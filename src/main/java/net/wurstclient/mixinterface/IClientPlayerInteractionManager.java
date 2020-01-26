@@ -9,14 +9,16 @@ package net.wurstclient.mixinterface;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.packet.PlayerActionC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public interface IClientPlayerInteractionManager {
 	float getCurrentBreakingProgress();
-
 	void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec);
+	
+	void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec, Hand hand);
 
 	void rightClickItem();
 
