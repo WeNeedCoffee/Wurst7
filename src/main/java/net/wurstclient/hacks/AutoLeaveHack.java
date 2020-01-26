@@ -20,6 +20,27 @@ import net.wurstclient.settings.SliderSetting.ValueDisplay;
 
 @SearchTags({ "auto leave", "AutoDisconnect", "auto disconnect", "AutoQuit", "auto quit" })
 public final class AutoLeaveHack extends Hack implements UpdateListener {
+	public enum Mode {
+		QUIT("Quit"),
+
+		CHARS("Chars"),
+
+		TELEPORT("TP"),
+
+		SELFHURT("SelfHurt");
+
+		private final String name;
+
+		private Mode(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final SliderSetting health = new SliderSetting("Health", "Leaves the server when your health\n" + "reaches this value or falls below it.", 4, 0.5, 9.5, 0.5, v -> ValueDisplay.DECIMAL.getValueString(v) + " hearts");
 
 	public final EnumSetting<Mode> mode = new EnumSetting<>("Mode", "\u00a7lQuit\u00a7r mode just quits the game normally.\n" + "Bypasses NoCheat+ but not CombatLog.\n\n" + "\u00a7lChars\u00a7r mode sends a special chat message that\n" + "causes the server to kick you.\n" + "Bypasses NoCheat+ and some versions of CombatLog.\n\n" + "\u00a7lTP\u00a7r mode teleports you to an invalid location,\n" + "causing the server to kick you.\n" + "Bypasses CombatLog, but not NoCheat+.\n\n" + "\u00a7lSelfHurt\u00a7r mode sends the packet for attacking\n" + "another player, but with yourself as both the attacker\n" + "and the target. This causes the server to kick you.\n" + "Bypasses both CombatLog and NoCheat+.", Mode.values(), Mode.QUIT);
@@ -38,13 +59,13 @@ public final class AutoLeaveHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
@@ -82,26 +103,5 @@ public final class AutoLeaveHack extends Hack implements UpdateListener {
 
 		// disable
 		setEnabled(false);
-	}
-
-	public static enum Mode {
-		QUIT("Quit"),
-
-		CHARS("Chars"),
-
-		TELEPORT("TP"),
-
-		SELFHURT("SelfHurt");
-
-		private final String name;
-
-		private Mode(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
 	}
 }

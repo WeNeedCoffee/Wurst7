@@ -12,16 +12,15 @@ import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface SetOpaqueCubeListener extends Listener {
-	public void onSetOpaqueCube(SetOpaqueCubeEvent event);
-
 	public static class SetOpaqueCubeEvent extends CancellableEvent<SetOpaqueCubeListener> {
 		@Override
 		public void fire(ArrayList<SetOpaqueCubeListener> listeners) {
 			for (SetOpaqueCubeListener listener : listeners) {
 				listener.onSetOpaqueCube(this);
 
-				if (isCancelled())
+				if (isCancelled()) {
 					break;
+				}
 			}
 		}
 
@@ -30,4 +29,6 @@ public interface SetOpaqueCubeListener extends Listener {
 			return SetOpaqueCubeListener.class;
 		}
 	}
+
+	void onSetOpaqueCube(SetOpaqueCubeEvent event);
 }

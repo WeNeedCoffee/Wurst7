@@ -26,24 +26,26 @@ public enum BlockUtils {
 
 	private static final MinecraftClient MC = WurstClient.MC;
 
-	public static BlockState getState(BlockPos pos) {
-		return MC.world.getBlockState(pos);
+	public static boolean canBeClicked(BlockPos pos) {
+		return getOutlineShape(pos) != VoxelShapes.empty();
+	}
+
+	public static ArrayList<BlockPos> getAllInBox(BlockPos min, BlockPos max) {
+		ArrayList<BlockPos> blocks = new ArrayList<>();
+
+		for (int x = min.getX(); x <= max.getX(); x++) {
+			for (int y = min.getY(); y <= max.getY(); y++) {
+				for (int z = min.getZ(); z <= max.getZ(); z++) {
+					blocks.add(new BlockPos(x, y, z));
+				}
+			}
+		}
+
+		return blocks;
 	}
 
 	public static Block getBlock(BlockPos pos) {
 		return getState(pos).getBlock();
-	}
-
-	public static int getId(BlockPos pos) {
-		return Block.getRawIdFromState(getState(pos));
-	}
-
-	public static String getName(BlockPos pos) {
-		return getName(getBlock(pos));
-	}
-
-	public static String getName(Block block) {
-		return Registry.BLOCK.getId(block).toString();
 	}
 
 	public static Block getBlockFromName(String name) {
@@ -55,30 +57,31 @@ public enum BlockUtils {
 		}
 	}
 
+	public static Box getBoundingBox(BlockPos pos) {
+		return getOutlineShape(pos).getBoundingBox().offset(pos);
+	}
+
 	public static float getHardness(BlockPos pos) {
 		return getState(pos).calcBlockBreakingDelta(MC.player, MC.world, pos);
+	}
+
+	public static int getId(BlockPos pos) {
+		return Block.getRawIdFromState(getState(pos));
+	}
+
+	public static String getName(Block block) {
+		return Registry.BLOCK.getId(block).toString();
+	}
+
+	public static String getName(BlockPos pos) {
+		return getName(getBlock(pos));
 	}
 
 	private static VoxelShape getOutlineShape(BlockPos pos) {
 		return getState(pos).getOutlineShape(MC.world, pos);
 	}
 
-	public static Box getBoundingBox(BlockPos pos) {
-		return getOutlineShape(pos).getBoundingBox().offset(pos);
-	}
-
-	public static boolean canBeClicked(BlockPos pos) {
-		return getOutlineShape(pos) != VoxelShapes.empty();
-	}
-
-	public static ArrayList<BlockPos> getAllInBox(BlockPos min, BlockPos max) {
-		ArrayList<BlockPos> blocks = new ArrayList<>();
-
-		for (int x = min.getX(); x <= max.getX(); x++)
-			for (int y = min.getY(); y <= max.getY(); y++)
-				for (int z = min.getZ(); z <= max.getZ(); z++)
-					blocks.add(new BlockPos(x, y, z));
-
-		return blocks;
+	public static BlockState getState(BlockPos pos) {
+		return MC.world.getBlockState(pos);
 	}
 }

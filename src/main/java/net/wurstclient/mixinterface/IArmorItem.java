@@ -8,5 +8,5 @@
 package net.wurstclient.mixinterface;
 
 public interface IArmorItem {
-	public float getToughness();
+	float getToughness();
 }

@@ -8,5 +8,5 @@
 package net.wurstclient.options;
 
 public interface PressAKeyCallback {
-	public void setKey(String key);
+	void setKey(String key);
 }

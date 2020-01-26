@@ -30,7 +30,25 @@ public final class AltManager {
 				break;
 			}
 		}
-		if (alt != null) LoginManager.login(alt.getEmail(), alt.getPassword());
+		if (alt != null) {
+			LoginManager.login(alt.getEmail(), alt.getPassword());
+		}
+	}
+
+	public void add(Alt alt) {
+		alts.add(alt);
+		sortAlts();
+		altsFile.save(this);
+	}
+
+	public void add(String email, String password, boolean starred) {
+		add(new Alt(email, password, null, starred));
+	}
+
+	public void addAll(Collection<Alt> c) {
+		alts.addAll(c);
+		sortAlts();
+		altsFile.save(this);
 	}
 
 	public boolean contains(String name) {
@@ -41,31 +59,52 @@ public final class AltManager {
 		return false;
 	}
 
-	public void add(String email, String password, boolean starred) {
-		add(new Alt(email, password, null, starred));
-	}
-
-	public void add(Alt alt) {
-		alts.add(alt);
-		sortAlts();
-		altsFile.save(this);
-	}
-
-	public void addAll(Collection<Alt> c) {
-		alts.addAll(c);
-		sortAlts();
-		altsFile.save(this);
-	}
-
 	public void edit(Alt alt, String newEmail, String newPassword) {
 		remove(alt);
 		add(new Alt(newEmail, newPassword, null, alt.isStarred()));
 	}
 
+	public List<Alt> getList() {
+		return Collections.unmodifiableList(alts);
+	}
+
+	public int getNumCracked() {
+		return numCracked;
+	}
+
+	public int getNumPremium() {
+		return numPremium;
+	}
+
+	private void remove(Alt alt) {
+		if (alts.remove(alt))
+			if (alt.isCracked()) {
+				numCracked--;
+			} else if (!alt.isUnchecked()) {
+				numPremium--;
+			}
+
+		altsFile.save(this);
+	}
+
+	public void remove(int index) {
+		Alt alt = alts.get(index);
+
+		if (alt.isCracked()) {
+			numCracked--;
+		} else if (!alt.isUnchecked()) {
+			numPremium--;
+		}
+
+		alts.remove(index);
+		altsFile.save(this);
+	}
+
 	public void setChecked(int index, String name) {
 		Alt alt = alts.get(index);
-		if (alt.isUnchecked())
+		if (alt.isUnchecked()) {
 			numPremium++;
+		}
 
 		alt.setChecked(name);
 		altsFile.save(this);
@@ -77,28 +116,6 @@ public final class AltManager {
 		altsFile.save(this);
 	}
 
-	public void remove(int index) {
-		Alt alt = alts.get(index);
-
-		if (alt.isCracked())
-			numCracked--;
-		else if (!alt.isUnchecked())
-			numPremium--;
-
-		alts.remove(index);
-		altsFile.save(this);
-	}
-
-	private void remove(Alt alt) {
-		if (alts.remove(alt))
-			if (alt.isCracked())
-				numCracked--;
-			else if (!alt.isUnchecked())
-				numPremium--;
-
-		altsFile.save(this);
-	}
-
 	private void sortAlts() {
 		ArrayList<Alt> newAlts = alts.stream().distinct().sorted().collect(Collectors.toCollection(() -> new ArrayList<>()));
 
@@ -107,17 +124,5 @@ public final class AltManager {
 
 		numCracked = (int) alts.stream().filter(Alt::isCracked).count();
 		numPremium = (int) alts.stream().filter(alt -> !alt.isCracked()).filter(alt -> !alt.isUnchecked()).count();
-	}
-
-	public List<Alt> getList() {
-		return Collections.unmodifiableList(alts);
-	}
-
-	public int getNumPremium() {
-		return numPremium;
-	}
-
-	public int getNumCracked() {
-		return numCracked;
 	}
 }

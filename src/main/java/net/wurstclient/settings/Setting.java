@@ -22,23 +22,23 @@ public abstract class Setting {
 		this.description = Objects.requireNonNull(description);
 	}
 
-	public final String getName() {
-		return name;
-	}
+	public abstract void fromJson(JsonElement json);
+
+	public abstract Component getComponent();
 
 	public final String getDescription() {
 		return description;
 	}
 
-	public abstract Component getComponent();
+	public final String getName() {
+		return name;
+	}
 
-	public abstract void fromJson(JsonElement json);
+	public abstract Set<PossibleKeybind> getPossibleKeybinds(String featureName);
 
 	public abstract JsonElement toJson();
 
 	public void update() {
 
 	}
-
-	public abstract Set<PossibleKeybind> getPossibleKeybinds(String featureName);
 }

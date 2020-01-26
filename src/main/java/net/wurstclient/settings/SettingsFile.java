@@ -42,18 +42,36 @@ public final class SettingsFile {
 		LinkedHashMap<String, Feature> map = new LinkedHashMap<>();
 
 		for (Hack hack : hax.getAllHax())
-			if (!hack.getSettings().isEmpty())
+			if (!hack.getSettings().isEmpty()) {
 				map.put(hack.getName(), hack);
+			}
 
 		for (Command cmd : cmds.getAllCmds())
-			if (!cmd.getSettings().isEmpty())
+			if (!cmd.getSettings().isEmpty()) {
 				map.put(cmd.getName(), cmd);
+			}
 
 		for (OtherFeature otf : otfs.getAllOtfs())
-			if (!otf.getSettings().isEmpty())
+			if (!otf.getSettings().isEmpty()) {
 				map.put(otf.getName(), otf);
+			}
 
 		return Collections.unmodifiableMap(map);
+	}
+
+	private JsonObject createJson() {
+		JsonObject json = new JsonObject();
+
+		for (Feature feature : featuresWithSettings.values()) {
+			Collection<Setting> settings = feature.getSettings().values();
+
+			JsonObject jsonSettings = new JsonObject();
+			settings.forEach(s -> jsonSettings.add(s.getName(), s.toJson()));
+
+			json.add(feature.getName(), jsonSettings);
+		}
+
+		return json;
 	}
 
 	public void load() {
@@ -72,32 +90,34 @@ public final class SettingsFile {
 		save();
 	}
 
+	private void loadSettings(Feature feature, JsonObject json) {
+		Map<String, Setting> settings = feature.getSettings();
+
+		for (Entry<String, JsonElement> e : json.entrySet()) {
+			String key = e.getKey().toLowerCase();
+			if (!settings.containsKey(key)) {
+				continue;
+			}
+
+			settings.get(key).fromJson(e.getValue());
+		}
+	}
+
 	private void loadSettings(WsonObject wson) {
 		try {
 			disableSaving = true;
 
 			for (Entry<String, JsonObject> e : wson.getAllJsonObjects().entrySet()) {
 				Feature feature = featuresWithSettings.get(e.getKey());
-				if (feature == null)
+				if (feature == null) {
 					continue;
+				}
 
 				loadSettings(feature, e.getValue());
 			}
 
 		} finally {
 			disableSaving = false;
-		}
-	}
-
-	private void loadSettings(Feature feature, JsonObject json) {
-		Map<String, Setting> settings = feature.getSettings();
-
-		for (Entry<String, JsonElement> e : json.entrySet()) {
-			String key = e.getKey().toLowerCase();
-			if (!settings.containsKey(key))
-				continue;
-
-			settings.get(key).fromJson(e.getValue());
 		}
 	}
 
@@ -114,20 +134,5 @@ public final class SettingsFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonObject createJson() {
-		JsonObject json = new JsonObject();
-
-		for (Feature feature : featuresWithSettings.values()) {
-			Collection<Setting> settings = feature.getSettings().values();
-
-			JsonObject jsonSettings = new JsonObject();
-			settings.forEach(s -> jsonSettings.add(s.getName(), s.toJson()));
-
-			json.add(feature.getName(), jsonSettings);
-		}
-
-		return json;
 	}
 }

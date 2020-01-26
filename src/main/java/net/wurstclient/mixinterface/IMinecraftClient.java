@@ -10,15 +10,15 @@ package net.wurstclient.mixinterface;
 import net.minecraft.client.util.Session;
 
 public interface IMinecraftClient {
-	public void rightClick();
+	IClientPlayerInteractionManager getInteractionManager();
 
-	public void setItemUseCooldown(int itemUseCooldown);
+	int getItemUseCooldown();
 
-	public IClientPlayerInteractionManager getInteractionManager();
+	IClientPlayerEntity getPlayer();
 
-	public int getItemUseCooldown();
+	void rightClick();
 
-	public IClientPlayerEntity getPlayer();
+	void setItemUseCooldown(int itemUseCooldown);
 
-	public void setSession(Session session);
+	void setSession(Session session);
 }

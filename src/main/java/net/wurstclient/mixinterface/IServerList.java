@@ -8,5 +8,5 @@
 package net.wurstclient.mixinterface;
 
 public interface IServerList {
-	public void clear();
+	void clear();
 }

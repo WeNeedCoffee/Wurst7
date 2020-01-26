@@ -52,29 +52,10 @@ public final class FreecamHack extends Hack implements UpdateListener, PacketOut
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(PacketOutputListener.class, this);
-		EVENTS.add(IsPlayerInWaterListener.class, this);
-		EVENTS.add(PlayerMoveListener.class, this);
-		EVENTS.add(CameraTransformViewBobbingListener.class, this);
-		EVENTS.add(IsNormalCubeListener.class, this);
-		EVENTS.add(SetOpaqueCubeListener.class, this);
-		EVENTS.add(RenderListener.class, this);
-
-		fakePlayer = new FakePlayerEntity();
-
-		GameOptions gs = MC.options;
-		KeyBinding[] bindings = { gs.keyForward, gs.keyBack, gs.keyLeft, gs.keyRight, gs.keyJump, gs.keySneak };
-
-		for (KeyBinding binding : bindings)
-			binding.setPressed(((IKeyBinding) binding).isActallyPressed());
-
-		playerBox = GL11.glGenLists(1);
-		GL11.glNewList(playerBox, GL11.GL_COMPILE);
-		Box bb = new Box(-0.5, 0, -0.5, 0.5, 1, 0.5);
-		RenderUtils.drawOutlinedBox(bb);
-		GL11.glEndList();
+	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
+		if (tracer.isChecked()) {
+			event.cancel();
+		}
 	}
 
 	@Override
@@ -101,41 +82,30 @@ public final class FreecamHack extends Hack implements UpdateListener, PacketOut
 	}
 
 	@Override
-	public void onUpdate() {
-		ClientPlayerEntity player = MC.player;
-		player.setVelocity(Vec3d.ZERO);
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(PacketOutputListener.class, this);
+		EVENTS.add(IsPlayerInWaterListener.class, this);
+		EVENTS.add(PlayerMoveListener.class, this);
+		EVENTS.add(CameraTransformViewBobbingListener.class, this);
+		EVENTS.add(IsNormalCubeListener.class, this);
+		EVENTS.add(SetOpaqueCubeListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 
-		player.onGround = false;
-		player.flyingSpeed = speed.getValueF();
-		Vec3d velcity = player.getVelocity();
+		fakePlayer = new FakePlayerEntity();
 
-		if (MC.options.keyJump.isPressed())
-			player.setVelocity(velcity.add(0, speed.getValue(), 0));
+		GameOptions gs = MC.options;
+		KeyBinding[] bindings = { gs.keyForward, gs.keyBack, gs.keyLeft, gs.keyRight, gs.keyJump, gs.keySneak };
 
-		if (MC.options.keySneak.isPressed())
-			player.setVelocity(velcity.subtract(0, speed.getValue(), 0));
-	}
+		for (KeyBinding binding : bindings) {
+			binding.setPressed(((IKeyBinding) binding).isActallyPressed());
+		}
 
-	@Override
-	public void onSentPacket(PacketOutputEvent event) {
-		if (event.getPacket() instanceof PlayerMoveC2SPacket)
-			event.cancel();
-	}
-
-	@Override
-	public void onPlayerMove(IClientPlayerEntity player) {
-		player.setNoClip(true);
-	}
-
-	@Override
-	public void onIsPlayerInWater(IsPlayerInWaterEvent event) {
-		event.setInWater(false);
-	}
-
-	@Override
-	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
-		if (tracer.isChecked())
-			event.cancel();
+		playerBox = GL11.glGenLists(1);
+		GL11.glNewList(playerBox, GL11.GL_COMPILE);
+		Box bb = new Box(-0.5, 0, -0.5, 0.5, 1, 0.5);
+		RenderUtils.drawOutlinedBox(bb);
+		GL11.glEndList();
 	}
 
 	@Override
@@ -144,8 +114,13 @@ public final class FreecamHack extends Hack implements UpdateListener, PacketOut
 	}
 
 	@Override
-	public void onSetOpaqueCube(SetOpaqueCubeEvent event) {
-		event.cancel();
+	public void onIsPlayerInWater(IsPlayerInWaterEvent event) {
+		event.setInWater(false);
+	}
+
+	@Override
+	public void onPlayerMove(IClientPlayerEntity player) {
+		player.setNoClip(true);
 	}
 
 	@Override
@@ -189,5 +164,35 @@ public final class FreecamHack extends Hack implements UpdateListener, PacketOut
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+	}
+
+	@Override
+	public void onSentPacket(PacketOutputEvent event) {
+		if (event.getPacket() instanceof PlayerMoveC2SPacket) {
+			event.cancel();
+		}
+	}
+
+	@Override
+	public void onSetOpaqueCube(SetOpaqueCubeEvent event) {
+		event.cancel();
+	}
+
+	@Override
+	public void onUpdate() {
+		ClientPlayerEntity player = MC.player;
+		player.setVelocity(Vec3d.ZERO);
+
+		player.onGround = false;
+		player.flyingSpeed = speed.getValueF();
+		Vec3d velcity = player.getVelocity();
+
+		if (MC.options.keyJump.isPressed()) {
+			player.setVelocity(velcity.add(0, speed.getValue(), 0));
+		}
+
+		if (MC.options.keySneak.isPressed()) {
+			player.setVelocity(velcity.subtract(0, speed.getValue(), 0));
+		}
 	}
 }

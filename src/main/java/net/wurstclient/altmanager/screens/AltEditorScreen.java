@@ -42,6 +42,38 @@ public abstract class AltEditorScreen extends Screen {
 		this.prevScreen = prevScreen;
 	}
 
+	private void createSkinFolder() {
+		try {
+			Files.createDirectories(skinFolder);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			message = "\u00a74\u00a7lSkin folder could not be created.";
+		}
+	}
+
+	protected final void doErrorEffect() {
+		errorTimer = 8;
+	}
+
+	protected String getDefaultEmail() {
+		return minecraft.getSession().getUsername();
+	}
+
+	protected String getDefaultPassword() {
+		return "";
+	}
+
+	protected abstract String getDoneButtonText();
+
+	protected final String getEmail() {
+		return emailBox.getText();
+	}
+
+	protected final String getPassword() {
+		return passwordBox.getText();
+	}
+
 	@Override
 	public final void init() {
 		addButton(doneButton = new ButtonWidget(width / 2 - 100, height / 4 + 72 + 12, 200, 20, getDoneButtonText(), b -> pressDoneButton()));
@@ -64,8 +96,9 @@ public abstract class AltEditorScreen extends Screen {
 		passwordBox.setText(getDefaultPassword());
 		passwordBox.setRenderTextProvider((text, int_1) -> {
 			String stars = "";
-			for (int i = 0; i < text.length(); i++)
+			for (int i = 0; i < text.length(); i++) {
 				stars += "*";
+			}
 			return stars;
 		});
 		passwordBox.setMaxLength(64);
@@ -74,80 +107,11 @@ public abstract class AltEditorScreen extends Screen {
 		setInitialFocus(emailBox);
 	}
 
-	private void openSkinFolder() {
-		createSkinFolder();
-		Util.getOperatingSystem().open(skinFolder.toFile());
-	}
-
-	private void createSkinFolder() {
-		try {
-			Files.createDirectories(skinFolder);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			message = "\u00a74\u00a7lSkin folder could not be created.";
-		}
-	}
-
-	@Override
-	public final void tick() {
-		emailBox.tick();
-		passwordBox.tick();
-
-		String email = emailBox.getText().trim();
-		boolean alex = email.equalsIgnoreCase("Alexander01998");
-
-		doneButton.active = !email.isEmpty() && !(alex && passwordBox.getText().isEmpty());
-
-		stealSkinButton.active = !alex;
-	}
-
-	protected final String getEmail() {
-		return emailBox.getText();
-	}
-
-	protected final String getPassword() {
-		return passwordBox.getText();
-	}
-
-	protected String getDefaultEmail() {
-		return minecraft.getSession().getUsername();
-	}
-
-	protected String getDefaultPassword() {
-		return "";
-	}
-
-	protected abstract String getDoneButtonText();
-
-	protected abstract void pressDoneButton();
-
-	protected final void doErrorEffect() {
-		errorTimer = 8;
-	}
-
-	private final String stealSkin(String name) {
-		String skin = name + ".png";
-
-		URI u = URI.create("http://skins.minecraft.net/MinecraftSkins/").resolve(skin);
-		Path path = skinFolder.resolve(skin);
-
-		createSkinFolder();
-
-		try (InputStream in = u.toURL().openStream()) {
-			Files.copy(in, path);
-			return "\u00a7a\u00a7lSaved skin as " + skin;
-
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "\u00a74\u00a7lSkin could not be saved.";
-		}
-	}
-
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
-		if (keyCode == GLFW.GLFW_KEY_ENTER)
+		if (keyCode == GLFW.GLFW_KEY_ENTER) {
 			doneButton.onPress();
+		}
 
 		return super.keyPressed(keyCode, scanCode, int_3);
 	}
@@ -157,11 +121,19 @@ public abstract class AltEditorScreen extends Screen {
 		emailBox.mouseClicked(x, y, button);
 		passwordBox.mouseClicked(x, y, button);
 
-		if (emailBox.isFocused() || passwordBox.isFocused())
+		if (emailBox.isFocused() || passwordBox.isFocused()) {
 			message = "";
+		}
 
 		return super.mouseClicked(x, y, button);
 	}
+
+	private void openSkinFolder() {
+		createSkinFolder();
+		Util.getOperatingSystem().open(skinFolder.toFile());
+	}
+
+	protected abstract void pressDoneButton();
 
 	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
@@ -204,5 +176,36 @@ public abstract class AltEditorScreen extends Screen {
 		}
 
 		super.render(mouseX, mouseY, partialTicks);
+	}
+
+	private final String stealSkin(String name) {
+		String skin = name + ".png";
+
+		URI u = URI.create("http://skins.minecraft.net/MinecraftSkins/").resolve(skin);
+		Path path = skinFolder.resolve(skin);
+
+		createSkinFolder();
+
+		try (InputStream in = u.toURL().openStream()) {
+			Files.copy(in, path);
+			return "\u00a7a\u00a7lSaved skin as " + skin;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "\u00a74\u00a7lSkin could not be saved.";
+		}
+	}
+
+	@Override
+	public final void tick() {
+		emailBox.tick();
+		passwordBox.tick();
+
+		String email = emailBox.getText().trim();
+		boolean alex = email.equalsIgnoreCase("Alexander01998");
+
+		doneButton.active = !email.isEmpty() && !(alex && passwordBox.getText().isEmpty());
+
+		stealSkinButton.active = !alex;
 	}
 }

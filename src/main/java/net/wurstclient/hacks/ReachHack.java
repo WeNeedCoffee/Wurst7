@@ -19,12 +19,12 @@ public final class ReachHack extends Hack {
 	}
 
 	@Override
-	public void onEnable() {
-		IMC.getInteractionManager().setOverrideReach(true);
+	public void onDisable() {
+		IMC.getInteractionManager().setOverrideReach(false);
 	}
 
 	@Override
-	public void onDisable() {
-		IMC.getInteractionManager().setOverrideReach(false);
+	public void onEnable() {
+		IMC.getInteractionManager().setOverrideReach(true);
 	}
 }

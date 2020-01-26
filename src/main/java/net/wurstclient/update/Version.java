@@ -42,20 +42,11 @@ public final class Version implements Comparable<Version> {
 
 		minor = Integer.parseInt(parts[1]);
 
-		if (parts.length == 3)
+		if (parts.length == 3) {
 			patch = Integer.parseInt(parts[2]);
-		else
+		} else {
 			patch = 0;
-	}
-
-	@Override
-	public int hashCode() {
-		return major << 24 | minor << 16 | patch << 8 | preRelease;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		return super.equals(obj) || obj instanceof Version && compareTo((Version) obj) == 0;
+		}
 	}
 
 	@Override
@@ -75,24 +66,52 @@ public final class Version implements Comparable<Version> {
 		return 0;
 	}
 
-	public boolean shouldUpdateTo(Version other) {
-		return isInvalid() || other.isInvalid() || isLowerThan(other);
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj) || obj instanceof Version && compareTo((Version) obj) == 0;
 	}
 
-	public boolean isLowerThan(Version other) {
-		return compareTo(other) < 0;
+	public String getChangelogLink() {
+		String version = major + "-" + minor;
+
+		if (isPreRelease()) {
+			version += "pre" + preRelease;
+		}
+
+		return "https://www.wurstclient.net/updates/wurst-" + version + "/";
 	}
 
-	public boolean isLowerThan(String other) {
-		return isLowerThan(new Version(other));
+	@Override
+	public int hashCode() {
+		return major << 24 | minor << 16 | patch << 8 | preRelease;
+	}
+
+	public boolean isHigherThan(String other) {
+		return isHigherThan(new Version(other));
 	}
 
 	public boolean isHigherThan(Version other) {
 		return compareTo(other) > 0;
 	}
 
-	public boolean isHigherThan(String other) {
-		return isHigherThan(new Version(other));
+	public boolean isInvalid() {
+		return major == -1 && minor == -1 && patch == -1;
+	}
+
+	public boolean isLowerThan(String other) {
+		return isLowerThan(new Version(other));
+	}
+
+	public boolean isLowerThan(Version other) {
+		return compareTo(other) < 0;
+	}
+
+	public boolean isPreRelease() {
+		return preRelease != Integer.MAX_VALUE;
+	}
+
+	public boolean shouldUpdateTo(Version other) {
+		return isInvalid() || other.isInvalid() || isLowerThan(other);
 	}
 
 	@Override
@@ -102,29 +121,14 @@ public final class Version implements Comparable<Version> {
 
 		String s = major + "." + minor;
 
-		if (patch > 0)
+		if (patch > 0) {
 			s += "." + patch;
+		}
 
-		if (isPreRelease())
+		if (isPreRelease()) {
 			s += "pre" + preRelease;
+		}
 
 		return s;
-	}
-
-	public boolean isInvalid() {
-		return major == -1 && minor == -1 && patch == -1;
-	}
-
-	public boolean isPreRelease() {
-		return preRelease != Integer.MAX_VALUE;
-	}
-
-	public String getChangelogLink() {
-		String version = major + "-" + minor;
-
-		if (isPreRelease())
-			version += "pre" + preRelease;
-
-		return "https://www.wurstclient.net/updates/wurst-" + version + "/";
 	}
 }

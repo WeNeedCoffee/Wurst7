@@ -14,18 +14,7 @@ import net.wurstclient.settings.EnumSetting;
 
 @SearchTags({ "wurst logo", "top left corner" })
 public final class WurstLogoOtf extends OtherFeature {
-	private final EnumSetting<Visibility> visibility = new EnumSetting<>("Visibility", Visibility.values(), Visibility.ALWAYS);
-
-	public WurstLogoOtf() {
-		super("WurstLogo", "Shows the Wurst logo and version on the screen.");
-		addSetting(visibility);
-	}
-
-	public boolean isVisible() {
-		return visibility.getSelected().isVisible();
-	}
-
-	public static enum Visibility {
+	public enum Visibility {
 		ALWAYS("Always", () -> true),
 
 		ONLY_OUTDATED("Only when outdated", () -> WURST.getUpdater().isOutdated());
@@ -46,5 +35,16 @@ public final class WurstLogoOtf extends OtherFeature {
 		public String toString() {
 			return name;
 		}
+	}
+
+	private final EnumSetting<Visibility> visibility = new EnumSetting<>("Visibility", Visibility.values(), Visibility.ALWAYS);
+
+	public WurstLogoOtf() {
+		super("WurstLogo", "Shows the Wurst logo and version on the screen.");
+		addSetting(visibility);
+	}
+
+	public boolean isVisible() {
+		return visibility.getSelected().isVisible();
 	}
 }

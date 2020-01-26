@@ -25,9 +25,9 @@ import net.wurstclient.events.ChatInputListener.ChatInputEvent;
 @Mixin(ChatHud.class)
 public class ChatHudMixin extends DrawableHelper {
 	@Shadow
-	private List<ChatHudLine> visibleMessages;
-	@Shadow
 	private static Logger LOGGER;
+	@Shadow
+	private List<ChatHudLine> visibleMessages;
 	@Shadow
 	private MinecraftClient client;
 

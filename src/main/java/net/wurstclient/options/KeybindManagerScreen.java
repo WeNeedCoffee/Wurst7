@@ -19,17 +19,62 @@ import net.wurstclient.keybinds.Keybind;
 import net.wurstclient.keybinds.KeybindList;
 
 public final class KeybindManagerScreen extends Screen {
-	private final Screen prevScreen;
+	private static final class ListGui extends ListWidget {
+		private int selected = -1;
 
+		public ListGui(MinecraftClient mc, int width, int height, int top, int bottom, int slotHeight) {
+			super(mc, width, height, top, bottom, slotHeight);
+		}
+
+		@Override
+		protected int getItemCount() {
+			return WurstClient.INSTANCE.getKeybinds().getAllKeybinds().size();
+		}
+
+		@Override
+		protected boolean isSelectedItem(int index) {
+			return selected == index;
+		}
+
+		@Override
+		protected void renderBackground() {
+
+		}
+
+		@Override
+		protected void renderItem(int index, int x, int y, int slotHeight, int mouseX, int mouseY, float partialTicks) {
+			Keybind keybind = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(index);
+
+			minecraft.textRenderer.draw("Key: " + keybind.getKey().replace("key.keyboard.", ""), x + 3, y + 3, 0xa0a0a0);
+			minecraft.textRenderer.draw("Commands: " + keybind.getCommands(), x + 3, y + 15, 0xa0a0a0);
+		}
+
+		@Override
+		protected boolean selectItem(int index, int int_2, double var3, double var4) {
+			if (index >= 0 && index < getItemCount()) {
+				selected = index;
+			}
+
+			return true;
+		}
+	}
+
+	private final Screen prevScreen;
 	private ListGui listGui;
 	private ButtonWidget addButton;
 	private ButtonWidget editButton;
 	private ButtonWidget removeButton;
+
 	private ButtonWidget backButton;
 
 	public KeybindManagerScreen(Screen prevScreen) {
 		super(new LiteralText(""));
 		this.prevScreen = prevScreen;
+	}
+
+	private void edit() {
+		Keybind keybind = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(listGui.selected);
+		minecraft.openScreen(new KeybindEditorScreen(this, keybind.getKey(), keybind.getCommands()));
 	}
 
 	@Override
@@ -45,20 +90,28 @@ public final class KeybindManagerScreen extends Screen {
 		addButton(backButton = new ButtonWidget(width / 2 + 2, height - 28, 100, 20, "Back", b -> minecraft.openScreen(prevScreen)));
 
 		addButton(new ButtonWidget(8, 8, 100, 20, "Reset Keybinds", b -> minecraft.openScreen(new ConfirmScreen(confirmed -> {
-			if (confirmed)
+			if (confirmed) {
 				WurstClient.INSTANCE.getKeybinds().setKeybinds(KeybindList.DEFAULT_KEYBINDS);
+			}
 			minecraft.openScreen(this);
 		}, new LiteralText("Are you sure you want to reset your keybinds?"), new LiteralText("This cannot be undone!")))));
 	}
 
-	private void edit() {
-		Keybind keybind = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(listGui.selected);
-		minecraft.openScreen(new KeybindEditorScreen(this, keybind.getKey(), keybind.getCommands()));
-	}
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
+		if (keyCode == GLFW.GLFW_KEY_ENTER)
+			if (editButton.active) {
+				editButton.onPress();
+			} else {
+				addButton.onPress();
+			}
+		else if (keyCode == GLFW.GLFW_KEY_DELETE) {
+			removeButton.onPress();
+		} else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+			backButton.onPress();
+		}
 
-	private void remove() {
-		Keybind keybind1 = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(listGui.selected);
-		WurstClient.INSTANCE.getKeybinds().remove(keybind1.getKey());
+		return super.keyPressed(keyCode, scanCode, int_3);
 	}
 
 	@Override
@@ -69,8 +122,9 @@ public final class KeybindManagerScreen extends Screen {
 
 		if (!childClicked)
 			if (mouseY >= 36 && mouseY <= height - 57)
-				if (mouseX >= width / 2 + 140 || mouseX <= width / 2 - 126)
+				if (mouseX >= width / 2 + 140 || mouseX <= width / 2 - 126) {
 					listGui.selected = -1;
+				}
 
 		return childClicked;
 	}
@@ -93,27 +147,9 @@ public final class KeybindManagerScreen extends Screen {
 		return super.mouseScrolled(double_1, double_2, double_3);
 	}
 
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
-		if (keyCode == GLFW.GLFW_KEY_ENTER)
-			if (editButton.active)
-				editButton.onPress();
-			else
-				addButton.onPress();
-		else if (keyCode == GLFW.GLFW_KEY_DELETE)
-			removeButton.onPress();
-		else if (keyCode == GLFW.GLFW_KEY_ESCAPE)
-			backButton.onPress();
-
-		return super.keyPressed(keyCode, scanCode, int_3);
-	}
-
-	@Override
-	public void tick() {
-		boolean inBounds = listGui.selected > -1 && listGui.selected < listGui.getItemCount();
-
-		editButton.active = inBounds;
-		removeButton.active = inBounds;
+	private void remove() {
+		Keybind keybind1 = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(listGui.selected);
+		WurstClient.INSTANCE.getKeybinds().remove(keybind1.getKey());
 	}
 
 	@Override
@@ -132,42 +168,11 @@ public final class KeybindManagerScreen extends Screen {
 		return false;
 	}
 
-	private static final class ListGui extends ListWidget {
-		private int selected = -1;
+	@Override
+	public void tick() {
+		boolean inBounds = listGui.selected > -1 && listGui.selected < listGui.getItemCount();
 
-		public ListGui(MinecraftClient mc, int width, int height, int top, int bottom, int slotHeight) {
-			super(mc, width, height, top, bottom, slotHeight);
-		}
-
-		@Override
-		protected boolean isSelectedItem(int index) {
-			return selected == index;
-		}
-
-		@Override
-		protected int getItemCount() {
-			return WurstClient.INSTANCE.getKeybinds().getAllKeybinds().size();
-		}
-
-		@Override
-		protected boolean selectItem(int index, int int_2, double var3, double var4) {
-			if (index >= 0 && index < getItemCount())
-				selected = index;
-
-			return true;
-		}
-
-		@Override
-		protected void renderBackground() {
-
-		}
-
-		@Override
-		protected void renderItem(int index, int x, int y, int slotHeight, int mouseX, int mouseY, float partialTicks) {
-			Keybind keybind = WurstClient.INSTANCE.getKeybinds().getAllKeybinds().get(index);
-
-			minecraft.textRenderer.draw("Key: " + keybind.getKey().replace("key.keyboard.", ""), x + 3, y + 3, 0xa0a0a0);
-			minecraft.textRenderer.draw("Commands: " + keybind.getCommands(), x + 3, y + 15, 0xa0a0a0);
-		}
+		editButton.active = inBounds;
+		removeButton.active = inBounds;
 	}
 }

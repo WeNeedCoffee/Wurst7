@@ -32,6 +32,16 @@ public final class Navigator {
 		preferencesFile.load();
 	}
 
+	public void addPreference(String feature) {
+		Long preference = preferences.get(feature);
+		if (preference == null) {
+			preference = 0L;
+		}
+		preference++;
+		preferences.put(feature, preference);
+		preferencesFile.save();
+	}
+
 	public void copyNavigatorList(ArrayList<Feature> list) {
 		if (list.equals(navigatorList))
 			return;
@@ -40,14 +50,31 @@ public final class Navigator {
 		list.addAll(navigatorList);
 	}
 
+	public int countAllFeatures() {
+		return navigatorList.size();
+	}
+
+	public List<Feature> getList() {
+		return Collections.unmodifiableList(navigatorList);
+	}
+
+	public long getPreference(String feature) {
+		Long preference = preferences.get(feature);
+		if (preference == null) {
+			preference = 0L;
+		}
+		return preference;
+	}
+
 	public void getSearchResults(ArrayList<Feature> list, String query) {
 		// clear display list
 		list.clear();
 
 		// add search results
 		for (Feature mod : navigatorList)
-			if (mod.getName().toLowerCase().contains(query) || mod.getSearchTags().toLowerCase().contains(query) || mod.getDescription().toLowerCase().contains(query))
+			if (mod.getName().toLowerCase().contains(query) || mod.getSearchTags().toLowerCase().contains(query) || mod.getDescription().toLowerCase().contains(query)) {
 				list.add(mod);
+			}
 
 		Comparator<String> c = (o1, o2) -> {
 			int index1 = o1.toLowerCase().indexOf(query);
@@ -67,31 +94,7 @@ public final class Navigator {
 		list.sort(Comparator.comparing(Feature::getName, c).thenComparing(Feature::getSearchTags, c).thenComparing(Feature::getDescription, c));
 	}
 
-	public long getPreference(String feature) {
-		Long preference = preferences.get(feature);
-		if (preference == null)
-			preference = 0L;
-		return preference;
-	}
-
-	public void addPreference(String feature) {
-		Long preference = preferences.get(feature);
-		if (preference == null)
-			preference = 0L;
-		preference++;
-		preferences.put(feature, preference);
-		preferencesFile.save();
-	}
-
-	public List<Feature> getList() {
-		return Collections.unmodifiableList(navigatorList);
-	}
-
 	public void sortFeatures() {
 		navigatorList.sort(Comparator.comparingLong((Feature f) -> getPreference(f.getName())).reversed());
-	}
-
-	public int countAllFeatures() {
-		return navigatorList.size();
 	}
 }

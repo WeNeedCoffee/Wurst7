@@ -24,12 +24,13 @@ public final class TpCmd extends Command {
 		super("tp", "Teleports you up to 10 blocks away.", ".tp <x> <y> <z>", ".tp <entity>");
 	}
 
-	@Override
-	public void call(String[] args) throws CmdException {
-		BlockPos pos = argsToPos(args);
+	private BlockPos argsToEntityPos(String name) throws CmdError {
+		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
 
-		ClientPlayerEntity player = MC.player;
-		player.updatePosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+		if (entity == null)
+			throw new CmdError("Entity \"" + name + "\" could not be found.");
+
+		return new BlockPos(entity);
 	}
 
 	private BlockPos argsToPos(String... args) throws CmdException {
@@ -45,30 +46,29 @@ public final class TpCmd extends Command {
 		}
 	}
 
-	private BlockPos argsToEntityPos(String name) throws CmdError {
-		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
-
-		if (entity == null)
-			throw new CmdError("Entity \"" + name + "\" could not be found.");
-
-		return new BlockPos(entity);
-	}
-
 	private BlockPos argsToXyzPos(String... xyz) throws CmdSyntaxError {
 		BlockPos playerPos = new BlockPos(MC.player);
 		int[] player = new int[] { playerPos.getX(), playerPos.getY(), playerPos.getZ() };
 		int[] pos = new int[3];
 
 		for (int i = 0; i < 3; i++)
-			if (MathUtils.isInteger(xyz[i]))
+			if (MathUtils.isInteger(xyz[i])) {
 				pos[i] = Integer.parseInt(xyz[i]);
-			else if (xyz[i].equals("~"))
+			} else if (xyz[i].equals("~")) {
 				pos[i] = player[i];
-			else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1)))
+			} else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1))) {
 				pos[i] = player[i] + Integer.parseInt(xyz[i].substring(1));
-			else
+			} else
 				throw new CmdSyntaxError("Invalid coordinates.");
 
 		return new BlockPos(pos[0], pos[1], pos[2]);
+	}
+
+	@Override
+	public void call(String[] args) throws CmdException {
+		BlockPos pos = argsToPos(args);
+
+		ClientPlayerEntity player = MC.player;
+		player.updatePosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 	}
 }

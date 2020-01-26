@@ -13,8 +13,6 @@ import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface TesselateBlockListener extends Listener {
-	public void onTesselateBlock(TesselateBlockEvent event);
-
 	public static class TesselateBlockEvent extends CancellableEvent<TesselateBlockListener> {
 		private final BlockState state;
 
@@ -22,17 +20,14 @@ public interface TesselateBlockListener extends Listener {
 			this.state = state;
 		}
 
-		public BlockState getState() {
-			return state;
-		}
-
 		@Override
 		public void fire(ArrayList<TesselateBlockListener> listeners) {
 			for (TesselateBlockListener listener : listeners) {
 				listener.onTesselateBlock(this);
 
-				if (isCancelled())
+				if (isCancelled()) {
 					break;
+				}
 			}
 		}
 
@@ -40,5 +35,11 @@ public interface TesselateBlockListener extends Listener {
 		public Class<TesselateBlockListener> getListenerType() {
 			return TesselateBlockListener.class;
 		}
+
+		public BlockState getState() {
+			return state;
+		}
 	}
+
+	void onTesselateBlock(TesselateBlockEvent event);
 }

@@ -18,22 +18,23 @@ public final class LeaveCmd extends Command {
 
 	@Override
 	public void call(String[] args) throws CmdException {
-		if (args.length == 1 && args[0].equalsIgnoreCase("taco"))
-			for (int i = 0; i < 128; i++)
+		if (args.length == 1 && args[0].equalsIgnoreCase("taco")) {
+			for (int i = 0; i < 128; i++) {
 				MC.player.sendChatMessage("Taco!");
-		else if (args.length != 0)
+			}
+		} else if (args.length != 0)
 			throw new CmdSyntaxError();
 
 		MC.world.disconnect();
 	}
 
 	@Override
-	public String getPrimaryAction() {
-		return "Leave";
+	public void doPrimaryAction() {
+		WURST.getCmdProcessor().process("leave");
 	}
 
 	@Override
-	public void doPrimaryAction() {
-		WURST.getCmdProcessor().process("leave");
+	public String getPrimaryAction() {
+		return "Leave";
 	}
 }

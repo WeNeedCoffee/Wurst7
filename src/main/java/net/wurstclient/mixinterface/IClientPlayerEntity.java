@@ -10,11 +10,11 @@ package net.wurstclient.mixinterface;
 import net.minecraft.util.math.Vec3d;
 
 public interface IClientPlayerEntity {
-	public void setNoClip(boolean noClip);
+	float getLastPitch();
 
-	public float getLastYaw();
+	float getLastYaw();
 
-	public float getLastPitch();
+	void setMovementMultiplier(Vec3d movementMultiplier);
 
-	public void setMovementMultiplier(Vec3d movementMultiplier);
+	void setNoClip(boolean noClip);
 }

@@ -36,32 +36,18 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 	}
 
 	@Override
-	protected void onResize() {
-		TextRenderer tr = WurstClient.MC.textRenderer;
-		searchBar = new TextFieldWidget(tr, 0, 32, 200, 20, "");
-		searchBar.setHasBorder(false);
-		searchBar.setMaxLength(128);
-
-		children.add(searchBar);
-		setInitialFocus(searchBar);
-		searchBar.setSelected(true);
-
-		searchBar.x = middleX - 100;
-		setContentHeight(navigatorDisplayList.size() / 3 * 20);
-	}
-
-	@Override
 	protected void onKeyPress(int keyCode, int scanCode, int int_3) {
 		if (keyCode == 1)
-			if (clickTimer == -1)
+			if (clickTimer == -1) {
 				WurstClient.MC.openScreen((Screen) null);
+			}
 
 		if (clickTimer == -1) {
 			String newText = searchBar.getText();
 			Navigator navigator = WurstClient.INSTANCE.getNavigator();
-			if (newText.isEmpty())
+			if (newText.isEmpty()) {
 				navigator.copyNavigatorList(navigatorDisplayList);
-			else {
+			} else {
 				newText = newText.toLowerCase().trim();
 				navigator.getSearchResults(navigatorDisplayList, newText);
 			}
@@ -72,15 +58,15 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 	@Override
 	protected void onMouseClick(double x, double y, int button) {
 		if (clickTimer == -1 && hoveredFeature != -1)
-			if (button == 0 && (hasShiftDown() || hoveringArrow) || button == 2)
+			if (button == 0 && (hasShiftDown() || hoveringArrow) || button == 2) {
 				// arrow click, shift click, wheel click
 				expanding = true;
-			else if (button == 0) {
+			} else if (button == 0) {
 				// left click
 				Feature feature = navigatorDisplayList.get(hoveredFeature);
-				if (feature.getPrimaryAction().isEmpty())
+				if (feature.getPrimaryAction().isEmpty()) {
 					expanding = true;
-				else {
+				} else {
 					feature.doPrimaryAction();
 					WurstClient wurst = WurstClient.INSTANCE;
 					wurst.getNavigator().addPreference(feature.getName());
@@ -99,19 +85,13 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 	}
 
 	@Override
-	protected void onUpdate() {
-		searchBar.tick();
+	protected void onMouseDrag(double mouseX, double mouseY, int button, double double_3, double double_4) {
 
-		if (expanding)
-			if (clickTimer < 4)
-				clickTimer++;
-			else {
-				Feature feature = navigatorDisplayList.get(hoveredFeature);
-				WurstClient.MC.openScreen(new NavigatorFeatureScreen(feature, this));
-			}
-		else if (!expanding && clickTimer > -1)
-			clickTimer--;
-		scrollbarLocked = clickTimer != -1;
+	}
+
+	@Override
+	protected void onMouseRelease(double x, double y, int button) {
+
 	}
 
 	@Override
@@ -135,17 +115,20 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 
 		// feature list
 		int x = middleX - 50;
-		if (clickTimerNotRunning)
+		if (clickTimerNotRunning) {
 			hoveredFeature = -1;
+		}
 		RenderUtils.scissorBox(0, 59, width, height - 42);
 		GL11.glEnable(GL11.GL_SCISSOR_TEST);
 		for (int i = Math.max(-scroll * 3 / 20 - 3, 0); i < navigatorDisplayList.size(); i++) {
 			// y position
 			int y = 60 + i / 3 * 20 + scroll;
-			if (y < 40)
+			if (y < 40) {
 				continue;
-			if (y > height - 40)
+			}
+			if (y > height - 40) {
 				break;
+			}
 
 			// x position
 			int xi = 0;
@@ -167,19 +150,22 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 
 			// click animation
 			if (!clickTimerNotRunning) {
-				if (i != hoveredFeature)
+				if (i != hoveredFeature) {
 					continue;
+				}
 
 				float factor;
 				if (expanding)
-					if (clickTimer == 4)
+					if (clickTimer == 4) {
 						factor = 1F;
-					else
+					} else {
 						factor = (clickTimer + partialTicks) / 4F;
-				else if (clickTimer == 0)
+					}
+				else if (clickTimer == 0) {
 					factor = 0F;
-				else
+				} else {
 					factor = (clickTimer - partialTicks) / 4F;
+				}
 				float antiFactor = 1 - factor;
 
 				area.x = (int) (area.x * antiFactor + (middleX - 154) * factor);
@@ -191,16 +177,18 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 			} else {
 				// color
 				boolean hovering = area.contains(mouseX, mouseY);
-				if (hovering)
+				if (hovering) {
 					hoveredFeature = i;
-				if (feature.isEnabled())
+				}
+				if (feature.isEnabled()) {
 					// if(feature.isBlocked())
 					// GL11.glColor4f(1, 0, 0,
 					// hovering ? opacity * 1.5F : opacity);
 					// else
 					GL11.glColor4f(0, 1, 0, hovering ? opacity * 1.5F : opacity);
-				else
+				} else {
 					GL11.glColor4f(bgColor[0], bgColor[1], bgColor[2], hovering ? opacity * 1.5F : opacity);
+				}
 
 				// tooltip
 				String tt = feature.getDescription();
@@ -213,8 +201,9 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 				// tt +=
 				// "Your current YesCheat+ profile is blocking this feature.";
 				// }
-				if (hovering)
+				if (hovering) {
 					tooltip = tt;
+				}
 
 				// box & shadow
 				drawBox(area.x, area.y, area.x + area.width, area.y + area.height);
@@ -229,8 +218,9 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 				GL11.glEnd();
 
 				// hovering
-				if (hovering)
+				if (hovering) {
 					hoveringArrow = mouseX >= bx1;
+				}
 
 				// arrow positions
 				double oneThrird = area.height / 3D;
@@ -279,8 +269,9 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 			int th = lines.length * fr.fontHeight;
 			for (String line : lines) {
 				int lw = fr.getStringWidth(line);
-				if (lw > tw)
+				if (lw > tw) {
 					tw = lw;
+				}
 			}
 			int sw = minecraft.currentScreen.width;
 			int sh = minecraft.currentScreen.height;
@@ -311,22 +302,45 @@ public final class NavigatorMainScreen extends NavigatorScreen {
 
 			// text
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
-			for (int i = 0; i < lines.length; i++)
+			for (int i = 0; i < lines.length; i++) {
 				fr.draw(lines[i], xt1 + 2, yt1 + 1 + i * fr.fontHeight, 0xffffff);
+			}
 		}
+	}
+
+	@Override
+	protected void onResize() {
+		TextRenderer tr = WurstClient.MC.textRenderer;
+		searchBar = new TextFieldWidget(tr, 0, 32, 200, 20, "");
+		searchBar.setHasBorder(false);
+		searchBar.setMaxLength(128);
+
+		children.add(searchBar);
+		setInitialFocus(searchBar);
+		searchBar.setSelected(true);
+
+		searchBar.x = middleX - 100;
+		setContentHeight(navigatorDisplayList.size() / 3 * 20);
+	}
+
+	@Override
+	protected void onUpdate() {
+		searchBar.tick();
+
+		if (expanding)
+			if (clickTimer < 4) {
+				clickTimer++;
+			} else {
+				Feature feature = navigatorDisplayList.get(hoveredFeature);
+				WurstClient.MC.openScreen(new NavigatorFeatureScreen(feature, this));
+			}
+		else if (!expanding && clickTimer > -1) {
+			clickTimer--;
+		}
+		scrollbarLocked = clickTimer != -1;
 	}
 
 	public void setExpanding(boolean expanding) {
 		this.expanding = expanding;
-	}
-
-	@Override
-	protected void onMouseDrag(double mouseX, double mouseY, int button, double double_3, double double_4) {
-
-	}
-
-	@Override
-	protected void onMouseRelease(double x, double y, int button) {
-
 	}
 }

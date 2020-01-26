@@ -39,6 +39,13 @@ public final class InstantBunkerHack extends Hack implements UpdateListener, Ren
 	}
 
 	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+		building = false;
+	}
+
+	@Override
 	public void onEnable() {
 		// get start pos and facings
 		BlockPos startPos = new BlockPos(MC.player);
@@ -47,8 +54,9 @@ public final class InstantBunkerHack extends Hack implements UpdateListener, Ren
 
 		// set positions
 		positions.clear();
-		for (int[] pos : template)
+		for (int[] pos : template) {
 			positions.add(startPos.up(pos[1]).offset(facing, pos[2]).offset(facing2, pos[0]));
+		}
 
 		if (!"".isEmpty())// mode.getSelected() == 1)
 		{
@@ -60,120 +68,6 @@ public final class InstantBunkerHack extends Hack implements UpdateListener, Ren
 
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-		building = false;
-	}
-
-	@Override
-	public void onUpdate() {
-		// build instantly
-		if (!building) {
-			for (BlockPos pos : positions)
-				if (BlockUtils.getState(pos).getMaterial().isReplaceable())
-					placeBlockSimple(pos);
-			MC.player.swingHand(Hand.MAIN_HAND);
-			setEnabled(false);
-			return;
-		}
-
-		// place next block
-		// if(blockIndex < positions.size() && (IMC.getItemUseCooldown() == 0
-		// || WURST.getHax().fastPlaceHack.isEnabled()))
-		// {
-		// BlockPos pos = positions.get(blockIndex);
-		//
-		// if(BlockUtils.getState(pos).getMaterial().isReplaceable())
-		// {
-		// if(!BlockUtils.placeBlockLegit(pos))
-		// {
-		// BlockPos playerPos = new BlockPos(MC.player);
-		// if(MC.player.onGround
-		// && Math.abs(pos.getX() - playerPos.getX()) == 2
-		// && pos.getY() - playerPos.getY() == 2
-		// && Math.abs(pos.getZ() - playerPos.getZ()) == 2)
-		// MC.player.jump();
-		// }
-		// }else
-		// {
-		// blockIndex++;
-		// if(blockIndex == positions.size())
-		// {
-		// building = false;
-		// setEnabled(false);
-		// }
-		// }
-		// }
-	}
-
-	private void placeBlockSimple(BlockPos pos) {
-		Direction side = null;
-		Direction[] sides = Direction.values();
-
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
-
-		Vec3d[] hitVecs = new Vec3d[sides.length];
-		for (int i = 0; i < sides.length; i++)
-			hitVecs[i] = posVec.add(new Vec3d(sides[i].getVector()).multiply(0.5));
-
-		for (int i = 0; i < sides.length; i++) {
-			// check if neighbor can be right clicked
-			BlockPos neighbor = pos.offset(sides[i]);
-			if (!BlockUtils.canBeClicked(neighbor))
-				continue;
-
-			// check line of sight
-			BlockState neighborState = BlockUtils.getState(neighbor);
-			VoxelShape neighborShape = neighborState.getOutlineShape(MC.world, neighbor);
-			if (MC.world.rayTraceBlock(eyesPos, hitVecs[i], neighbor, neighborShape, neighborState) != null)
-				continue;
-
-			side = sides[i];
-			break;
-		}
-
-		if (side == null)
-			for (int i = 0; i < sides.length; i++) {
-				// check if neighbor can be right clicked
-				if (!BlockUtils.canBeClicked(pos.offset(sides[i])))
-					continue;
-
-				// check if side is facing away from player
-				if (distanceSqPosVec > eyesPos.squaredDistanceTo(hitVecs[i]))
-					continue;
-
-				side = sides[i];
-				break;
-			}
-
-		if (side == null)
-			return;
-
-		Vec3d hitVec = hitVecs[side.ordinal()];
-
-		// face block
-		// WURST.getRotationFaker().faceVectorPacket(hitVec);
-		// if(RotationUtils.getAngleToLastReportedLookVec(hitVec) > 1)
-		// return;
-
-		// check timer
-		// if(IMC.getItemUseCooldown() > 0)
-		// return;
-
-		// place block
-		IMC.getInteractionManager().rightClickBlock(pos.offset(side), side.getOpposite(), hitVec);
-
-		// swing arm
-		MC.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-
-		// reset timer
-		IMC.setItemUseCooldown(4);
 	}
 
 	@Override
@@ -234,5 +128,119 @@ public final class InstantBunkerHack extends Hack implements UpdateListener, Ren
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+	}
+
+	@Override
+	public void onUpdate() {
+		// build instantly
+		if (!building) {
+			for (BlockPos pos : positions)
+				if (BlockUtils.getState(pos).getMaterial().isReplaceable()) {
+					placeBlockSimple(pos);
+				}
+			MC.player.swingHand(Hand.MAIN_HAND);
+			setEnabled(false);
+			return;
+		}
+
+		// place next block
+		// if(blockIndex < positions.size() && (IMC.getItemUseCooldown() == 0
+		// || WURST.getHax().fastPlaceHack.isEnabled()))
+		// {
+		// BlockPos pos = positions.get(blockIndex);
+		//
+		// if(BlockUtils.getState(pos).getMaterial().isReplaceable())
+		// {
+		// if(!BlockUtils.placeBlockLegit(pos))
+		// {
+		// BlockPos playerPos = new BlockPos(MC.player);
+		// if(MC.player.onGround
+		// && Math.abs(pos.getX() - playerPos.getX()) == 2
+		// && pos.getY() - playerPos.getY() == 2
+		// && Math.abs(pos.getZ() - playerPos.getZ()) == 2)
+		// MC.player.jump();
+		// }
+		// }else
+		// {
+		// blockIndex++;
+		// if(blockIndex == positions.size())
+		// {
+		// building = false;
+		// setEnabled(false);
+		// }
+		// }
+		// }
+	}
+
+	private void placeBlockSimple(BlockPos pos) {
+		Direction side = null;
+		Direction[] sides = Direction.values();
+
+		Vec3d eyesPos = RotationUtils.getEyesPos();
+		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
+
+		Vec3d[] hitVecs = new Vec3d[sides.length];
+		for (int i = 0; i < sides.length; i++) {
+			hitVecs[i] = posVec.add(new Vec3d(sides[i].getVector()).multiply(0.5));
+		}
+
+		for (int i = 0; i < sides.length; i++) {
+			// check if neighbor can be right clicked
+			BlockPos neighbor = pos.offset(sides[i]);
+			if (!BlockUtils.canBeClicked(neighbor)) {
+				continue;
+			}
+
+			// check line of sight
+			BlockState neighborState = BlockUtils.getState(neighbor);
+			VoxelShape neighborShape = neighborState.getOutlineShape(MC.world, neighbor);
+			if (MC.world.rayTraceBlock(eyesPos, hitVecs[i], neighbor, neighborShape, neighborState) != null) {
+				continue;
+			}
+
+			side = sides[i];
+			break;
+		}
+
+		if (side == null) {
+			for (int i = 0; i < sides.length; i++) {
+				// check if neighbor can be right clicked
+				if (!BlockUtils.canBeClicked(pos.offset(sides[i]))) {
+					continue;
+				}
+
+				// check if side is facing away from player
+				if (distanceSqPosVec > eyesPos.squaredDistanceTo(hitVecs[i])) {
+					continue;
+				}
+
+				side = sides[i];
+				break;
+			}
+		}
+
+		if (side == null)
+			return;
+
+		Vec3d hitVec = hitVecs[side.ordinal()];
+
+		// face block
+		// WURST.getRotationFaker().faceVectorPacket(hitVec);
+		// if(RotationUtils.getAngleToLastReportedLookVec(hitVec) > 1)
+		// return;
+
+		// check timer
+		// if(IMC.getItemUseCooldown() > 0)
+		// return;
+
+		// place block
+		IMC.getInteractionManager().rightClickBlock(pos.offset(side), side.getOpposite(), hitVec);
+
+		// swing arm
+		MC.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+
+		// reset timer
+		IMC.setItemUseCooldown(4);
 	}
 }

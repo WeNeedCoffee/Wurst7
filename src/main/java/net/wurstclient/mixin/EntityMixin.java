@@ -25,7 +25,8 @@ public abstract class EntityMixin implements Nameable, CommandOutput {
 		VelocityFromFluidEvent event = new VelocityFromFluidEvent();
 		WurstClient.INSTANCE.getEventManager().fire(event);
 
-		if (!event.isCancelled())
+		if (!event.isCancelled()) {
 			entity.setVelocity(velocity);
+		}
 	}
 }

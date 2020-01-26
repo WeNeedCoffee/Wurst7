@@ -33,39 +33,14 @@ public class FriendsList {
 		save();
 	}
 
-	public void removeAndSave(String name) {
-		friends.remove(name);
-		save();
-	}
-
-	public void removeAllAndSave() {
-		friends.clear();
-		save();
-	}
-
-	public void middleClick(Entity entity) {
-		if (entity == null || !(entity instanceof PlayerEntity))
-			return;
-
-		FriendsCmd friendsCmd = WurstClient.INSTANCE.getCmds().friendsCmd;
-		CheckboxSetting middleClickFriends = friendsCmd.getMiddleClickFriends();
-		if (!middleClickFriends.isChecked())
-			return;
-
-		String name = entity.getEntityName();
-
-		if (contains(name))
-			removeAndSave(name);
-		else
-			addAndSave(name);
-	}
-
 	public boolean contains(String name) {
 		return friends.contains(name);
 	}
 
-	public ArrayList<String> toList() {
-		return new ArrayList<>(friends);
+	private JsonArray createJson() {
+		JsonArray json = new JsonArray();
+		friends.forEach(json::add);
+		return json;
 	}
 
 	public void load() {
@@ -84,6 +59,34 @@ public class FriendsList {
 		save();
 	}
 
+	public void middleClick(Entity entity) {
+		if (entity == null || !(entity instanceof PlayerEntity))
+			return;
+
+		FriendsCmd friendsCmd = WurstClient.INSTANCE.getCmds().friendsCmd;
+		CheckboxSetting middleClickFriends = friendsCmd.getMiddleClickFriends();
+		if (!middleClickFriends.isChecked())
+			return;
+
+		String name = entity.getEntityName();
+
+		if (contains(name)) {
+			removeAndSave(name);
+		} else {
+			addAndSave(name);
+		}
+	}
+
+	public void removeAllAndSave() {
+		friends.clear();
+		save();
+	}
+
+	public void removeAndSave(String name) {
+		friends.remove(name);
+		save();
+	}
+
 	private void save() {
 		try {
 			JsonUtils.toJson(createJson(), path);
@@ -94,9 +97,7 @@ public class FriendsList {
 		}
 	}
 
-	private JsonArray createJson() {
-		JsonArray json = new JsonArray();
-		friends.forEach(json::add);
-		return json;
+	public ArrayList<String> toList() {
+		return new ArrayList<>(friends);
 	}
 }

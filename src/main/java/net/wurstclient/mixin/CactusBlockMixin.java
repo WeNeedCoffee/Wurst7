@@ -38,7 +38,8 @@ public abstract class CactusBlockMixin extends Block {
 		events.fire(event);
 
 		VoxelShape collisionShape = event.getCollisionShape();
-		if (collisionShape != null)
+		if (collisionShape != null) {
 			cir.setReturnValue(collisionShape);
+		}
 	}
 }

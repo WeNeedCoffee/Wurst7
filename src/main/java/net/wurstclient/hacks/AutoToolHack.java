@@ -45,42 +45,6 @@ public final class AutoToolHack extends Hack implements BlockBreakingProgressLis
 		addSetting(switchBack);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(BlockBreakingProgressListener.class, this);
-		EVENTS.add(UpdateListener.class, this);
-		prevSelectedSlot = -1;
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(BlockBreakingProgressListener.class, this);
-		EVENTS.remove(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onBlockBreakingProgress(BlockBreakingProgressEvent event) {
-		BlockPos pos = event.getBlockPos();
-		if (!BlockUtils.canBeClicked(pos))
-			return;
-
-		if (prevSelectedSlot == -1)
-			prevSelectedSlot = MC.player.inventory.selectedSlot;
-
-		equipBestTool(pos, useSwords.isChecked(), useHands.isChecked(), repairMode.isChecked());
-	}
-
-	@Override
-	public void onUpdate() {
-		if (prevSelectedSlot == -1 || MC.interactionManager.isBreakingBlock())
-			return;
-
-		if (switchBack.isChecked())
-			MC.player.inventory.selectedSlot = prevSelectedSlot;
-
-		prevSelectedSlot = -1;
-	}
-
 	public void equipBestTool(BlockPos pos, boolean useSwords, boolean useHands, boolean repairMode) {
 		ClientPlayerEntity player = MC.player;
 		if (player.abilities.creativeMode)
@@ -118,20 +82,24 @@ public final class AutoToolHack extends Hack implements BlockBreakingProgressLis
 		int bestSlot = -1;
 
 		for (int slot = 0; slot < 9; slot++) {
-			if (slot == inventory.selectedSlot)
+			if (slot == inventory.selectedSlot) {
 				continue;
+			}
 
 			ItemStack stack = inventory.getInvStack(slot);
 
 			float speed = getMiningSpeed(stack, state);
-			if (speed <= bestSpeed)
+			if (speed <= bestSpeed) {
 				continue;
+			}
 
-			if (!useSwords && stack.getItem() instanceof SwordItem)
+			if (!useSwords && stack.getItem() instanceof SwordItem) {
 				continue;
+			}
 
-			if (repairMode && isTooDamaged(stack))
+			if (repairMode && isTooDamaged(stack)) {
 				continue;
+			}
 
 			bestSpeed = speed;
 			bestSlot = slot;
@@ -140,13 +108,31 @@ public final class AutoToolHack extends Hack implements BlockBreakingProgressLis
 		return bestSlot;
 	}
 
+	private int getFallbackSlot() {
+		PlayerInventory inventory = MC.player.inventory;
+
+		for (int slot = 0; slot < 9; slot++) {
+			if (slot == inventory.selectedSlot) {
+				continue;
+			}
+
+			ItemStack stack = inventory.getInvStack(slot);
+
+			if (!isDamageable(stack))
+				return slot;
+		}
+
+		return -1;
+	}
+
 	private float getMiningSpeed(ItemStack stack, BlockState state) {
 		float speed = stack.getMiningSpeed(state);
 
 		if (speed > 1) {
 			int efficiency = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
-			if (efficiency > 0 && !stack.isEmpty())
+			if (efficiency > 0 && !stack.isEmpty()) {
 				speed += efficiency * efficiency + 1;
+			}
 		}
 
 		return speed;
@@ -165,35 +151,58 @@ public final class AutoToolHack extends Hack implements BlockBreakingProgressLis
 		return getMiningSpeed(heldItem, state) <= 1;
 	}
 
+	@Override
+	public void onBlockBreakingProgress(BlockBreakingProgressEvent event) {
+		BlockPos pos = event.getBlockPos();
+		if (!BlockUtils.canBeClicked(pos))
+			return;
+
+		if (prevSelectedSlot == -1) {
+			prevSelectedSlot = MC.player.inventory.selectedSlot;
+		}
+
+		equipBestTool(pos, useSwords.isChecked(), useHands.isChecked(), repairMode.isChecked());
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(BlockBreakingProgressListener.class, this);
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(BlockBreakingProgressListener.class, this);
+		EVENTS.add(UpdateListener.class, this);
+		prevSelectedSlot = -1;
+	}
+
+	@Override
+	public void onUpdate() {
+		if (prevSelectedSlot == -1 || MC.interactionManager.isBreakingBlock())
+			return;
+
+		if (switchBack.isChecked()) {
+			MC.player.inventory.selectedSlot = prevSelectedSlot;
+		}
+
+		prevSelectedSlot = -1;
+	}
+
 	private void selectFallbackSlot() {
 		int fallbackSlot = getFallbackSlot();
 		PlayerInventory inventory = MC.player.inventory;
 
 		if (fallbackSlot == -1) {
-			if (inventory.selectedSlot == 8)
+			if (inventory.selectedSlot == 8) {
 				inventory.selectedSlot = 0;
-			else
+			} else {
 				inventory.selectedSlot++;
+			}
 
 			return;
 		}
 
 		inventory.selectedSlot = fallbackSlot;
-	}
-
-	private int getFallbackSlot() {
-		PlayerInventory inventory = MC.player.inventory;
-
-		for (int slot = 0; slot < 9; slot++) {
-			if (slot == inventory.selectedSlot)
-				continue;
-
-			ItemStack stack = inventory.getInvStack(slot);
-
-			if (!isDamageable(stack))
-				return slot;
-		}
-
-		return -1;
 	}
 }

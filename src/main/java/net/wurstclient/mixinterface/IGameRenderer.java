@@ -10,5 +10,5 @@ package net.wurstclient.mixinterface;
 import net.minecraft.util.Identifier;
 
 public interface IGameRenderer {
-	public void loadWurstShader(Identifier identifier);
+	void loadWurstShader(Identifier identifier);
 }

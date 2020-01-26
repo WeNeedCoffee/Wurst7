@@ -18,17 +18,6 @@ import net.wurstclient.util.json.JsonException;
 import net.wurstclient.util.json.JsonUtils;
 
 public final class AutoBuildTemplate {
-	private final Path path;
-	private final String name;
-	private final int[][] blocks;
-
-	private AutoBuildTemplate(Path path, int[][] blocks) {
-		this.path = path;
-		String fileName = path.getFileName().toString();
-		name = fileName.substring(0, fileName.lastIndexOf("."));
-		this.blocks = blocks;
-	}
-
 	public static AutoBuildTemplate load(Path path) throws IOException, JsonException {
 		JsonObject json = JsonUtils.parseFileToObject(path).toJsonObject();
 		int[][] blocks = JsonUtils.GSON.fromJson(json.get("blocks"), int[][].class);
@@ -41,6 +30,30 @@ public final class AutoBuildTemplate {
 		}
 
 		return new AutoBuildTemplate(path, blocks);
+	}
+
+	private final Path path;
+	private final String name;
+
+	private final int[][] blocks;
+
+	private AutoBuildTemplate(Path path, int[][] blocks) {
+		this.path = path;
+		String fileName = path.getFileName().toString();
+		name = fileName.substring(0, fileName.lastIndexOf("."));
+		this.blocks = blocks;
+	}
+
+	public int[][] getBlocks() {
+		return blocks;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Path getPath() {
+		return path;
 	}
 
 	public LinkedHashSet<BlockPos> getPositions(BlockPos startPos, Direction direction) {
@@ -59,23 +72,11 @@ public final class AutoBuildTemplate {
 		return positions;
 	}
 
-	public int size() {
-		return blocks.length;
-	}
-
 	public boolean isSelected(FileSetting setting) {
 		return path.equals(setting.getSelectedFile());
 	}
 
-	public Path getPath() {
-		return path;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public int[][] getBlocks() {
-		return blocks;
+	public int size() {
+		return blocks.length;
 	}
 }

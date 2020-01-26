@@ -26,6 +26,10 @@ public final class BlockSetting extends Setting {
 	private String blockName = "";
 	private final String defaultName;
 
+	public BlockSetting(String name, String blockName) {
+		this(name, "", blockName);
+	}
+
 	public BlockSetting(String name, String description, String blockName) {
 		super(name, description);
 
@@ -36,8 +40,21 @@ public final class BlockSetting extends Setting {
 		defaultName = this.blockName;
 	}
 
-	public BlockSetting(String name, String blockName) {
-		this(name, "", blockName);
+	@Override
+	public void fromJson(JsonElement json) {
+		try {
+			String newName = JsonUtils.getAsString(json);
+
+			Block newBlock = BlockUtils.getBlockFromName(newName);
+			if (newBlock == null || newBlock instanceof AirBlock)
+				throw new JsonException();
+
+			blockName = BlockUtils.getName(newBlock);
+
+		} catch (JsonException e) {
+			e.printStackTrace();
+			resetToDefault();
+		}
 	}
 
 	public Block getBlock() {
@@ -46,6 +63,21 @@ public final class BlockSetting extends Setting {
 
 	public String getBlockName() {
 		return blockName;
+	}
+
+	@Override
+	public Component getComponent() {
+		return new BlockComponent(this);
+	}
+
+	@Override
+	public Set<PossibleKeybind> getPossibleKeybinds(String featureName) {
+		return new LinkedHashSet<>();
+	}
+
+	public void resetToDefault() {
+		blockName = defaultName;
+		WurstClient.INSTANCE.saveSettings();
 	}
 
 	public void setBlock(Block block) {
@@ -68,40 +100,8 @@ public final class BlockSetting extends Setting {
 		setBlock(block);
 	}
 
-	public void resetToDefault() {
-		blockName = defaultName;
-		WurstClient.INSTANCE.saveSettings();
-	}
-
-	@Override
-	public Component getComponent() {
-		return new BlockComponent(this);
-	}
-
-	@Override
-	public void fromJson(JsonElement json) {
-		try {
-			String newName = JsonUtils.getAsString(json);
-
-			Block newBlock = BlockUtils.getBlockFromName(newName);
-			if (newBlock == null || newBlock instanceof AirBlock)
-				throw new JsonException();
-
-			blockName = BlockUtils.getName(newBlock);
-
-		} catch (JsonException e) {
-			e.printStackTrace();
-			resetToDefault();
-		}
-	}
-
 	@Override
 	public JsonElement toJson() {
 		return new JsonPrimitive(blockName);
-	}
-
-	@Override
-	public Set<PossibleKeybind> getPossibleKeybinds(String featureName) {
-		return new LinkedHashSet<>();
 	}
 }

@@ -18,6 +18,10 @@ public final class IngameHUD implements GUIRenderListener {
 	private final HackListHUD modList = new HackListHUD();
 	// private static final TabGui tabGui = new TabGui();
 
+	public HackListHUD getHackList() {
+		return modList;
+	}
+
 	@Override
 	public void onRenderGUI(float partialTicks) {
 		if (!WurstClient.INSTANCE.isEnabled())
@@ -37,21 +41,19 @@ public final class IngameHUD implements GUIRenderListener {
 		// tabGui.render(partialTicks);
 
 		// pinned windows
-		if (!(WurstClient.MC.currentScreen instanceof ClickGuiScreen))
+		if (!(WurstClient.MC.currentScreen instanceof ClickGuiScreen)) {
 			clickGui.renderPinnedWindows(partialTicks);
+		}
 
 		// GL resets
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_ALPHA_TEST);
 		GL11.glColor4f(1, 1, 1, 1);
 
-		if (blend)
+		if (blend) {
 			GL11.glEnable(GL11.GL_BLEND);
-		else
+		} else {
 			GL11.glDisable(GL11.GL_BLEND);
-	}
-
-	public HackListHUD getHackList() {
-		return modList;
+		}
 	}
 }

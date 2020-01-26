@@ -18,13 +18,13 @@ public final class LiquidsHack extends Hack implements HitResultRayTraceListener
 	}
 
 	@Override
-	protected void onEnable() {
-		EVENTS.add(HitResultRayTraceListener.class, this);
+	protected void onDisable() {
+		EVENTS.remove(HitResultRayTraceListener.class, this);
 	}
 
 	@Override
-	protected void onDisable() {
-		EVENTS.remove(HitResultRayTraceListener.class, this);
+	protected void onEnable() {
+		EVENTS.add(HitResultRayTraceListener.class, this);
 	}
 
 	@Override

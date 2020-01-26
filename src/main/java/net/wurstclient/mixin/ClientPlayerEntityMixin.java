@@ -43,6 +43,41 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 		super(clientWorld_1, gameProfile_1);
 	}
 
+	@Override
+	protected boolean clipAtLedge() {
+		return super.clipAtLedge() || WurstClient.INSTANCE.getHax().safeWalkHack.isEnabled();
+	}
+
+	@Override
+	protected float getJumpVelocity() {
+		return super.getJumpVelocity() + WurstClient.INSTANCE.getHax().highJumpHack.getAdditionalJumpMotion();
+	}
+
+	@Override
+	public float getLastPitch() {
+		return lastPitch;
+	}
+
+	@Override
+	public float getLastYaw() {
+		return lastYaw;
+	}
+
+	@Override
+	public boolean isTouchingWater() {
+		boolean inWater = super.isTouchingWater();
+		IsPlayerInWaterEvent event = new IsPlayerInWaterEvent(inWater);
+		WurstClient.INSTANCE.getEventManager().fire(event);
+
+		return event.isInWater();
+	}
+
+	@Inject(at = { @At("HEAD") }, method = { "move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V" })
+	private void onMove(MovementType type, Vec3d offset, CallbackInfo ci) {
+		PlayerMoveEvent event = new PlayerMoveEvent(this);
+		WurstClient.INSTANCE.getEventManager().fire(event);
+	}
+
 	@Inject(at = @At("HEAD"), method = "sendChatMessage(Ljava/lang/String;)V", cancellable = true)
 	private void onSendChatMessage(String message, CallbackInfo ci) {
 		ChatOutputEvent event = new ChatOutputEvent(message);
@@ -61,11 +96,6 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 		ci.cancel();
 	}
 
-	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V", ordinal = 0), method = "tick()V")
-	private void onTick(CallbackInfo ci) {
-		WurstClient.INSTANCE.getEventManager().fire(UpdateEvent.INSTANCE);
-	}
-
 	@Inject(at = { @At("HEAD") }, method = { "sendMovementPackets()V" })
 	private void onSendMovementPacketsHEAD(CallbackInfo ci) {
 		WurstClient.INSTANCE.getEventManager().fire(PreMotionEvent.INSTANCE);
@@ -76,36 +106,14 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 		WurstClient.INSTANCE.getEventManager().fire(PostMotionEvent.INSTANCE);
 	}
 
-	@Inject(at = { @At("HEAD") }, method = { "move(Lnet/minecraft/entity/MovementType;Lnet/minecraft/util/math/Vec3d;)V" })
-	private void onMove(MovementType type, Vec3d offset, CallbackInfo ci) {
-		PlayerMoveEvent event = new PlayerMoveEvent(this);
-		WurstClient.INSTANCE.getEventManager().fire(event);
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V", ordinal = 0), method = "tick()V")
+	private void onTick(CallbackInfo ci) {
+		WurstClient.INSTANCE.getEventManager().fire(UpdateEvent.INSTANCE);
 	}
 
 	@Override
-	public void setVelocityClient(double x, double y, double z) {
-		KnockbackEvent event = new KnockbackEvent(x, y, z);
-		WurstClient.INSTANCE.getEventManager().fire(event);
-		super.setVelocityClient(event.getX(), event.getY(), event.getZ());
-	}
-
-	@Override
-	public boolean isTouchingWater() {
-		boolean inWater = super.isTouchingWater();
-		IsPlayerInWaterEvent event = new IsPlayerInWaterEvent(inWater);
-		WurstClient.INSTANCE.getEventManager().fire(event);
-
-		return event.isInWater();
-	}
-
-	@Override
-	protected float getJumpVelocity() {
-		return super.getJumpVelocity() + WurstClient.INSTANCE.getHax().highJumpHack.getAdditionalJumpMotion();
-	}
-
-	@Override
-	protected boolean clipAtLedge() {
-		return super.clipAtLedge() || WurstClient.INSTANCE.getHax().safeWalkHack.isEnabled();
+	public void setMovementMultiplier(Vec3d movementMultiplier) {
+		this.movementMultiplier = movementMultiplier;
 	}
 
 	@Override
@@ -114,17 +122,9 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 	}
 
 	@Override
-	public float getLastYaw() {
-		return lastYaw;
-	}
-
-	@Override
-	public float getLastPitch() {
-		return lastPitch;
-	}
-
-	@Override
-	public void setMovementMultiplier(Vec3d movementMultiplier) {
-		this.movementMultiplier = movementMultiplier;
+	public void setVelocityClient(double x, double y, double z) {
+		KnockbackEvent event = new KnockbackEvent(x, y, z);
+		WurstClient.INSTANCE.getEventManager().fire(event);
+		super.setVelocityClient(event.getX(), event.getY(), event.getZ());
 	}
 }

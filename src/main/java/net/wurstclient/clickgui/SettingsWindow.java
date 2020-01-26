@@ -32,10 +32,12 @@ public final class SettingsWindow extends Window {
 		int y = parent.getY() + 12 + buttonY + scroll;
 
 		net.minecraft.client.util.Window mcWindow = WurstClient.MC.getWindow();
-		if (x + getWidth() > mcWindow.getScaledWidth())
+		if (x + getWidth() > mcWindow.getScaledWidth()) {
 			x = parent.getX() - getWidth() - 5;
-		if (y + getHeight() > mcWindow.getScaledHeight())
+		}
+		if (y + getHeight() > mcWindow.getScaledHeight()) {
 			y -= getHeight() - 14;
+		}
 
 		setX(x);
 		setY(y);

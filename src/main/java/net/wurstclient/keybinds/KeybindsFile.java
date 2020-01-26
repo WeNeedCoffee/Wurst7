@@ -26,6 +26,26 @@ public final class KeybindsFile {
 		this.path = path;
 	}
 
+	private JsonObject createJson(KeybindList list) {
+		JsonObject json = new JsonObject();
+
+		for (Keybind kb : list.getAllKeybinds()) {
+			json.addProperty(kb.getKey(), kb.getCommands());
+		}
+
+		return json;
+	}
+
+	private boolean isValidKeyName(String key) {
+		try {
+			InputUtil.fromName(key);
+			return true;
+
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
+	}
+
 	public void load(KeybindList list) {
 		try {
 			WsonObject wson = JsonUtils.parseFileToObject(path);
@@ -35,15 +55,17 @@ public final class KeybindsFile {
 				String keyName = entry.getKey();
 				String commands = entry.getValue();
 
-				if (!isValidKeyName(keyName))
+				if (!isValidKeyName(keyName)) {
 					continue;
+				}
 
 				Keybind keybind = new Keybind(keyName, commands);
 				newKeybinds.add(keybind);
 			}
 
-			if (newKeybinds.isEmpty())
+			if (newKeybinds.isEmpty()) {
 				newKeybinds = KeybindList.DEFAULT_KEYBINDS;
+			}
 
 			list.setKeybinds(newKeybinds);
 
@@ -58,16 +80,6 @@ public final class KeybindsFile {
 		}
 	}
 
-	private boolean isValidKeyName(String key) {
-		try {
-			InputUtil.fromName(key);
-			return true;
-
-		} catch (IllegalArgumentException e) {
-			return false;
-		}
-	}
-
 	public void save(KeybindList list) {
 		JsonObject json = createJson(list);
 
@@ -78,14 +90,5 @@ public final class KeybindsFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonObject createJson(KeybindList list) {
-		JsonObject json = new JsonObject();
-
-		for (Keybind kb : list.getAllKeybinds())
-			json.addProperty(kb.getKey(), kb.getCommands());
-
-		return json;
 	}
 }

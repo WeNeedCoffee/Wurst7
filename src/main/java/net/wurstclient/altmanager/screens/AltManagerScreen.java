@@ -32,16 +32,108 @@ import net.wurstclient.altmanager.NameGenerator;
 import net.wurstclient.util.MultiProcessingUtils;
 
 public final class AltManagerScreen extends Screen {
-	private final Screen prevScreen;
-	private final AltManager altManager;
+	public static final class ListGui extends ListWidget {
+		private final List<Alt> list;
+		private int selected = -1;
 
+		public ListGui(MinecraftClient minecraft, AltManagerScreen prevScreen, List<Alt> list) {
+			super(minecraft, prevScreen.width, prevScreen.height, 36, prevScreen.height - 56, 30);
+
+			this.list = list;
+		}
+
+		@Override
+		protected int getItemCount() {
+			return list.size();
+		}
+
+		protected Alt getSelectedAlt() {
+			if (selected < 0 || selected >= list.size())
+				return null;
+
+			return list.get(selected);
+		}
+
+		protected int getSelectedSlot() {
+			return selected;
+		}
+
+		@Override
+		protected boolean isSelectedItem(int id) {
+			return selected == id;
+		}
+
+		@Override
+		protected void renderBackground() {
+
+		}
+
+		@Override
+		protected void renderItem(int id, int x, int y, int var4, int var5, int var6, float partialTicks) {
+			Alt alt = list.get(id);
+
+			// green glow when logged in
+			if (minecraft.getSession().getUsername().equals(alt.getName())) {
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				GL11.glDisable(GL11.GL_CULL_FACE);
+				GL11.glEnable(GL11.GL_BLEND);
+
+				float opacity = 0.3F - Math.abs(MathHelper.sin(System.currentTimeMillis() % 10000L / 10000F * (float) Math.PI * 2.0F) * 0.15F);
+
+				GL11.glColor4f(0, 1, 0, opacity);
+
+				GL11.glBegin(GL11.GL_QUADS);
+				{
+					GL11.glVertex2d(x - 2, y - 2);
+					GL11.glVertex2d(x - 2 + 220, y - 2);
+					GL11.glVertex2d(x - 2 + 220, y - 2 + 30);
+					GL11.glVertex2d(x - 2, y - 2 + 30);
+				}
+				GL11.glEnd();
+
+				GL11.glEnable(GL11.GL_TEXTURE_2D);
+				GL11.glEnable(GL11.GL_CULL_FACE);
+				GL11.glDisable(GL11.GL_BLEND);
+			}
+
+			// face
+			AltRenderer.drawAltFace(alt.getNameOrEmail(), x + 1, y + 1, 24, 24, isSelectedItem(id));
+
+			// name / email
+			minecraft.textRenderer.draw("Name: " + alt.getNameOrEmail(), x + 31, y + 3, 10526880);
+
+			// tags
+			String tags = alt.isCracked() ? "\u00a78cracked" : "\u00a72premium";
+			if (alt.isStarred()) {
+				tags += "\u00a7r, \u00a7estarred";
+			}
+			if (alt.isUnchecked()) {
+				tags += "\u00a7r, \u00a7cunchecked";
+			}
+			minecraft.textRenderer.draw(tags, x + 31, y + 15, 10526880);
+		}
+
+		@Override
+		protected boolean selectItem(int index, int button, double mouseX, double mouseY) {
+			if (index >= 0 && index < list.size()) {
+				selected = index;
+			}
+
+			return true;
+		}
+	}
+
+	private final Screen prevScreen;
+
+	private final AltManager altManager;
 	private ListGui listGui;
 	private boolean shouldAsk = true;
-	private int errorTimer;
 
+	private int errorTimer;
 	private ButtonWidget useButton;
 	private ButtonWidget starButton;
 	private ButtonWidget editButton;
+
 	private ButtonWidget deleteButton;
 
 	public AltManagerScreen(Screen prevScreen, AltManager altManager) {
@@ -50,12 +142,35 @@ public final class AltManagerScreen extends Screen {
 		this.altManager = altManager;
 	}
 
+	private void confirmGenerate(boolean confirmed) {
+		if (confirmed) {
+			ArrayList<Alt> alts = new ArrayList<>();
+			for (int i = 0; i < 8; i++) {
+				alts.add(new Alt(NameGenerator.generateName(), null, null));
+			}
+
+			altManager.addAll(alts);
+		}
+
+		shouldAsk = false;
+		minecraft.openScreen(this);
+	}
+
+	private void confirmRemove(boolean confirmed) {
+		if (confirmed) {
+			altManager.remove(listGui.selected);
+		}
+
+		minecraft.openScreen(this);
+	}
+
 	@Override
 	public void init() {
 		listGui = new ListGui(minecraft, this, altManager.getList());
 
-		if (altManager.getList().isEmpty() && shouldAsk)
+		if (altManager.getList().isEmpty() && shouldAsk) {
 			minecraft.openScreen(new ConfirmScreen(this::confirmGenerate, new LiteralText("Your alt list is empty."), new LiteralText("Would you like some random alts to get started?")));
+		}
 
 		addButton(useButton = new ButtonWidget(width / 2 - 154, height - 52, 100, 20, "Use", b -> pressUse()));
 
@@ -75,12 +190,22 @@ public final class AltManagerScreen extends Screen {
 	}
 
 	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (keyCode == GLFW.GLFW_KEY_ENTER) {
+			useButton.onPress();
+		}
+
+		return super.keyPressed(keyCode, scanCode, modifiers);
+	}
+
+	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 		listGui.mouseClicked(mouseX, mouseY, mouseButton);
 
 		if (mouseY >= 36 && mouseY <= height - 57)
-			if (mouseX >= width / 2 + 140 || mouseX <= width / 2 - 126)
+			if (mouseX >= width / 2 + 140 || mouseX <= width / 2 - 126) {
 				listGui.selected = -1;
+			}
 
 		return super.mouseClicked(mouseX, mouseY, mouseButton);
 	}
@@ -103,55 +228,6 @@ public final class AltManagerScreen extends Screen {
 		return super.mouseScrolled(d, e, amount);
 	}
 
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (keyCode == GLFW.GLFW_KEY_ENTER)
-			useButton.onPress();
-
-		return super.keyPressed(keyCode, scanCode, modifiers);
-	}
-
-	@Override
-	public void tick() {
-		boolean altSelected = listGui.selected >= 0 && listGui.selected < altManager.getList().size();
-
-		useButton.active = altSelected;
-		starButton.active = altSelected;
-		editButton.active = altSelected;
-		deleteButton.active = altSelected;
-	}
-
-	private void pressUse() {
-		Alt alt = listGui.getSelectedAlt();
-
-		if (alt.isCracked()) {
-			LoginManager.changeCrackedName(alt.getEmail());
-			minecraft.openScreen(prevScreen);
-			return;
-		}
-
-		String error = LoginManager.login(alt.getEmail(), alt.getPassword());
-
-		if (!error.isEmpty()) {
-			errorTimer = 8;
-			return;
-		}
-
-		altManager.setChecked(listGui.selected, minecraft.getSession().getUsername());
-		minecraft.openScreen(prevScreen);
-	}
-
-	private void pressStar() {
-		Alt alt = listGui.getSelectedAlt();
-		altManager.setStarred(listGui.selected, !alt.isStarred());
-		listGui.selected = -1;
-	}
-
-	private void pressEdit() {
-		Alt alt = listGui.getSelectedAlt();
-		minecraft.openScreen(new EditAltScreen(this, altManager, alt));
-	}
-
 	private void pressDelete() {
 		LiteralText text = new LiteralText("Are you sure you want to remove this alt?");
 
@@ -160,6 +236,11 @@ public final class AltManagerScreen extends Screen {
 
 		ConfirmScreen screen = new ConfirmScreen(this::confirmRemove, text, message, "Delete", "Cancel");
 		minecraft.openScreen(screen);
+	}
+
+	private void pressEdit() {
+		Alt alt = listGui.getSelectedAlt();
+		minecraft.openScreen(new EditAltScreen(this, altManager, alt));
 	}
 
 	private void pressImportAlts() {
@@ -193,24 +274,30 @@ public final class AltManagerScreen extends Screen {
 		}
 	}
 
-	private void confirmGenerate(boolean confirmed) {
-		if (confirmed) {
-			ArrayList<Alt> alts = new ArrayList<>();
-			for (int i = 0; i < 8; i++)
-				alts.add(new Alt(NameGenerator.generateName(), null, null));
-
-			altManager.addAll(alts);
-		}
-
-		shouldAsk = false;
-		minecraft.openScreen(this);
+	private void pressStar() {
+		Alt alt = listGui.getSelectedAlt();
+		altManager.setStarred(listGui.selected, !alt.isStarred());
+		listGui.selected = -1;
 	}
 
-	private void confirmRemove(boolean confirmed) {
-		if (confirmed)
-			altManager.remove(listGui.selected);
+	private void pressUse() {
+		Alt alt = listGui.getSelectedAlt();
 
-		minecraft.openScreen(this);
+		if (alt.isCracked()) {
+			LoginManager.changeCrackedName(alt.getEmail());
+			minecraft.openScreen(prevScreen);
+			return;
+		}
+
+		String error = LoginManager.login(alt.getEmail(), alt.getPassword());
+
+		if (!error.isEmpty()) {
+			errorTimer = 8;
+			return;
+		}
+
+		altManager.setChecked(listGui.selected, minecraft.getSession().getUsername());
+		minecraft.openScreen(prevScreen);
 	}
 
 	@Override
@@ -256,91 +343,13 @@ public final class AltManagerScreen extends Screen {
 		super.render(mouseX, mouseY, partialTicks);
 	}
 
-	public static final class ListGui extends ListWidget {
-		private final List<Alt> list;
-		private int selected = -1;
+	@Override
+	public void tick() {
+		boolean altSelected = listGui.selected >= 0 && listGui.selected < altManager.getList().size();
 
-		public ListGui(MinecraftClient minecraft, AltManagerScreen prevScreen, List<Alt> list) {
-			super(minecraft, prevScreen.width, prevScreen.height, 36, prevScreen.height - 56, 30);
-
-			this.list = list;
-		}
-
-		@Override
-		protected boolean isSelectedItem(int id) {
-			return selected == id;
-		}
-
-		protected int getSelectedSlot() {
-			return selected;
-		}
-
-		protected Alt getSelectedAlt() {
-			if (selected < 0 || selected >= list.size())
-				return null;
-
-			return list.get(selected);
-		}
-
-		@Override
-		protected int getItemCount() {
-			return list.size();
-		}
-
-		@Override
-		protected boolean selectItem(int index, int button, double mouseX, double mouseY) {
-			if (index >= 0 && index < list.size())
-				selected = index;
-
-			return true;
-		}
-
-		@Override
-		protected void renderBackground() {
-
-		}
-
-		@Override
-		protected void renderItem(int id, int x, int y, int var4, int var5, int var6, float partialTicks) {
-			Alt alt = list.get(id);
-
-			// green glow when logged in
-			if (minecraft.getSession().getUsername().equals(alt.getName())) {
-				GL11.glDisable(GL11.GL_TEXTURE_2D);
-				GL11.glDisable(GL11.GL_CULL_FACE);
-				GL11.glEnable(GL11.GL_BLEND);
-
-				float opacity = 0.3F - Math.abs(MathHelper.sin(System.currentTimeMillis() % 10000L / 10000F * (float) Math.PI * 2.0F) * 0.15F);
-
-				GL11.glColor4f(0, 1, 0, opacity);
-
-				GL11.glBegin(GL11.GL_QUADS);
-				{
-					GL11.glVertex2d(x - 2, y - 2);
-					GL11.glVertex2d(x - 2 + 220, y - 2);
-					GL11.glVertex2d(x - 2 + 220, y - 2 + 30);
-					GL11.glVertex2d(x - 2, y - 2 + 30);
-				}
-				GL11.glEnd();
-
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
-				GL11.glEnable(GL11.GL_CULL_FACE);
-				GL11.glDisable(GL11.GL_BLEND);
-			}
-
-			// face
-			AltRenderer.drawAltFace(alt.getNameOrEmail(), x + 1, y + 1, 24, 24, isSelectedItem(id));
-
-			// name / email
-			minecraft.textRenderer.draw("Name: " + alt.getNameOrEmail(), x + 31, y + 3, 10526880);
-
-			// tags
-			String tags = alt.isCracked() ? "\u00a78cracked" : "\u00a72premium";
-			if (alt.isStarred())
-				tags += "\u00a7r, \u00a7estarred";
-			if (alt.isUnchecked())
-				tags += "\u00a7r, \u00a7cunchecked";
-			minecraft.textRenderer.draw(tags, x + 31, y + 15, 10526880);
-		}
+		useButton.active = altSelected;
+		starButton.active = altSelected;
+		editButton.active = altSelected;
+		deleteButton.active = altSelected;
 	}
 }

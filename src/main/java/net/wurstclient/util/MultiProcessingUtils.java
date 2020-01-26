@@ -17,6 +17,19 @@ import java.util.Arrays;
 public enum MultiProcessingUtils {
 	;
 
+	private static Path getClasspath() {
+		try {
+			return Paths.get(MultiProcessingUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static Path getJavaDir() {
+		return Paths.get(System.getProperty("java.home"), "bin", "java");
+	}
+
 	public static ProcessBuilder makeProcess(Class<?> mainClass, String... args) throws IOException {
 		ArrayList<String> cmd = new ArrayList<>();
 		cmd.add(getJavaDir().toString());
@@ -34,18 +47,5 @@ public enum MultiProcessingUtils {
 
 	public static Process startProcessWithIO(Class<?> mainClass, String... args) throws IOException {
 		return makeProcess(mainClass, args).start();
-	}
-
-	private static Path getJavaDir() {
-		return Paths.get(System.getProperty("java.home"), "bin", "java");
-	}
-
-	private static Path getClasspath() {
-		try {
-			return Paths.get(MultiProcessingUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
 	}
 }

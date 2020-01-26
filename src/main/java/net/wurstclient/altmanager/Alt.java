@@ -42,6 +42,25 @@ public final class Alt implements Comparable<Alt> {
 		}
 	}
 
+	@Override
+	public int compareTo(Alt o) {
+		Comparator<Alt> c = Comparator.comparing(a -> !a.starred);
+		c = c.thenComparing(a -> a.cracked);
+		c = c.thenComparing(a -> a.email.toLowerCase());
+
+		return c.compare(this, o);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Alt))
+			return false;
+
+		Alt other = (Alt) obj;
+
+		return email.equals(other.email) && cracked == other.cracked;
+	}
+
 	public String getEmail() {
 		return email;
 	}
@@ -62,16 +81,17 @@ public final class Alt implements Comparable<Alt> {
 			return password;
 	}
 
+	@Override
+	public int hashCode() {
+		return email.hashCode() << 1 | (cracked ? 1 : 0);
+	}
+
 	public boolean isCracked() {
 		return cracked;
 	}
 
 	public boolean isStarred() {
 		return starred;
-	}
-
-	public void setStarred(boolean starred) {
-		this.starred = starred;
 	}
 
 	public boolean isUnchecked() {
@@ -83,27 +103,7 @@ public final class Alt implements Comparable<Alt> {
 		unchecked = false;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Alt))
-			return false;
-
-		Alt other = (Alt) obj;
-
-		return email.equals(other.email) && cracked == other.cracked;
-	}
-
-	@Override
-	public int hashCode() {
-		return email.hashCode() << 1 | (cracked ? 1 : 0);
-	}
-
-	@Override
-	public int compareTo(Alt o) {
-		Comparator<Alt> c = Comparator.comparing(a -> !a.starred);
-		c = c.thenComparing(a -> a.cracked);
-		c = c.thenComparing(a -> a.email.toLowerCase());
-
-		return c.compare(this, o);
+	public void setStarred(boolean starred) {
+		this.starred = starred;
 	}
 }

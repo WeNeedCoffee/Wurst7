@@ -39,14 +39,6 @@ public class GoogleAnalyticsV4_7_2 implements IGoogleAnalyticsURLBuilder {
 	}
 
 	/**
-	 * @see net.wurstclient.analytics.dmurph.IGoogleAnalyticsURLBuilder#getGoogleAnalyticsVersion()
-	 */
-	@Override
-	public String getGoogleAnalyticsVersion() {
-		return "4.7.2";
-	}
-
-	/**
 	 * @see net.wurstclient.analytics.dmurph.IGoogleAnalyticsURLBuilder#buildURL(net.wurstclient.analytics.dmurph.AnalyticsRequestData)
 	 */
 	@Override
@@ -59,8 +51,9 @@ public class GoogleAnalyticsV4_7_2 implements IGoogleAnalyticsURLBuilder {
 		sb.append("?utmwv=" + getGoogleAnalyticsVersion()); // version
 		sb.append("&utmn=" + random.nextInt()); // random int so no caching
 
-		if (argData.getHostName() != null)
+		if (argData.getHostName() != null) {
 			sb.append("&utmhn=" + getURIString(argData.getHostName())); // hostname
+		}
 
 		if (argData.getEventAction() != null && argData.getEventCategory() != null) {
 			sb.append("&utmt=event");
@@ -69,42 +62,51 @@ public class GoogleAnalyticsV4_7_2 implements IGoogleAnalyticsURLBuilder {
 
 			sb.append("&utme=5(" + category + "*" + action);
 
-			if (argData.getEventLabel() != null)
+			if (argData.getEventLabel() != null) {
 				sb.append("*" + getURIString(argData.getEventLabel()));
+			}
 			sb.append(")");
 
-			if (argData.getEventValue() != null)
+			if (argData.getEventValue() != null) {
 				sb.append("(" + argData.getEventValue() + ")");
+			}
 		} else if (argData.getEventAction() != null || argData.getEventCategory() != null)
 			throw new IllegalArgumentException("Event tracking must have both a category and an action");
 
-		if (config.getEncoding() != null)
+		if (config.getEncoding() != null) {
 			sb.append("&utmcs=" + getURIString(config.getEncoding())); // encoding
-		else
+		} else {
 			sb.append("&utmcs=-");
-		if (config.getScreenResolution() != null)
+		}
+		if (config.getScreenResolution() != null) {
 			sb.append("&utmsr=" + getURIString(config.getScreenResolution())); // screen
+		}
 		// resolution
-		if (config.getColorDepth() != null)
+		if (config.getColorDepth() != null) {
 			sb.append("&utmsc=" + getURIString(config.getColorDepth())); // color
+		}
 		// depth
-		if (config.getUserLanguage() != null)
+		if (config.getUserLanguage() != null) {
 			sb.append("&utmul=" + getURIString(config.getUserLanguage())); // language
+		}
 		sb.append("&utmje=1"); // java enabled (probably)
 
-		if (config.getFlashVersion() != null)
+		if (config.getFlashVersion() != null) {
 			sb.append("&utmfl=" + getURIString(config.getFlashVersion())); // flash
-		// version
+			// version
+		}
 
-		if (argData.getPageTitle() != null)
+		if (argData.getPageTitle() != null) {
 			sb.append("&utmdt=" + getURIString(argData.getPageTitle())); // page
-		// title
+			// title
+		}
 
 		sb.append("&utmhid=" + random.nextInt());
 
-		if (argData.getPageURL() != null)
+		if (argData.getPageURL() != null) {
 			sb.append("&utmp=" + getURIString(argData.getPageURL())); // page
-		// url
+			// url
+		}
 
 		sb.append("&utmac=" + config.getTrackingCode()); // tracking code
 
@@ -126,6 +128,14 @@ public class GoogleAnalyticsV4_7_2 implements IGoogleAnalyticsURLBuilder {
 
 		sb.append("&utmcc=__utma%3D" + hostnameHash + "." + visitorId + "." + timestampFirst + "." + timestampPrevious + "." + timestampCurrent + "." + visits + "%3B%2B__utmz%3D" + hostnameHash + "." + timestampCurrent + ".1.1.utmcsr%3D" + utmcsr + "%7Cutmccn%3D" + utmccn + "%7Cutmcmd%3D" + utmcmd + (utmctr != null ? "%7Cutmctr%3D" + utmctr : "") + (utmcct != null ? "%7Cutmcct%3D" + utmcct : "") + "%3B&gaq=1");
 		return sb.toString();
+	}
+
+	/**
+	 * @see net.wurstclient.analytics.dmurph.IGoogleAnalyticsURLBuilder#getGoogleAnalyticsVersion()
+	 */
+	@Override
+	public String getGoogleAnalyticsVersion() {
+		return "4.7.2";
 	}
 
 	/*

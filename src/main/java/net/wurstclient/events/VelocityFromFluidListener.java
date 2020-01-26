@@ -12,16 +12,15 @@ import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface VelocityFromFluidListener extends Listener {
-	public void onVelocityFromFluid(VelocityFromFluidEvent event);
-
 	public static class VelocityFromFluidEvent extends CancellableEvent<VelocityFromFluidListener> {
 		@Override
 		public void fire(ArrayList<VelocityFromFluidListener> listeners) {
 			for (VelocityFromFluidListener listener : listeners) {
 				listener.onVelocityFromFluid(this);
 
-				if (isCancelled())
+				if (isCancelled()) {
 					break;
+				}
 			}
 		}
 
@@ -30,4 +29,6 @@ public interface VelocityFromFluidListener extends Listener {
 			return VelocityFromFluidListener.class;
 		}
 	}
+
+	void onVelocityFromFluid(VelocityFromFluidEvent event);
 }

@@ -20,6 +20,17 @@ public final class DamageCmd extends Command {
 		super("damage", "Applies the given amount of damage.", ".damage <amount>", "Note: The amount is in half-hearts.", "Example: .damage 7 (applies 3.5 hearts)", "To apply more damage, run the command multiple times.");
 	}
 
+	private void applyDamage(int amount) {
+		Vec3d pos = MC.player.getPos();
+
+		for (int i = 0; i < 80; i++) {
+			sendPosition(pos.x, pos.y + amount + 2.1, pos.z, false);
+			sendPosition(pos.x, pos.y + 0.05, pos.z, false);
+		}
+
+		sendPosition(pos.x, pos.y, pos.z, true);
+	}
+
 	@Override
 	public void call(String[] args) throws CmdException {
 		if (args.length == 0)
@@ -45,17 +56,6 @@ public final class DamageCmd extends Command {
 			throw new CmdSyntaxError("Maximum amount is 7.");
 
 		return dmg;
-	}
-
-	private void applyDamage(int amount) {
-		Vec3d pos = MC.player.getPos();
-
-		for (int i = 0; i < 80; i++) {
-			sendPosition(pos.x, pos.y + amount + 2.1, pos.z, false);
-			sendPosition(pos.x, pos.y + 0.05, pos.z, false);
-		}
-
-		sendPosition(pos.x, pos.y, pos.z, true);
 	}
 
 	private void sendPosition(double x, double y, double z, boolean onGround) {

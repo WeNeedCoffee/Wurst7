@@ -22,10 +22,56 @@ import net.minecraft.util.Util;
 import net.wurstclient.settings.FileSetting;
 
 public final class SelectFileScreen extends Screen {
-	private final Screen prevScreen;
-	private final FileSetting setting;
+	private static class ListGui extends ListWidget {
+		private final MinecraftClient mc;
+		private final List<Path> list;
+		private int selected = -1;
 
+		public ListGui(MinecraftClient mc, SelectFileScreen screen, ArrayList<Path> list) {
+			super(mc, screen.width, screen.height, 36, screen.height - 64, 20);
+			this.mc = mc;
+			this.list = list;
+		}
+
+		@Override
+		protected int getItemCount() {
+			return list.size();
+		}
+
+		@Override
+		protected boolean isSelectedItem(int index) {
+			return index == selected;
+		}
+
+		@Override
+		protected void renderBackground() {
+
+		}
+
+		@Override
+		protected void renderItem(int index, int x, int y, int var4, int var5, int var6, float partialTicks) {
+			TextRenderer fr = mc.textRenderer;
+
+			Path path = list.get(index);
+			fr.draw("" + path.getFileName(), x + 28, y, 0xf0f0f0);
+			fr.draw("" + minecraft.runDirectory.toPath().relativize(path), x + 28, y + 9, 0xa0a0a0);
+		}
+
+		@Override
+		protected boolean selectItem(int index, int int_2, double var3, double var4) {
+			if (index >= 0 && index < list.size()) {
+				selected = index;
+			}
+
+			return true;
+		}
+	}
+
+	private final Screen prevScreen;
+
+	private final FileSetting setting;
 	private ListGui listGui;
+
 	private ButtonWidget doneButton;
 
 	public SelectFileScreen(Screen prevScreen, FileSetting blockList) {
@@ -34,9 +80,30 @@ public final class SelectFileScreen extends Screen {
 		setting = blockList;
 	}
 
-	@Override
-	public boolean isPauseScreen() {
-		return false;
+	private void askToConfirmReset() {
+		LiteralText title = new LiteralText("Reset Folder");
+
+		LiteralText message = new LiteralText("This will empty the '" + setting.getFolder().getFileName() + "' folder and then re-generate the default files.\n" + "Are you sure you want to do this?");
+
+		minecraft.openScreen(new ConfirmScreen(c -> confirmReset(c), title, message));
+	}
+
+	private void confirmReset(boolean confirmed) {
+		if (confirmed) {
+			setting.resetFolder();
+		}
+
+		minecraft.openScreen(SelectFileScreen.this);
+	}
+
+	private void done() {
+		if (listGui.selected >= 0 && listGui.selected < listGui.list.size()) {
+			Path path = listGui.list.get(listGui.selected);
+			String fileName = "" + path.getFileName();
+			setting.setSelectedFile(fileName);
+		}
+
+		openPrevScreen();
 	}
 
 	@Override
@@ -50,37 +117,20 @@ public final class SelectFileScreen extends Screen {
 		addButton(new ButtonWidget(width / 2 + 2, height - 48, 100, 20, "Cancel", b -> openPrevScreen()));
 	}
 
-	private void openFolder() {
-		Util.getOperatingSystem().open(setting.getFolder().toFile());
+	@Override
+	public boolean isPauseScreen() {
+		return false;
 	}
 
-	private void openPrevScreen() {
-		minecraft.openScreen(prevScreen);
-	}
-
-	private void done() {
-		if (listGui.selected >= 0 && listGui.selected < listGui.list.size()) {
-			Path path = listGui.list.get(listGui.selected);
-			String fileName = "" + path.getFileName();
-			setting.setSelectedFile(fileName);
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
+		if (keyCode == GLFW.GLFW_KEY_ENTER) {
+			done();
+		} else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+			openPrevScreen();
 		}
 
-		openPrevScreen();
-	}
-
-	private void askToConfirmReset() {
-		LiteralText title = new LiteralText("Reset Folder");
-
-		LiteralText message = new LiteralText("This will empty the '" + setting.getFolder().getFileName() + "' folder and then re-generate the default files.\n" + "Are you sure you want to do this?");
-
-		minecraft.openScreen(new ConfirmScreen(c -> confirmReset(c), title, message));
-	}
-
-	private void confirmReset(boolean confirmed) {
-		if (confirmed)
-			setting.resetFolder();
-
-		minecraft.openScreen(SelectFileScreen.this);
+		return super.keyPressed(keyCode, scanCode, int_3);
 	}
 
 	@Override
@@ -89,8 +139,9 @@ public final class SelectFileScreen extends Screen {
 
 		listGui.mouseClicked(mouseX, mouseY, mouseButton);
 
-		if (!childClicked && (mouseX < (width - 220) / 2 || mouseX > width / 2 + 129 || mouseY < 32 || mouseY > height - 64))
+		if (!childClicked && (mouseX < (width - 220) / 2 || mouseX > width / 2 + 129 || mouseY < 32 || mouseY > height - 64)) {
 			listGui.selected = -1;
+		}
 
 		return childClicked;
 	}
@@ -113,19 +164,12 @@ public final class SelectFileScreen extends Screen {
 		return super.mouseScrolled(double_1, double_2, double_3);
 	}
 
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
-		if (keyCode == GLFW.GLFW_KEY_ENTER)
-			done();
-		else if (keyCode == GLFW.GLFW_KEY_ESCAPE)
-			openPrevScreen();
-
-		return super.keyPressed(keyCode, scanCode, int_3);
+	private void openFolder() {
+		Util.getOperatingSystem().open(setting.getFolder().toFile());
 	}
 
-	@Override
-	public void tick() {
-		doneButton.active = listGui.selected >= 0 && listGui.selected < listGui.list.size();
+	private void openPrevScreen() {
+		minecraft.openScreen(prevScreen);
 	}
 
 	@Override
@@ -137,51 +181,13 @@ public final class SelectFileScreen extends Screen {
 
 		super.render(mouseX, mouseY, partialTicks);
 
-		if (doneButton.isHovered() && !doneButton.active)
+		if (doneButton.isHovered() && !doneButton.active) {
 			renderTooltip("You must first select a file.", mouseX, mouseY);
+		}
 	}
 
-	private static class ListGui extends ListWidget {
-		private final MinecraftClient mc;
-		private final List<Path> list;
-		private int selected = -1;
-
-		public ListGui(MinecraftClient mc, SelectFileScreen screen, ArrayList<Path> list) {
-			super(mc, screen.width, screen.height, 36, screen.height - 64, 20);
-			this.mc = mc;
-			this.list = list;
-		}
-
-		@Override
-		protected int getItemCount() {
-			return list.size();
-		}
-
-		@Override
-		protected boolean selectItem(int index, int int_2, double var3, double var4) {
-			if (index >= 0 && index < list.size())
-				selected = index;
-
-			return true;
-		}
-
-		@Override
-		protected boolean isSelectedItem(int index) {
-			return index == selected;
-		}
-
-		@Override
-		protected void renderBackground() {
-
-		}
-
-		@Override
-		protected void renderItem(int index, int x, int y, int var4, int var5, int var6, float partialTicks) {
-			TextRenderer fr = mc.textRenderer;
-
-			Path path = list.get(index);
-			fr.draw("" + path.getFileName(), x + 28, y, 0xf0f0f0);
-			fr.draw("" + minecraft.runDirectory.toPath().relativize(path), x + 28, y + 9, 0xa0a0a0);
-		}
+	@Override
+	public void tick() {
+		doneButton.active = listGui.selected >= 0 && listGui.selected < listGui.list.size();
 	}
 }

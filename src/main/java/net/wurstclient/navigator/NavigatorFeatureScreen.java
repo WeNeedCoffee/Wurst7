@@ -39,11 +39,30 @@ import net.wurstclient.settings.Setting;
 import net.wurstclient.util.RenderUtils;
 
 public final class NavigatorFeatureScreen extends NavigatorScreen {
+	public abstract class ButtonData extends Rectangle {
+		public String buttonText;
+		public Color color;
+		public int textColor = 0xffffff;
+
+		public ButtonData(int x, int y, int width, int height, String buttonText, int color) {
+			super(x, y, width, height);
+			this.buttonText = buttonText;
+			this.color = new Color(color);
+		}
+
+		public boolean isLocked() {
+			return false;
+		}
+
+		public abstract void press();
+	}
+
 	private Feature feature;
 	private NavigatorMainScreen parent;
 	private ButtonData activeButton;
 	private ButtonWidget primaryButton;
 	private String text;
+
 	private ArrayList<ButtonData> buttonDatas = new ArrayList<>();
 
 	private Window window = new Window("");
@@ -56,158 +75,35 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 		for (Setting setting : feature.getSettings().values()) {
 			Component c = setting.getComponent();
 
-			if (c != null)
+			if (c != null) {
 				window.add(c);
+			}
 		}
 
 		window.pack();
 		window.setWidth(308);
 	}
 
+	public void addText(String text) {
+		this.text += text;
+	}
+
+	public Feature getFeature() {
+		return feature;
+	}
+
+	public int getMiddleX() {
+		return middleX;
+	}
+
+	public int getTextHeight() {
+		return getStringHeight(text);
+	}
+
 	@Override
-	protected void onResize() {
-		buttonDatas.clear();
-
-		// primary button
-		String primaryAction = feature.getPrimaryAction();
-		boolean hasPrimaryAction = !primaryAction.isEmpty();
-		boolean hasHelp = false;// !feature.getHelpPage().isEmpty();
-		if (hasPrimaryAction) {
-			primaryButton = new ButtonWidget(width / 2 - 151, height - 65, hasHelp ? 149 : 302, 18, primaryAction, b -> {
-				feature.doPrimaryAction();
-				primaryButton.setMessage(feature.getPrimaryAction());
-				WurstClient.INSTANCE.getNavigator().addPreference(feature.getName());
-			});
-			addButton(primaryButton);
-		}
-
-		// help button
-		// if(hasHelp)
-		// addButton(new ButtonWidget(
-		// width / 2 + (hasPrimaryAction ? 2 : -151), height - 65,
-		// hasPrimaryAction ? 149 : 302, 20, "Help", b -> {
-		// MiscUtils.openLink("https://www.wurstclient.net/wiki/"
-		// + feature.getHelpPage() + "/");
-		// wurst.navigator.analytics.trackEvent("help", "open",
-		// feature.getName());
-		// wurst.navigator.addPreference(feature.getName());
-		// ConfigFiles.NAVIGATOR.save();
-		// }));
-
-		// type
-		text = "Type: ";
-		if (feature instanceof Hack)
-			text += "Hack";
-		else if (feature instanceof Command)
-			text += "Command";
-		else
-			text += "Other Feature";
-
-		// category
-		if (feature.getCategory() != null)
-			text += ", Category: " + feature.getCategory().getName();
-
-		// description
-		String description = feature.getDescription();
-		if (!description.isEmpty())
-			text += "\n\nDescription:\n" + description;
-
-		// area
-		Rectangle area = new Rectangle(middleX - 154, 60, 308, height - 103);
-
-		// settings
-		Collection<Setting> settings = feature.getSettings().values();
-		if (!settings.isEmpty()) {
-			text += "\n\nSettings:";
-			window.setY(getStringHeight(text) + 2);
-
-			for (int i = 0; i < Math.ceil(window.getInnerHeight() / 9.0); i++)
-				text += "\n";
-		}
-
-		// keybinds
-		Set<PossibleKeybind> possibleKeybinds = feature.getPossibleKeybinds();
-		if (!possibleKeybinds.isEmpty()) {
-			// heading
-			text += "\n\nKeybinds:";
-
-			// add keybind button
-			ButtonData addKeybindButton = new ButtonData(area.x + area.width - 16, area.y + getStringHeight(text) - 7, 12, 8, "+", 0x00ff00) {
-				@Override
-				public void press() {
-					// add keybind
-					WurstClient.MC.openScreen(new NavigatorNewKeybindScreen(possibleKeybinds, NavigatorFeatureScreen.this));
-				}
-			};
-			buttonDatas.add(addKeybindButton);
-
-			// keybind list
-			HashMap<String, String> possibleKeybindsMap = new HashMap<>();
-			for (PossibleKeybind possibleKeybind : possibleKeybinds)
-				possibleKeybindsMap.put(possibleKeybind.getCommand(), possibleKeybind.getDescription());
-			TreeMap<String, PossibleKeybind> existingKeybinds = new TreeMap<>();
-			boolean noKeybindsSet = true;
-			for (Keybind keybind : WurstClient.INSTANCE.getKeybinds().getAllKeybinds()) {
-				String commands = keybind.getCommands();
-				commands = commands.replace(";", "\u00a7").replace("\u00a7\u00a7", ";");
-				for (String command : commands.split("\u00a7")) {
-					command = command.trim();
-					String keybindDescription = possibleKeybindsMap.get(command);
-
-					if (keybindDescription != null) {
-						if (noKeybindsSet)
-							noKeybindsSet = false;
-						text += "\n" + keybind.getKey().replace("key.keyboard.", "") + ": " + keybindDescription;
-						existingKeybinds.put(keybind.getKey(), new PossibleKeybind(command, keybindDescription));
-
-					} else if (feature instanceof Hack && command.equalsIgnoreCase(feature.getName())) {
-						if (noKeybindsSet)
-							noKeybindsSet = false;
-						text += "\n" + keybind.getKey().replace("key.keyboard.", "") + ": " + "Toggle " + feature.getName();
-						existingKeybinds.put(keybind.getKey(), new PossibleKeybind(command, "Toggle " + feature.getName()));
-					}
-				}
-			}
-			if (noKeybindsSet)
-				text += "\nNone";
-			else {
-				// remove keybind button
-				buttonDatas.add(new ButtonData(addKeybindButton.x, addKeybindButton.y, addKeybindButton.width, addKeybindButton.height, "-", 0xff0000) {
-					@Override
-					public void press() {
-						// remove keybind
-						minecraft.openScreen(new NavigatorRemoveKeybindScreen(existingKeybinds, NavigatorFeatureScreen.this));
-					}
-				});
-				addKeybindButton.x -= 16;
-			}
-		}
-
-		// see also
-		// Feature[] seeAlso = feature.getSeeAlso();
-		// if(seeAlso.length != 0)
-		// {
-		// text += "\n\nSee also:";
-		// for(Feature seeAlsoFeature : seeAlso)
-		// {
-		// int y = 60 + getTextHeight() + 2;
-		// String name = seeAlsoFeature.getName();
-		// text += "\n- " + name;
-		// buttonDatas.add(new ButtonData(middleX - 148, y,
-		// Fonts.segoe15.getStringWidth(name) + 1, 8, "", 0x404040)
-		// {
-		// @Override
-		// public void press()
-		// {
-		// mc.displayGuiScreen(
-		// new NavigatorFeatureScreen(seeAlsoFeature, parent));
-		// }
-		// });
-		// }
-		// }
-
-		// text height
-		setContentHeight(getStringHeight(text));
+	public void onClose() {
+		window.close();
+		WurstClient.INSTANCE.getGui().handleMouseClick(Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
 	}
 
 	@Override
@@ -248,11 +144,6 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 	@Override
 	protected void onMouseRelease(double x, double y, int button) {
 		WurstClient.INSTANCE.getGui().handleMouseRelease(x, y, button);
-	}
-
-	@Override
-	protected void onUpdate() {
-
 	}
 
 	@Override
@@ -329,9 +220,9 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 			// window background
 			// bottom
 			int yc1;
-			if (window.countChildren() == 0)
+			if (window.countChildren() == 0) {
 				yc1 = 0;
-			else {
+			} else {
 				Component lastChild = window.getChild(window.countChildren() - 1);
 				yc1 = lastChild.getY() + lastChild.getHeight();
 			}
@@ -344,8 +235,9 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 			GL11.glEnd();
 		}
 
-		for (int i = 0; i < window.countChildren(); i++)
+		for (int i = 0; i < window.countChildren(); i++) {
 			window.getChild(i).render(mouseX - bgx1, mouseY - windowY, partialTicks);
+		}
 		GL11.glPopMatrix();
 
 		// buttons
@@ -359,13 +251,14 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 
 			// color
 			float alpha;
-			if (buttonData.isLocked())
+			if (buttonData.isLocked()) {
 				alpha = 0.25F;
-			else if (mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2) {
+			} else if (mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2) {
 				alpha = 0.75F;
 				activeButton = buttonData;
-			} else
+			} else {
 				alpha = 0.375F;
+			}
 			float[] rgb = buttonData.color.getColorComponents(null);
 			glColor4f(rgb[0], rgb[1], rgb[2], alpha);
 
@@ -407,15 +300,16 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 
 			// color
 			boolean hovering = mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2;
-			if (feature.isEnabled() && button == primaryButton)
+			if (feature.isEnabled() && button == primaryButton) {
 				// if(feature.isBlocked())
 				// glColor4f(hovering ? 1F : 0.875F, 0F, 0F, 0.25F);
 				// else
 				glColor4f(0F, hovering ? 1F : 0.875F, 0F, 0.25F);
-			else if (hovering)
+			} else if (hovering) {
 				glColor4f(0.375F, 0.375F, 0.375F, 0.25F);
-			else
+			} else {
 				glColor4f(0.25F, 0.25F, 0.25F, 0.25F);
+			}
 
 			// button
 			glDisable(GL_TEXTURE_2D);
@@ -434,42 +328,160 @@ public final class NavigatorFeatureScreen extends NavigatorScreen {
 	}
 
 	@Override
-	public void onClose() {
-		window.close();
-		WurstClient.INSTANCE.getGui().handleMouseClick(Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
-	}
+	protected void onResize() {
+		buttonDatas.clear();
 
-	public Feature getFeature() {
-		return feature;
-	}
-
-	public int getMiddleX() {
-		return middleX;
-	}
-
-	public void addText(String text) {
-		this.text += text;
-	}
-
-	public int getTextHeight() {
-		return getStringHeight(text);
-	}
-
-	public abstract class ButtonData extends Rectangle {
-		public String buttonText;
-		public Color color;
-		public int textColor = 0xffffff;
-
-		public ButtonData(int x, int y, int width, int height, String buttonText, int color) {
-			super(x, y, width, height);
-			this.buttonText = buttonText;
-			this.color = new Color(color);
+		// primary button
+		String primaryAction = feature.getPrimaryAction();
+		boolean hasPrimaryAction = !primaryAction.isEmpty();
+		boolean hasHelp = false;// !feature.getHelpPage().isEmpty();
+		if (hasPrimaryAction) {
+			primaryButton = new ButtonWidget(width / 2 - 151, height - 65, hasHelp ? 149 : 302, 18, primaryAction, b -> {
+				feature.doPrimaryAction();
+				primaryButton.setMessage(feature.getPrimaryAction());
+				WurstClient.INSTANCE.getNavigator().addPreference(feature.getName());
+			});
+			addButton(primaryButton);
 		}
 
-		public abstract void press();
+		// help button
+		// if(hasHelp)
+		// addButton(new ButtonWidget(
+		// width / 2 + (hasPrimaryAction ? 2 : -151), height - 65,
+		// hasPrimaryAction ? 149 : 302, 20, "Help", b -> {
+		// MiscUtils.openLink("https://www.wurstclient.net/wiki/"
+		// + feature.getHelpPage() + "/");
+		// wurst.navigator.analytics.trackEvent("help", "open",
+		// feature.getName());
+		// wurst.navigator.addPreference(feature.getName());
+		// ConfigFiles.NAVIGATOR.save();
+		// }));
 
-		public boolean isLocked() {
-			return false;
+		// type
+		text = "Type: ";
+		if (feature instanceof Hack) {
+			text += "Hack";
+		} else if (feature instanceof Command) {
+			text += "Command";
+		} else {
+			text += "Other Feature";
 		}
+
+		// category
+		if (feature.getCategory() != null) {
+			text += ", Category: " + feature.getCategory().getName();
+		}
+
+		// description
+		String description = feature.getDescription();
+		if (!description.isEmpty()) {
+			text += "\n\nDescription:\n" + description;
+		}
+
+		// area
+		Rectangle area = new Rectangle(middleX - 154, 60, 308, height - 103);
+
+		// settings
+		Collection<Setting> settings = feature.getSettings().values();
+		if (!settings.isEmpty()) {
+			text += "\n\nSettings:";
+			window.setY(getStringHeight(text) + 2);
+
+			for (int i = 0; i < Math.ceil(window.getInnerHeight() / 9.0); i++) {
+				text += "\n";
+			}
+		}
+
+		// keybinds
+		Set<PossibleKeybind> possibleKeybinds = feature.getPossibleKeybinds();
+		if (!possibleKeybinds.isEmpty()) {
+			// heading
+			text += "\n\nKeybinds:";
+
+			// add keybind button
+			ButtonData addKeybindButton = new ButtonData(area.x + area.width - 16, area.y + getStringHeight(text) - 7, 12, 8, "+", 0x00ff00) {
+				@Override
+				public void press() {
+					// add keybind
+					WurstClient.MC.openScreen(new NavigatorNewKeybindScreen(possibleKeybinds, NavigatorFeatureScreen.this));
+				}
+			};
+			buttonDatas.add(addKeybindButton);
+
+			// keybind list
+			HashMap<String, String> possibleKeybindsMap = new HashMap<>();
+			for (PossibleKeybind possibleKeybind : possibleKeybinds) {
+				possibleKeybindsMap.put(possibleKeybind.getCommand(), possibleKeybind.getDescription());
+			}
+			TreeMap<String, PossibleKeybind> existingKeybinds = new TreeMap<>();
+			boolean noKeybindsSet = true;
+			for (Keybind keybind : WurstClient.INSTANCE.getKeybinds().getAllKeybinds()) {
+				String commands = keybind.getCommands();
+				commands = commands.replace(";", "\u00a7").replace("\u00a7\u00a7", ";");
+				for (String command : commands.split("\u00a7")) {
+					command = command.trim();
+					String keybindDescription = possibleKeybindsMap.get(command);
+
+					if (keybindDescription != null) {
+						if (noKeybindsSet) {
+							noKeybindsSet = false;
+						}
+						text += "\n" + keybind.getKey().replace("key.keyboard.", "") + ": " + keybindDescription;
+						existingKeybinds.put(keybind.getKey(), new PossibleKeybind(command, keybindDescription));
+
+					} else if (feature instanceof Hack && command.equalsIgnoreCase(feature.getName())) {
+						if (noKeybindsSet) {
+							noKeybindsSet = false;
+						}
+						text += "\n" + keybind.getKey().replace("key.keyboard.", "") + ": " + "Toggle " + feature.getName();
+						existingKeybinds.put(keybind.getKey(), new PossibleKeybind(command, "Toggle " + feature.getName()));
+					}
+				}
+			}
+			if (noKeybindsSet) {
+				text += "\nNone";
+			} else {
+				// remove keybind button
+				buttonDatas.add(new ButtonData(addKeybindButton.x, addKeybindButton.y, addKeybindButton.width, addKeybindButton.height, "-", 0xff0000) {
+					@Override
+					public void press() {
+						// remove keybind
+						minecraft.openScreen(new NavigatorRemoveKeybindScreen(existingKeybinds, NavigatorFeatureScreen.this));
+					}
+				});
+				addKeybindButton.x -= 16;
+			}
+		}
+
+		// see also
+		// Feature[] seeAlso = feature.getSeeAlso();
+		// if(seeAlso.length != 0)
+		// {
+		// text += "\n\nSee also:";
+		// for(Feature seeAlsoFeature : seeAlso)
+		// {
+		// int y = 60 + getTextHeight() + 2;
+		// String name = seeAlsoFeature.getName();
+		// text += "\n- " + name;
+		// buttonDatas.add(new ButtonData(middleX - 148, y,
+		// Fonts.segoe15.getStringWidth(name) + 1, 8, "", 0x404040)
+		// {
+		// @Override
+		// public void press()
+		// {
+		// mc.displayGuiScreen(
+		// new NavigatorFeatureScreen(seeAlsoFeature, parent));
+		// }
+		// });
+		// }
+		// }
+
+		// text height
+		setContentHeight(getStringHeight(text));
+	}
+
+	@Override
+	protected void onUpdate() {
+
 	}
 }

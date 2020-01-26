@@ -36,17 +36,6 @@ public final class CopyItemCmd extends Command {
 		ChatUtils.message("Item copied.");
 	}
 
-	private AbstractClientPlayerEntity getPlayer(String name) throws CmdError {
-		for (AbstractClientPlayerEntity player : MC.world.getPlayers()) {
-			if (!player.getEntityName().equalsIgnoreCase(name))
-				continue;
-
-			return player;
-		}
-
-		throw new CmdError("Player \"" + name + "\" could not be found.");
-	}
-
 	private ItemStack getItem(AbstractClientPlayerEntity player, String slot) throws CmdSyntaxError {
 		switch (slot.toLowerCase()) {
 			case "hand":
@@ -69,13 +58,26 @@ public final class CopyItemCmd extends Command {
 		}
 	}
 
+	private AbstractClientPlayerEntity getPlayer(String name) throws CmdError {
+		for (AbstractClientPlayerEntity player : MC.world.getPlayers()) {
+			if (!player.getEntityName().equalsIgnoreCase(name)) {
+				continue;
+			}
+
+			return player;
+		}
+
+		throw new CmdError("Player \"" + name + "\" could not be found.");
+	}
+
 	private void giveItem(ItemStack stack) throws CmdError {
 		int slot = MC.player.inventory.getEmptySlot();
 		if (slot < 0)
 			throw new CmdError("Cannot give item. Your inventory is full.");
 
-		if (slot < 9)
+		if (slot < 9) {
 			slot += 36;
+		}
 
 		CreativeInventoryActionC2SPacket packet = new CreativeInventoryActionC2SPacket(slot, stack);
 		MC.player.networkHandler.sendPacket(packet);

@@ -50,6 +50,7 @@ public enum WurstClient {
 	public static final String VERSION = "7.0pre25";
 	public static final String MC_VERSION = "1.15.2";
 
+	private static boolean guiInitialized;
 	private WurstAnalytics analytics;
 	private EventManager eventManager;
 	private AltManager altManager;
@@ -63,14 +64,116 @@ public enum WurstClient {
 	private CmdProcessor cmdProcessor;
 	private IngameHUD hud;
 	private RotationFaker rotationFaker;
-	private FriendsList friends;
 
+	private FriendsList friends;
 	private boolean enabled = true;
-	private static boolean guiInitialized;
 	private WurstUpdater updater;
 	private Path wurstFolder;
 
 	private FabricKeyBinding zoomKey;
+
+	private Path createEncryptionFolder() {
+		Path encFolder = Paths.get(System.getProperty("user.home"), ".Wurst encryption").normalize();
+
+		try {
+			Files.createDirectories(encFolder);
+			if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS) {
+				Files.setAttribute(encFolder, "dos:hidden", true);
+			}
+
+			Path readme = encFolder.resolve("READ ME I AM VERY IMPORTANT.txt");
+			String readmeText = "DO NOT SHARE THESE FILES WITH ANYONE!\r\n" + "They are encryption keys that protect your alt list file from being read by someone else.\r\n" + "If someone is asking you to send these files, they are 100% trying to scam you.\r\n" + "\r\n" + "DO NOT EDIT, RENAME OR DELETE THESE FILES! (unless you know what you're doing)\r\n" + "If you do, Wurst's Alt Manager can no longer read your alt list and will replace it with a blank one.\r\n" + "In other words, YOUR ALT LIST WILL BE DELETED.";
+			Files.write(readme, readmeText.getBytes("UTF-8"), StandardOpenOption.CREATE);
+
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't create '.Wurst encryption' folder.", e);
+		}
+
+		return encFolder;
+	}
+
+	private Path createWurstFolder() {
+		Path dotMinecraftFolder = MC.runDirectory.toPath().normalize();
+		Path wurstFolder = dotMinecraftFolder.resolve("wurst");
+
+		try {
+			Files.createDirectories(wurstFolder);
+
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't create .minecraft/wurst folder.", e);
+		}
+
+		return wurstFolder;
+	}
+
+	public AltManager getAltManager() {
+		return altManager;
+	}
+
+	public WurstAnalytics getAnalytics() {
+		return analytics;
+	}
+
+	public CmdProcessor getCmdProcessor() {
+		return cmdProcessor;
+	}
+
+	public CmdList getCmds() {
+		return cmds;
+	}
+
+	public EventManager getEventManager() {
+		return eventManager;
+	}
+
+	public FriendsList getFriends() {
+		return friends;
+	}
+
+	public ClickGui getGui() {
+		if (!guiInitialized) {
+			guiInitialized = true;
+			gui.init();
+		}
+
+		return gui;
+	}
+
+	public HackList getHax() {
+		return hax;
+	}
+
+	public IngameHUD getHud() {
+		return hud;
+	}
+
+	public KeybindList getKeybinds() {
+		return keybinds;
+	}
+
+	public Navigator getNavigator() {
+		return navigator;
+	}
+
+	public OtfList getOtfs() {
+		return otfs;
+	}
+
+	public RotationFaker getRotationFaker() {
+		return rotationFaker;
+	}
+
+	public WurstUpdater getUpdater() {
+		return updater;
+	}
+
+	public Path getWurstFolder() {
+		return wurstFolder;
+	}
+
+	public FabricKeyBinding getZoomKey() {
+		return zoomKey;
+	}
 
 	public void initialize() {
 		System.out.println("Starting Wurst Client...");
@@ -134,117 +237,15 @@ public enum WurstClient {
 		analytics.trackPageView("/mc" + MC_VERSION + "/v" + VERSION, "Wurst " + VERSION + " MC" + MC_VERSION);
 	}
 
-	private Path createWurstFolder() {
-		Path dotMinecraftFolder = MC.runDirectory.toPath().normalize();
-		Path wurstFolder = dotMinecraftFolder.resolve("wurst");
-
-		try {
-			Files.createDirectories(wurstFolder);
-
-		} catch (IOException e) {
-			throw new RuntimeException("Couldn't create .minecraft/wurst folder.", e);
-		}
-
-		return wurstFolder;
-	}
-
-	private Path createEncryptionFolder() {
-		Path encFolder = Paths.get(System.getProperty("user.home"), ".Wurst encryption").normalize();
-
-		try {
-			Files.createDirectories(encFolder);
-			if (Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS)
-				Files.setAttribute(encFolder, "dos:hidden", true);
-
-			Path readme = encFolder.resolve("READ ME I AM VERY IMPORTANT.txt");
-			String readmeText = "DO NOT SHARE THESE FILES WITH ANYONE!\r\n" + "They are encryption keys that protect your alt list file from being read by someone else.\r\n" + "If someone is asking you to send these files, they are 100% trying to scam you.\r\n" + "\r\n" + "DO NOT EDIT, RENAME OR DELETE THESE FILES! (unless you know what you're doing)\r\n" + "If you do, Wurst's Alt Manager can no longer read your alt list and will replace it with a blank one.\r\n" + "In other words, YOUR ALT LIST WILL BE DELETED.";
-			Files.write(readme, readmeText.getBytes("UTF-8"), StandardOpenOption.CREATE);
-
-		} catch (IOException e) {
-			throw new RuntimeException("Couldn't create '.Wurst encryption' folder.", e);
-		}
-
-		return encFolder;
-	}
-
-	public WurstAnalytics getAnalytics() {
-		return analytics;
-	}
-
-	public EventManager getEventManager() {
-		return eventManager;
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 	public void saveSettings() {
 		settingsFile.save();
 	}
 
-	public HackList getHax() {
-		return hax;
-	}
-
-	public CmdList getCmds() {
-		return cmds;
-	}
-
-	public OtfList getOtfs() {
-		return otfs;
-	}
-
-	public KeybindList getKeybinds() {
-		return keybinds;
-	}
-
-	public ClickGui getGui() {
-		if (!guiInitialized) {
-			guiInitialized = true;
-			gui.init();
-		}
-
-		return gui;
-	}
-
-	public Navigator getNavigator() {
-		return navigator;
-	}
-
-	public CmdProcessor getCmdProcessor() {
-		return cmdProcessor;
-	}
-
-	public IngameHUD getHud() {
-		return hud;
-	}
-
-	public RotationFaker getRotationFaker() {
-		return rotationFaker;
-	}
-
-	public FriendsList getFriends() {
-		return friends;
-	}
-
-	public boolean isEnabled() {
-		return enabled;
-	}
-
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public WurstUpdater getUpdater() {
-		return updater;
-	}
-
-	public Path getWurstFolder() {
-		return wurstFolder;
-	}
-
-	public FabricKeyBinding getZoomKey() {
-		return zoomKey;
-	}
-
-	public AltManager getAltManager() {
-		return altManager;
 	}
 }

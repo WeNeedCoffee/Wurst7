@@ -51,6 +51,30 @@ public final class AutoArmorHack extends Hack implements UpdateListener, PacketO
 		addSetting(delay);
 	}
 
+	private int getArmorValue(ArmorItem item, ItemStack stack) {
+		int armorPoints = item.getProtection();
+		int prtPoints = 0;
+		int armorToughness = (int) ((IArmorItem) item).getToughness();
+		int armorType = item.getMaterial().getProtectionAmount(EquipmentSlot.LEGS);
+
+		if (useEnchantments.isChecked()) {
+			Enchantment protection = Enchantments.PROTECTION;
+			int prtLvl = EnchantmentHelper.getLevel(protection, stack);
+
+			ClientPlayerEntity player = MC.player;
+			DamageSource dmgSource = DamageSource.player(player);
+			prtPoints = protection.getProtectionAmount(prtLvl, dmgSource);
+		}
+
+		return armorPoints * 5 + prtPoints * 3 + armorToughness + armorType;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(PacketOutputListener.class, this);
+	}
+
 	@Override
 	public void onEnable() {
 		timer = 0;
@@ -59,9 +83,10 @@ public final class AutoArmorHack extends Hack implements UpdateListener, PacketO
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(PacketOutputListener.class, this);
+	public void onSentPacket(PacketOutputEvent event) {
+		if (event.getPacket() instanceof ClickWindowC2SPacket) {
+			timer = delay.getValueI();
+		}
 	}
 
 	@Override
@@ -91,8 +116,9 @@ public final class AutoArmorHack extends Hack implements UpdateListener, PacketO
 			bestArmorSlots[type] = -1;
 
 			ItemStack stack = inventory.getArmorStack(type);
-			if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem))
+			if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem)) {
 				continue;
+			}
 
 			ArmorItem item = (ArmorItem) stack.getItem();
 			bestArmorValues[type] = getArmorValue(item, stack);
@@ -102,8 +128,9 @@ public final class AutoArmorHack extends Hack implements UpdateListener, PacketO
 		for (int slot = 0; slot < 36; slot++) {
 			ItemStack stack = inventory.getInvStack(slot);
 
-			if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem))
+			if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem)) {
 				continue;
+			}
 
 			ArmorItem item = (ArmorItem) stack.getItem();
 			int armorType = item.getSlotType().getEntitySlotId();
@@ -121,49 +148,29 @@ public final class AutoArmorHack extends Hack implements UpdateListener, PacketO
 		for (int type : types) {
 			// check if better armor was found
 			int slot = bestArmorSlots[type];
-			if (slot == -1)
+			if (slot == -1) {
 				continue;
+			}
 
 			// check if armor can be swapped
 			// needs 1 free slot where it can put the old armor
 			ItemStack oldArmor = inventory.getArmorStack(type);
-			if (!oldArmor.isEmpty() && inventory.getEmptySlot() == -1)
+			if (!oldArmor.isEmpty() && inventory.getEmptySlot() == -1) {
 				continue;
+			}
 
 			// hotbar fix
-			if (slot < 9)
+			if (slot < 9) {
 				slot += 36;
+			}
 
 			// swap armor
-			if (!oldArmor.isEmpty())
+			if (!oldArmor.isEmpty()) {
 				IMC.getInteractionManager().windowClick_QUICK_MOVE(8 - type);
+			}
 			IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
 
 			break;
 		}
-	}
-
-	@Override
-	public void onSentPacket(PacketOutputEvent event) {
-		if (event.getPacket() instanceof ClickWindowC2SPacket)
-			timer = delay.getValueI();
-	}
-
-	private int getArmorValue(ArmorItem item, ItemStack stack) {
-		int armorPoints = item.getProtection();
-		int prtPoints = 0;
-		int armorToughness = (int) ((IArmorItem) item).getToughness();
-		int armorType = item.getMaterial().getProtectionAmount(EquipmentSlot.LEGS);
-
-		if (useEnchantments.isChecked()) {
-			Enchantment protection = Enchantments.PROTECTION;
-			int prtLvl = EnchantmentHelper.getLevel(protection, stack);
-
-			ClientPlayerEntity player = MC.player;
-			DamageSource dmgSource = DamageSource.player(player);
-			prtPoints = protection.getProtectionAmount(prtLvl, dmgSource);
-		}
-
-		return armorPoints * 5 + prtPoints * 3 + armorToughness + armorType;
 	}
 }

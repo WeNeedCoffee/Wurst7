@@ -21,8 +21,36 @@ import net.wurstclient.command.Command;
 import net.wurstclient.util.ChatUtils;
 
 public final class ModifyCmd extends Command {
+	private static class NbtPath {
+		public CompoundTag base;
+		public String key;
+
+		public NbtPath(CompoundTag base, String key) {
+			this.base = base;
+			this.key = key;
+		}
+	}
+
 	public ModifyCmd() {
 		super("modify", "Allows you to modify NBT data of items.", ".modify add <nbt_data>", ".modify set <nbt_data>", ".modify remove <nbt_path>", "Use $ for colors, use $$ for $.", "", "Example:", ".modify add {display:{Name:'{\"text\":\"$cRed Name\"}'}}", "(changes the item's name to \u00a7cRed Name\u00a7r)");
+	}
+
+	private void add(ItemStack stack, String[] args) throws CmdError {
+		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
+
+		if (!stack.hasTag()) {
+			stack.setTag(new CompoundTag());
+		}
+
+		try {
+			CompoundTag tag = StringNbtReader.parse(nbt);
+			stack.getTag().copyFrom(tag);
+
+		} catch (CommandSyntaxException e) {
+			ChatUtils.message(e.getMessage());
+			throw new CmdError("NBT data is invalid.");
+		}
 	}
 
 	@Override
@@ -62,49 +90,6 @@ public final class ModifyCmd extends Command {
 		ChatUtils.message("Item modified.");
 	}
 
-	private void add(ItemStack stack, String[] args) throws CmdError {
-		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
-
-		if (!stack.hasTag())
-			stack.setTag(new CompoundTag());
-
-		try {
-			CompoundTag tag = StringNbtReader.parse(nbt);
-			stack.getTag().copyFrom(tag);
-
-		} catch (CommandSyntaxException e) {
-			ChatUtils.message(e.getMessage());
-			throw new CmdError("NBT data is invalid.");
-		}
-	}
-
-	private void set(ItemStack stack, String[] args) throws CmdError {
-		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
-
-		try {
-			CompoundTag tag = StringNbtReader.parse(nbt);
-			stack.setTag(tag);
-
-		} catch (CommandSyntaxException e) {
-			ChatUtils.message(e.getMessage());
-			throw new CmdError("NBT data is invalid.");
-		}
-	}
-
-	private void remove(ItemStack stack, String[] args) throws CmdException {
-		if (args.length > 2)
-			throw new CmdSyntaxError();
-
-		NbtPath path = parseNbtPath(stack.getTag(), args[1]);
-
-		if (path == null)
-			throw new CmdError("The path does not exist.");
-
-		path.base.remove(path.key);
-	}
-
 	private NbtPath parseNbtPath(CompoundTag tag, String path) {
 		String[] parts = path.split("\\.");
 
@@ -127,13 +112,29 @@ public final class ModifyCmd extends Command {
 		return new NbtPath(base, parts[parts.length - 1]);
 	}
 
-	private static class NbtPath {
-		public CompoundTag base;
-		public String key;
+	private void remove(ItemStack stack, String[] args) throws CmdException {
+		if (args.length > 2)
+			throw new CmdSyntaxError();
 
-		public NbtPath(CompoundTag base, String key) {
-			this.base = base;
-			this.key = key;
+		NbtPath path = parseNbtPath(stack.getTag(), args[1]);
+
+		if (path == null)
+			throw new CmdError("The path does not exist.");
+
+		path.base.remove(path.key);
+	}
+
+	private void set(ItemStack stack, String[] args) throws CmdError {
+		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
+
+		try {
+			CompoundTag tag = StringNbtReader.parse(nbt);
+			stack.setTag(tag);
+
+		} catch (CommandSyntaxException e) {
+			ChatUtils.message(e.getMessage());
+			throw new CmdError("NBT data is invalid.");
 		}
 	}
 }

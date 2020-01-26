@@ -15,6 +15,42 @@ import net.wurstclient.settings.EnumSetting;
 
 @SearchTags({ "ArrayList", "ModList", "CheatList", "mod list", "array list", "hack list", "cheat list" })
 public final class HackListOtf extends OtherFeature {
+	public enum Mode {
+		AUTO("Auto"),
+
+		COUNT("Count"),
+
+		HIDDEN("Hidden");
+
+		private final String name;
+
+		private Mode(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
+	public enum Position {
+		LEFT("Left"),
+
+		RIGHT("Right");
+
+		private final String name;
+
+		private Position(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final EnumSetting<Mode> mode = new EnumSetting<>("Mode", TextFormat.BOLD + "Auto" + TextFormat.RESET + " mode renders the whole list if it\n" + "fits onto the screen.\n" + TextFormat.BOLD + "Count" + TextFormat.RESET + " mode only renders the number\n" + "of active hacks.\n" + TextFormat.BOLD + "Hidden" + TextFormat.RESET + " mode renders nothing.", Mode.values(), Mode.AUTO);
 
 	private final EnumSetting<Position> position = new EnumSetting<>("Position", Position.values(), Position.LEFT);
@@ -39,41 +75,5 @@ public final class HackListOtf extends OtherFeature {
 
 	public boolean isAnimations() {
 		return animations.isChecked();
-	}
-
-	public static enum Mode {
-		AUTO("Auto"),
-
-		COUNT("Count"),
-
-		HIDDEN("Hidden");
-
-		private final String name;
-
-		private Mode(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
-	public static enum Position {
-		LEFT("Left"),
-
-		RIGHT("Right");
-
-		private final String name;
-
-		private Position(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
 	}
 }

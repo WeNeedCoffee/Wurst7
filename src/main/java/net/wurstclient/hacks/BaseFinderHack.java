@@ -40,22 +40,35 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 		addSetting(naturalBlocks);
 	}
 
+	private void addVertex(BlockPos pos, int x, int y, int z) {
+		vertices.add(new int[] { pos.getX() + x, pos.getY() + y, pos.getZ() + z });
+	}
+
 	@Override
 	public String getRenderName() {
 		String name = getName() + " [";
 
 		// counter
-		if (counter >= 10000)
+		if (counter >= 10000) {
 			name += "10000+ blocks";
-		else if (counter == 1)
+		} else if (counter == 1) {
 			name += "1 block";
-		else if (counter == 0)
+		} else if (counter == 0) {
 			name += "nothing";
-		else
+		} else {
 			name += counter + " blocks";
+		}
 
 		name += " found]";
 		return name;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+		matchingBlocks.clear();
+		vertices.clear();
 	}
 
 	@Override
@@ -66,14 +79,6 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-		matchingBlocks.clear();
-		vertices.clear();
 	}
 
 	@Override
@@ -92,8 +97,9 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 		// vertices
 		GL11.glBegin(GL11.GL_QUADS);
 		{
-			for (int[] vertex : vertices)
+			for (int[] vertex : vertices) {
 				GL11.glVertex3d(vertex[0], vertex[1], vertex[2]);
+			}
 		}
 		GL11.glEnd();
 
@@ -111,8 +117,9 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 		int modulo = MC.player.age % 64;
 
 		// reset matching blocks
-		if (modulo == 0)
+		if (modulo == 0) {
 			matchingBlocks.clear();
+		}
 
 		int startY = 255 - modulo * 4;
 		int endY = startY - 4;
@@ -120,27 +127,31 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 		BlockPos playerPos = new BlockPos(MC.player.getX(), 0, MC.player.getZ());
 
 		// search matching blocks
-		loop: for (int y = startY; y > endY; y--)
-			for (int x = 64; x > -64; x--)
+		loop: for (int y = startY; y > endY; y--) {
+			for (int x = 64; x > -64; x--) {
 				for (int z = 64; z > -64; z--) {
-					if (matchingBlocks.size() >= 10000)
+					if (matchingBlocks.size() >= 10000) {
 						break loop;
+					}
 
 					BlockPos pos = playerPos.add(x, y, z);
 
-					if (Collections.binarySearch(blockNames, BlockUtils.getName(pos)) >= 0)
+					if (Collections.binarySearch(blockNames, BlockUtils.getName(pos)) >= 0) {
 						continue;
+					}
 
 					matchingBlocks.add(pos);
 				}
+			}
+		}
 
 		if (modulo != 63)
 			return;
 
 		// update timer
-		if (matchingBlocks.size() < 10000)
+		if (matchingBlocks.size() < 10000) {
 			messageTimer--;
-		else {
+		} else {
 			// show message
 			if (messageTimer <= 0) {
 				ChatUtils.warning("BaseFinder found \u00a7lA LOT\u00a7r of blocks.");
@@ -199,9 +210,5 @@ public final class BaseFinderHack extends Hack implements UpdateListener, Render
 				addVertex(pos, 0, 1, 0);
 			}
 		}
-	}
-
-	private void addVertex(BlockPos pos, int x, int y, int z) {
-		vertices.add(new int[] { pos.getX() + x, pos.getY() + y, pos.getZ() + z });
 	}
 }

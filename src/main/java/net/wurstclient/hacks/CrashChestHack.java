@@ -43,8 +43,9 @@ public final class CrashChestHack extends Hack {
 		ItemStack stack = new ItemStack(Blocks.CHEST);
 		CompoundTag nbtCompound = new CompoundTag();
 		ListTag nbtList = new ListTag();
-		for (int i = 0; i < 40000; i++)
+		for (int i = 0; i < 40000; i++) {
 			nbtList.add(new ListTag());
+		}
 		nbtCompound.put("www.wurstclient.net", nbtList);
 		stack.setTag(nbtCompound);
 		stack.setCustomName(new LiteralText("Copy Me"));

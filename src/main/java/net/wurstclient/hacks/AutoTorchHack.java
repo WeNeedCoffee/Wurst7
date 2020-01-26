@@ -19,14 +19,64 @@ import net.wurstclient.util.RotationUtils;
 @SearchTags({ "AutoTorch", "Torch", "auto torch", "torch" })
 public final class AutoTorchHack extends Hack implements UpdateListener {
 
+	public static int hasTorch() {
+		for (int slot = 0; slot <= 8; slot++) {
+			if (isTorchItem(MC.player.inventory.getInvStack(slot)))
+				return slot;
+		}
+		return -1;
+	}
+
+	private static boolean isTorchItem(ItemStack candidate) {
+		if (candidate.getItem().equals(Items.TORCH) || candidate.getItem().equals(Items.LANTERN))
+			return true;
+		return false;
+	}
+
+	public static boolean placeTorch(BlockPos pos) {
+		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+		Vec3d eyesPos = RotationUtils.getEyesPos();
+		IClientPlayerInteractionManager im = IMC.getInteractionManager();
+		double rangeSq = Math.pow(6, 2);
+		for (Direction side : Direction.values()) {
+			BlockPos neighbor = pos.offset(side);
+
+			// check if neighbor can be right clicked
+			if (!BlockUtils.canBeClicked(neighbor) || BlockUtils.getState(neighbor).getMaterial().isReplaceable()) {
+				continue;
+			}
+
+			Vec3d dirVec = new Vec3d(side.getVector());
+			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
+
+			// check if hitVec is within range
+			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
+				continue;
+			}
+
+			// place block
+			int s = MC.player.inventory.selectedSlot;
+			if (hasTorch() == -1)
+				return false;
+			MC.player.inventory.selectedSlot = hasTorch();
+			im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
+			// MC.player.swingHand(Hand.MAIN_HAND);
+			MC.player.inventory.selectedSlot = s;
+			return true;
+		}
+		return false;
+	}
+
+	int e = 0;
+
+	List<BlockPos> tocheck = new ArrayList<>();
+
+	List<BlockPos> toplace = new ArrayList<>();
+	boolean d = false;
+
 	public AutoTorchHack() {
 		super("AutoTorch", "Auto torches");
 		setCategory(Category.BLOCKS);
-	}
-
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
@@ -34,7 +84,10 @@ public final class AutoTorchHack extends Hack implements UpdateListener {
 		EVENTS.remove(UpdateListener.class, this);
 	}
 
-	int e = 0;
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+	}
 
 	@Override
 	public void onUpdate() {
@@ -85,56 +138,6 @@ public final class AutoTorchHack extends Hack implements UpdateListener {
 				e++;
 			}
 		}
-	}
-
-	List<BlockPos> tocheck = new ArrayList<>();
-	List<BlockPos> toplace = new ArrayList<>();
-	boolean d = false;
-
-	public static boolean placeTorch(BlockPos pos) {
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		IClientPlayerInteractionManager im = IMC.getInteractionManager();
-		double rangeSq = Math.pow(6, 2);
-		for (Direction side : Direction.values()) {
-			BlockPos neighbor = pos.offset(side);
-
-			// check if neighbor can be right clicked
-			if (!BlockUtils.canBeClicked(neighbor) || BlockUtils.getState(neighbor).getMaterial().isReplaceable())
-				continue;
-
-			Vec3d dirVec = new Vec3d(side.getVector());
-			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
-
-			// check if hitVec is within range
-			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq)
-				continue;
-
-			// place block
-			int s = MC.player.inventory.selectedSlot;
-			if (hasTorch() == -1)
-				return false;
-			MC.player.inventory.selectedSlot = hasTorch();
-			im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
-			// MC.player.swingHand(Hand.MAIN_HAND);
-			MC.player.inventory.selectedSlot = s;
-			return true;
-		}
-		return false;
-	}
-
-	public static int hasTorch() {
-		for (int slot = 0; slot <= 8; slot++) {
-			if (isTorchItem((ItemStack) MC.player.inventory.getInvStack(slot)))
-				return slot;
-		}
-		return -1;
-	}
-
-	private static boolean isTorchItem(ItemStack candidate) {
-		if (candidate.getItem().equals(Items.TORCH) || candidate.getItem().equals(Items.LANTERN))
-			return true;
-		return false;
 	}
 
 }

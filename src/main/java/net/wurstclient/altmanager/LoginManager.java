@@ -17,6 +17,10 @@ import net.minecraft.client.util.Session;
 import net.wurstclient.WurstClient;
 
 public final class LoginManager {
+	public static void changeCrackedName(String newName) {
+		WurstClient.IMC.setSession(new Session(newName, "", "", "mojang"));
+	}
+
 	public static String login(String email, String password) {
 		YggdrasilUserAuthentication auth = (YggdrasilUserAuthentication) new YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT);
 
@@ -43,9 +47,5 @@ public final class LoginManager {
 			e.printStackTrace();
 			return "\u00a74\u00a7lWrong password! (or shadowbanned)";
 		}
-	}
-
-	public static void changeCrackedName(String newName) {
-		WurstClient.IMC.setSession(new Session(newName, "", "", "mojang"));
 	}
 }

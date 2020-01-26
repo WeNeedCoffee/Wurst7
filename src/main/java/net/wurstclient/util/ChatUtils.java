@@ -25,10 +25,6 @@ public enum ChatUtils {
 
 	private static boolean enabled = true;
 
-	public static void setEnabled(boolean enabled) {
-		ChatUtils.enabled = enabled;
-	}
-
 	public static void component(Text component) {
 		if (!enabled)
 			return;
@@ -38,19 +34,23 @@ public enum ChatUtils {
 		chatHud.addMessage(prefix.append(component));
 	}
 
-	public static void message(String message) {
-		component(new LiteralText(message));
-	}
-
-	public static void warning(String message) {
-		message(WARNING_PREFIX + message);
-	}
-
 	public static void error(String message) {
 		message(ERROR_PREFIX + message);
 	}
 
+	public static void message(String message) {
+		component(new LiteralText(message));
+	}
+
+	public static void setEnabled(boolean enabled) {
+		ChatUtils.enabled = enabled;
+	}
+
 	public static void syntaxError(String message) {
 		message(SYNTAX_ERROR_PREFIX + message);
+	}
+
+	public static void warning(String message) {
+		message(WARNING_PREFIX + message);
 	}
 }

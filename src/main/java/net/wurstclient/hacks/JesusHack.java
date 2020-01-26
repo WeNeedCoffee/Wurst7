@@ -38,10 +38,25 @@ public final class JesusHack extends Hack implements UpdateListener, PacketOutpu
 		addSetting(bypass);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(PacketOutputListener.class, this);
+	public boolean isOverLiquid() {
+		boolean foundLiquid = false;
+		boolean foundSolid = false;
+
+		// check collision boxes below player
+		ArrayList<Box> blockCollisions = MC.world.getBlockCollisions(MC.player, MC.player.getBoundingBox().offset(0, -0.5, 0)).map(VoxelShape::getBoundingBox).collect(Collectors.toCollection(() -> new ArrayList<>()));
+
+		for (Box bb : blockCollisions) {
+			BlockPos pos = new BlockPos(bb.getCenter());
+			Material material = BlockUtils.getState(pos).getMaterial();
+
+			if (material == Material.WATER || material == Material.LAVA) {
+				foundLiquid = true;
+			} else if (material != Material.AIR) {
+				foundSolid = true;
+			}
+		}
+
+		return foundLiquid && !foundSolid;
 	}
 
 	@Override
@@ -51,30 +66,9 @@ public final class JesusHack extends Hack implements UpdateListener, PacketOutpu
 	}
 
 	@Override
-	public void onUpdate() {
-		// check if sneaking
-		if (MC.options.keySneak.isPressed())
-			return;
-
-		ClientPlayerEntity player = MC.player;
-
-		// move up in water
-		if (player.isTouchingWater()) {
-			Vec3d velocity = player.getVelocity();
-			player.setVelocity(velocity.x, 0.11, velocity.z);
-			tickTimer = 0;
-			return;
-		}
-
-		// simulate jumping out of water
-		Vec3d velocity = player.getVelocity();
-		if (tickTimer == 0)
-			player.setVelocity(velocity.x, 0.30, velocity.z);
-		else if (tickTimer == 1)
-			player.setVelocity(velocity.x, 0, velocity.z);
-
-		// update timer
-		tickTimer++;
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(PacketOutputListener.class, this);
 	}
 
 	@Override
@@ -120,40 +114,50 @@ public final class JesusHack extends Hack implements UpdateListener, PacketOutpu
 		double z = packet.getZ(0);
 
 		// offset y
-		if (bypass.isChecked() && MC.player.age % 2 == 0)
+		if (bypass.isChecked() && MC.player.age % 2 == 0) {
 			y -= 0.05;
-		else
+		} else {
 			y += 0.05;
+		}
 
 		// create new packet
 		Packet<?> newPacket;
-		if (packet instanceof PlayerMoveC2SPacket.PositionOnly)
+		if (packet instanceof PlayerMoveC2SPacket.PositionOnly) {
 			newPacket = new PlayerMoveC2SPacket.PositionOnly(x, y, z, true);
-		else
+		} else {
 			newPacket = new PlayerMoveC2SPacket.Both(x, y, z, packet.getYaw(0), packet.getPitch(0), true);
+		}
 
 		// send new packet
 		MC.player.networkHandler.getConnection().send(newPacket);
 	}
 
-	public boolean isOverLiquid() {
-		boolean foundLiquid = false;
-		boolean foundSolid = false;
+	@Override
+	public void onUpdate() {
+		// check if sneaking
+		if (MC.options.keySneak.isPressed())
+			return;
 
-		// check collision boxes below player
-		ArrayList<Box> blockCollisions = MC.world.getBlockCollisions(MC.player, MC.player.getBoundingBox().offset(0, -0.5, 0)).map(VoxelShape::getBoundingBox).collect(Collectors.toCollection(() -> new ArrayList<>()));
+		ClientPlayerEntity player = MC.player;
 
-		for (Box bb : blockCollisions) {
-			BlockPos pos = new BlockPos(bb.getCenter());
-			Material material = BlockUtils.getState(pos).getMaterial();
-
-			if (material == Material.WATER || material == Material.LAVA)
-				foundLiquid = true;
-			else if (material != Material.AIR)
-				foundSolid = true;
+		// move up in water
+		if (player.isTouchingWater()) {
+			Vec3d velocity = player.getVelocity();
+			player.setVelocity(velocity.x, 0.11, velocity.z);
+			tickTimer = 0;
+			return;
 		}
 
-		return foundLiquid && !foundSolid;
+		// simulate jumping out of water
+		Vec3d velocity = player.getVelocity();
+		if (tickTimer == 0) {
+			player.setVelocity(velocity.x, 0.30, velocity.z);
+		} else if (tickTimer == 1) {
+			player.setVelocity(velocity.x, 0, velocity.z);
+		}
+
+		// update timer
+		tickTimer++;
 	}
 
 	public boolean shouldBeSolid() {

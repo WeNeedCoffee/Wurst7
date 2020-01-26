@@ -61,105 +61,24 @@ public final class Encryption {
 		}
 	}
 
-	public JsonElement parseFile(Path path) throws IOException, JsonException {
-		try (BufferedReader reader = Files.newBufferedReader(path)) {
-			return JsonUtils.JSON_PARSER.parse(loadEncryptedFile(path));
-
-		} catch (JsonParseException e) {
-			throw new JsonException(e);
-		}
-	}
-
-	public String loadEncryptedFile(Path path) throws IOException {
+	private SecretKey createAesKey(Path path, KeyPair pair) {
 		try {
-			return new String(decrypt(Files.readAllBytes(path)), CHARSET);
+			System.out.println("Generating AES key.");
 
-		} catch (CrashException e) {
-			throw new IOException(e);
-		}
-	}
+			// generate key
+			KeyGenerator keygen = KeyGenerator.getInstance("AES");
+			keygen.init(128);
+			SecretKey key = keygen.generateKey();
 
-	public WsonArray parseFileToArray(Path path) throws IOException, JsonException {
-		JsonElement json = parseFile(path);
+			// save key
+			Cipher rsaCipher = Cipher.getInstance("RSA");
+			rsaCipher.init(Cipher.ENCRYPT_MODE, pair.getPublic());
+			Files.write(path, rsaCipher.doFinal(key.getEncoded()));
 
-		if (!json.isJsonArray())
-			throw new JsonException();
-
-		return new WsonArray(json.getAsJsonArray());
-	}
-
-	public WsonObject parseFileToObject(Path path) throws IOException, JsonException {
-		JsonElement json = parseFile(path);
-
-		if (!json.isJsonObject())
-			throw new JsonException();
-
-		return new WsonObject(json.getAsJsonObject());
-	}
-
-	public byte[] decrypt(byte[] bytes) {
-		try {
-			return decryptCipher.doFinal(Base64.getDecoder().decode(bytes));
-
-		} catch (IllegalArgumentException | GeneralSecurityException e) {
-			throw new CrashException(CrashReport.create(e, "Decrypting bytes"));
-		}
-	}
-
-	public void toEncryptedJson(JsonObject json, Path path) throws IOException, JsonException {
-		try {
-			saveEncryptedFile(path, JsonUtils.PRETTY_GSON.toJson(json));
-
-		} catch (JsonParseException e) {
-			throw new JsonException(e);
-		}
-	}
-
-	public void saveEncryptedFile(Path path, String content) throws IOException {
-		try {
-			Files.write(path, encrypt(content.getBytes(CHARSET)));
-
-		} catch (CrashException e) {
-			throw new IOException(e);
-		}
-	}
-
-	public byte[] encrypt(byte[] bytes) {
-		try {
-			return Base64.getEncoder().encode(encryptCipher.doFinal(bytes));
-
-		} catch (GeneralSecurityException e) {
-			throw new CrashException(CrashReport.create(e, "Encrypting bytes"));
-		}
-	}
-
-	private KeyPair getRsaKeyPair(Path publicFile, Path privateFile) {
-		if (Files.notExists(publicFile) || Files.notExists(privateFile))
-			return createRsaKeys(publicFile, privateFile);
-
-		try {
-			return loadRsaKeys(publicFile, privateFile);
-
-		} catch (GeneralSecurityException | ReflectiveOperationException | IOException e) {
-			System.err.println("Couldn't load RSA keypair!");
-			e.printStackTrace();
-
-			return createRsaKeys(publicFile, privateFile);
-		}
-	}
-
-	private SecretKey getAesKey(Path path, KeyPair pair) {
-		if (Files.notExists(path))
-			return createAesKey(path, pair);
-
-		try {
-			return loadAesKey(path, pair);
+			return key;
 
 		} catch (GeneralSecurityException | IOException e) {
-			System.err.println("Couldn't load AES key!");
-			e.printStackTrace();
-
-			return createAesKey(path, pair);
+			throw new CrashException(CrashReport.create(e, "Creating AES key"));
 		}
 	}
 
@@ -197,24 +116,67 @@ public final class Encryption {
 		}
 	}
 
-	private SecretKey createAesKey(Path path, KeyPair pair) {
+	public byte[] decrypt(byte[] bytes) {
 		try {
-			System.out.println("Generating AES key.");
+			return decryptCipher.doFinal(Base64.getDecoder().decode(bytes));
 
-			// generate key
-			KeyGenerator keygen = KeyGenerator.getInstance("AES");
-			keygen.init(128);
-			SecretKey key = keygen.generateKey();
+		} catch (IllegalArgumentException | GeneralSecurityException e) {
+			throw new CrashException(CrashReport.create(e, "Decrypting bytes"));
+		}
+	}
 
-			// save key
-			Cipher rsaCipher = Cipher.getInstance("RSA");
-			rsaCipher.init(Cipher.ENCRYPT_MODE, pair.getPublic());
-			Files.write(path, rsaCipher.doFinal(key.getEncoded()));
+	public byte[] encrypt(byte[] bytes) {
+		try {
+			return Base64.getEncoder().encode(encryptCipher.doFinal(bytes));
 
-			return key;
+		} catch (GeneralSecurityException e) {
+			throw new CrashException(CrashReport.create(e, "Encrypting bytes"));
+		}
+	}
+
+	private SecretKey getAesKey(Path path, KeyPair pair) {
+		if (Files.notExists(path))
+			return createAesKey(path, pair);
+
+		try {
+			return loadAesKey(path, pair);
 
 		} catch (GeneralSecurityException | IOException e) {
-			throw new CrashException(CrashReport.create(e, "Creating AES key"));
+			System.err.println("Couldn't load AES key!");
+			e.printStackTrace();
+
+			return createAesKey(path, pair);
+		}
+	}
+
+	private KeyPair getRsaKeyPair(Path publicFile, Path privateFile) {
+		if (Files.notExists(publicFile) || Files.notExists(privateFile))
+			return createRsaKeys(publicFile, privateFile);
+
+		try {
+			return loadRsaKeys(publicFile, privateFile);
+
+		} catch (GeneralSecurityException | ReflectiveOperationException | IOException e) {
+			System.err.println("Couldn't load RSA keypair!");
+			e.printStackTrace();
+
+			return createRsaKeys(publicFile, privateFile);
+		}
+	}
+
+	private SecretKey loadAesKey(Path path, KeyPair pair) throws GeneralSecurityException, IOException {
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
+
+		return new SecretKeySpec(cipher.doFinal(Files.readAllBytes(path)), "AES");
+	}
+
+	public String loadEncryptedFile(Path path) throws IOException {
+		try {
+			return new String(decrypt(Files.readAllBytes(path)), CHARSET);
+
+		} catch (CrashException e) {
+			throw new IOException(e);
 		}
 	}
 
@@ -236,10 +198,48 @@ public final class Encryption {
 		return new KeyPair(publicKey, privateKey);
 	}
 
-	private SecretKey loadAesKey(Path path, KeyPair pair) throws GeneralSecurityException, IOException {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
+	public JsonElement parseFile(Path path) throws IOException, JsonException {
+		try (BufferedReader reader = Files.newBufferedReader(path)) {
+			return JsonUtils.JSON_PARSER.parse(loadEncryptedFile(path));
 
-		return new SecretKeySpec(cipher.doFinal(Files.readAllBytes(path)), "AES");
+		} catch (JsonParseException e) {
+			throw new JsonException(e);
+		}
+	}
+
+	public WsonArray parseFileToArray(Path path) throws IOException, JsonException {
+		JsonElement json = parseFile(path);
+
+		if (!json.isJsonArray())
+			throw new JsonException();
+
+		return new WsonArray(json.getAsJsonArray());
+	}
+
+	public WsonObject parseFileToObject(Path path) throws IOException, JsonException {
+		JsonElement json = parseFile(path);
+
+		if (!json.isJsonObject())
+			throw new JsonException();
+
+		return new WsonObject(json.getAsJsonObject());
+	}
+
+	public void saveEncryptedFile(Path path, String content) throws IOException {
+		try {
+			Files.write(path, encrypt(content.getBytes(CHARSET)));
+
+		} catch (CrashException e) {
+			throw new IOException(e);
+		}
+	}
+
+	public void toEncryptedJson(JsonObject json, Path path) throws IOException, JsonException {
+		try {
+			saveEncryptedFile(path, JsonUtils.PRETTY_GSON.toJson(json));
+
+		} catch (JsonParseException e) {
+			throw new JsonException(e);
+		}
 	}
 }

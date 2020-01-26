@@ -27,12 +27,13 @@ public abstract class Hack extends Feature {
 	}
 
 	@Override
-	public final String getName() {
-		return name;
+	public final void doPrimaryAction() {
+		setEnabled(!enabled);
 	}
 
-	public String getRenderName() {
-		return name;
+	@Override
+	public final Category getCategory() {
+		return category;
 	}
 
 	@Override
@@ -41,17 +42,38 @@ public abstract class Hack extends Feature {
 	}
 
 	@Override
-	public final Category getCategory() {
-		return category;
+	public final String getName() {
+		return name;
 	}
 
-	protected final void setCategory(Category category) {
-		this.category = category;
+	@Override
+	public final String getPrimaryAction() {
+		return enabled ? "Disable" : "Enable";
+	}
+
+	public String getRenderName() {
+		return name;
 	}
 
 	@Override
 	public final boolean isEnabled() {
 		return enabled;
+	}
+
+	public final boolean isStateSaved() {
+		return stateSaved;
+	}
+
+	protected void onDisable() {
+
+	}
+
+	protected void onEnable() {
+
+	}
+
+	protected final void setCategory(Category category) {
+		this.category = category;
 	}
 
 	public final void setEnabled(boolean enabled) {
@@ -60,37 +82,18 @@ public abstract class Hack extends Feature {
 
 		this.enabled = enabled;
 
-		if (!(this instanceof NavigatorHack))
+		if (!(this instanceof NavigatorHack)) {
 			WURST.getHud().getHackList().updateState(this);
+		}
 
-		if (enabled)
+		if (enabled) {
 			onEnable();
-		else
+		} else {
 			onDisable();
+		}
 
-		if (stateSaved)
+		if (stateSaved) {
 			WURST.getHax().saveEnabledHax();
-	}
-
-	@Override
-	public final String getPrimaryAction() {
-		return enabled ? "Disable" : "Enable";
-	}
-
-	@Override
-	public final void doPrimaryAction() {
-		setEnabled(!enabled);
-	}
-
-	public final boolean isStateSaved() {
-		return stateSaved;
-	}
-
-	protected void onEnable() {
-
-	}
-
-	protected void onDisable() {
-
+		}
 	}
 }

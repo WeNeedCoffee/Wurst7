@@ -21,19 +21,20 @@ public final class JetpackHack extends Hack implements UpdateListener {
 	}
 
 	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
 	public void onEnable() {
 		WURST.getHax().flightHack.setEnabled(false);
 		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-	}
-
-	@Override
 	public void onUpdate() {
-		if (MC.options.keyJump.isPressed())
+		if (MC.options.keyJump.isPressed()) {
 			MC.player.jump();
+		}
 	}
 }

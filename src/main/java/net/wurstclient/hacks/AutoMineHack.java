@@ -26,10 +26,12 @@ public final class AutoMineHack extends Hack implements UpdateListener {
 		setCategory(Category.BLOCKS);
 	}
 
-	@Override
-	public void onEnable() {
-		WURST.getHax().nukerHack.setEnabled(false);
-		EVENTS.add(UpdateListener.class, this);
+	private void breakCurrentBlock() {
+		if (MC.player.abilities.creativeMode) {
+			BlockBreaker.breakBlocksWithPacketSpam(Arrays.asList(currentBlock));
+		} else {
+			BlockBreaker.breakOneBlock(currentBlock);
+		}
 	}
 
 	@Override
@@ -39,11 +41,18 @@ public final class AutoMineHack extends Hack implements UpdateListener {
 	}
 
 	@Override
+	public void onEnable() {
+		WURST.getHax().nukerHack.setEnabled(false);
+		EVENTS.add(UpdateListener.class, this);
+	}
+
+	@Override
 	public void onUpdate() {
 		setCurrentBlockFromHitResult();
 
-		if (currentBlock != null)
+		if (currentBlock != null) {
 			breakCurrentBlock();
+		}
 	}
 
 	private void setCurrentBlockFromHitResult() {
@@ -53,13 +62,6 @@ public final class AutoMineHack extends Hack implements UpdateListener {
 		}
 
 		currentBlock = ((BlockHitResult) MC.crosshairTarget).getBlockPos();
-	}
-
-	private void breakCurrentBlock() {
-		if (MC.player.abilities.creativeMode)
-			BlockBreaker.breakBlocksWithPacketSpam(Arrays.asList(currentBlock));
-		else
-			BlockBreaker.breakOneBlock(currentBlock);
 	}
 
 	private void stopMiningAndResetProgress() {

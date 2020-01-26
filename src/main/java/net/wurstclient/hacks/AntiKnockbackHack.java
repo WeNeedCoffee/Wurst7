@@ -25,13 +25,13 @@ public final class AntiKnockbackHack extends Hack implements KnockbackListener {
 	}
 
 	@Override
-	protected void onEnable() {
-		EVENTS.add(KnockbackListener.class, this);
+	protected void onDisable() {
+		EVENTS.remove(KnockbackListener.class, this);
 	}
 
 	@Override
-	protected void onDisable() {
-		EVENTS.remove(KnockbackListener.class, this);
+	protected void onEnable() {
+		EVENTS.add(KnockbackListener.class, this);
 	}
 
 	@Override

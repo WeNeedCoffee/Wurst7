@@ -23,23 +23,6 @@ public final class WurstUpdater implements UpdateListener {
 	private boolean outdated;
 	private Text component;
 
-	@Override
-	public void onUpdate() {
-		if (thread == null) {
-			thread = new Thread(() -> checkForUpdates(), "WurstUpdater");
-			thread.start();
-			return;
-		}
-
-		if (thread.isAlive())
-			return;
-
-		if (component != null)
-			ChatUtils.component(component);
-
-		WurstClient.INSTANCE.getEventManager().remove(UpdateListener.class, this);
-	}
-
 	public void checkForUpdates() {
 		Version currentVersion = new Version(WurstClient.VERSION);
 		Version latestVersion = null;
@@ -48,11 +31,13 @@ public final class WurstUpdater implements UpdateListener {
 			WsonArray wson = JsonUtils.parseURLToArray("https://api.github.com/repos/Wurst-Imperium/Wurst-MCX2/releases");
 
 			for (WsonObject release : wson.getAllObjects()) {
-				if (!currentVersion.isPreRelease() && release.getBoolean("prerelease"))
+				if (!currentVersion.isPreRelease() && release.getBoolean("prerelease")) {
 					continue;
+				}
 
-				if (!containsCompatibleAsset(release.getArray("assets")))
+				if (!containsCompatibleAsset(release.getArray("assets"))) {
 					continue;
+				}
 
 				String tagName = release.getString("tag_name");
 				latestVersion = new Version(tagName.substring(1));
@@ -86,20 +71,14 @@ public final class WurstUpdater implements UpdateListener {
 		showLink(text, url);
 	}
 
-	private void showLink(String text, String url) {
-		component = new LiteralText(text);
-
-		ClickEvent event = new ClickEvent(ClickEvent.Action.OPEN_URL, url);
-		component.getStyle().setClickEvent(event);
-	}
-
 	private boolean containsCompatibleAsset(WsonArray wsonArray) throws JsonException {
 		String compatibleSuffix = "MC" + WurstClient.MC_VERSION + ".jar";
 
 		for (WsonObject asset : wsonArray.getAllObjects()) {
 			String assetName = asset.getString("name");
-			if (!assetName.endsWith(compatibleSuffix))
+			if (!assetName.endsWith(compatibleSuffix)) {
 				continue;
+			}
 
 			return true;
 		}
@@ -109,5 +88,30 @@ public final class WurstUpdater implements UpdateListener {
 
 	public boolean isOutdated() {
 		return outdated;
+	}
+
+	@Override
+	public void onUpdate() {
+		if (thread == null) {
+			thread = new Thread(() -> checkForUpdates(), "WurstUpdater");
+			thread.start();
+			return;
+		}
+
+		if (thread.isAlive())
+			return;
+
+		if (component != null) {
+			ChatUtils.component(component);
+		}
+
+		WurstClient.INSTANCE.getEventManager().remove(UpdateListener.class, this);
+	}
+
+	private void showLink(String text, String url) {
+		component = new LiteralText(text);
+
+		ClickEvent event = new ClickEvent(ClickEvent.Action.OPEN_URL, url);
+		component.getStyle().setClickEvent(event);
 	}
 }

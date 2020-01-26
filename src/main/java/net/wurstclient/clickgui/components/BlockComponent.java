@@ -31,6 +31,25 @@ public final class BlockComponent extends Component {
 		setHeight(getDefaultHeight());
 	}
 
+	private String getBlockName(ItemStack stack) {
+		if (stack.isEmpty())
+			return TextFormat.ITALIC + "unknown block" + TextFormat.RESET;
+		else
+			return stack.getName().asFormattedString();
+	}
+
+	@Override
+	public int getDefaultHeight() {
+		return BLOCK_WITDH;
+	}
+
+	@Override
+	public int getDefaultWidth() {
+		TextRenderer tr = WurstClient.MC.textRenderer;
+		String text = setting.getName() + ":";
+		return tr.getStringWidth(text) + BLOCK_WITDH + 4;
+	}
+
 	@Override
 	public void handleMouseClick(double mouseX, double mouseY, int mouseButton) {
 		if (mouseX < getX() + getWidth() - BLOCK_WITDH)
@@ -41,8 +60,9 @@ public final class BlockComponent extends Component {
 			EditBlockScreen editScreen = new EditBlockScreen(currentScreen, setting);
 			WurstClient.MC.openScreen(editScreen);
 
-		} else if (mouseButton == 1)
+		} else if (mouseButton == 1) {
 			setting.resetToDefault();
+		}
 	}
 
 	@Override
@@ -65,9 +85,9 @@ public final class BlockComponent extends Component {
 		ItemStack stack = new ItemStack(setting.getBlock());
 
 		// tooltip
-		if (hText)
+		if (hText) {
 			gui.setTooltip(setting.getDescription());
-		else if (hBlock) {
+		} else if (hBlock) {
 			String tooltip = "\u00a76Name:\u00a7r " + getBlockName(stack);
 			tooltip += "\n\u00a76ID:\u00a7r " + setting.getBlockName();
 			tooltip += "\n\n\u00a7e[left-click]\u00a7r to edit";
@@ -97,18 +117,6 @@ public final class BlockComponent extends Component {
 		GL11.glEnable(GL11.GL_BLEND);
 	}
 
-	@Override
-	public int getDefaultWidth() {
-		TextRenderer tr = WurstClient.MC.textRenderer;
-		String text = setting.getName() + ":";
-		return tr.getStringWidth(text) + BLOCK_WITDH + 4;
-	}
-
-	@Override
-	public int getDefaultHeight() {
-		return BLOCK_WITDH;
-	}
-
 	private void renderIcon(ItemStack stack, int x, int y, boolean large) {
 		GL11.glPushMatrix();
 
@@ -124,16 +132,18 @@ public final class BlockComponent extends Component {
 
 		GL11.glPopMatrix();
 
-		if (stack.isEmpty())
+		if (stack.isEmpty()) {
 			renderQuestionMark(x, y, large);
+		}
 	}
 
 	private void renderQuestionMark(int x, int y, boolean large) {
 		GL11.glPushMatrix();
 
 		GL11.glTranslated(x, y, 0);
-		if (large)
+		if (large) {
 			GL11.glScaled(2, 2, 2);
+		}
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		TextRenderer tr = WurstClient.MC.textRenderer;
@@ -142,12 +152,5 @@ public final class BlockComponent extends Component {
 		GL11.glEnable(GL11.GL_BLEND);
 
 		GL11.glPopMatrix();
-	}
-
-	private String getBlockName(ItemStack stack) {
-		if (stack.isEmpty())
-			return TextFormat.ITALIC + "unknown block" + TextFormat.RESET;
-		else
-			return stack.getName().asFormattedString();
 	}
 }

@@ -18,6 +18,22 @@ public class WurstServerPinger {
 	private boolean done = false;
 	private boolean failed = false;
 
+	public String getServerIP() {
+		return server.address;
+	}
+
+	public boolean isOtherVersion() {
+		return server.protocolVersion != 47;
+	}
+
+	public boolean isStillPinging() {
+		return !done;
+	}
+
+	public boolean isWorking() {
+		return !failed;
+	}
+
 	public void ping(String ip) {
 		ping(ip, 25565);
 	}
@@ -47,21 +63,5 @@ public class WurstServerPinger {
 
 		pinger.cancel();
 		done = true;
-	}
-
-	public boolean isStillPinging() {
-		return !done;
-	}
-
-	public boolean isWorking() {
-		return !failed;
-	}
-
-	public boolean isOtherVersion() {
-		return server.protocolVersion != 47;
-	}
-
-	public String getServerIP() {
-		return server.address;
 	}
 }

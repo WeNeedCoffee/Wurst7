@@ -19,13 +19,13 @@ public final class NoWebHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override

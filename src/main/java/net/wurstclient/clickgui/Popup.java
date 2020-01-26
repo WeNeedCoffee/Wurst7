@@ -20,55 +20,55 @@ public abstract class Popup {
 		this.owner = owner;
 	}
 
-	public abstract void handleMouseClick(int mouseX, int mouseY, int mouseButton);
-
-	public abstract void render(int mouseX, int mouseY);
-
-	public abstract int getDefaultWidth();
+	public void close() {
+		closing = true;
+	}
 
 	public abstract int getDefaultHeight();
 
+	public abstract int getDefaultWidth();
+
+	public int getHeight() {
+		return height;
+	}
+
 	public Component getOwner() {
 		return owner;
-	}
-
-	public int getX() {
-		return x;
-	}
-
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public void setY(int y) {
-		this.y = y;
 	}
 
 	public int getWidth() {
 		return width;
 	}
 
-	public void setWidth(int width) {
-		this.width = width;
+	public int getX() {
+		return x;
 	}
 
-	public int getHeight() {
-		return height;
+	public int getY() {
+		return y;
 	}
 
-	public void setHeight(int height) {
-		this.height = height;
-	}
+	public abstract void handleMouseClick(int mouseX, int mouseY, int mouseButton);
 
 	public boolean isClosing() {
 		return closing;
 	}
 
-	public void close() {
-		closing = true;
+	public abstract void render(int mouseX, int mouseY);
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public void setY(int y) {
+		this.y = y;
 	}
 }

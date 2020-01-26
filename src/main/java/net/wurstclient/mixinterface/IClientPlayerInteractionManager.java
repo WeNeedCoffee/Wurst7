@@ -14,23 +14,23 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public interface IClientPlayerInteractionManager {
-	public float getCurrentBreakingProgress();
+	float getCurrentBreakingProgress();
 
-	public void setBreakingBlock(boolean breakingBlock);
+	void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec);
 
-	public ItemStack windowClick_PICKUP(int slot);
+	void rightClickItem();
 
-	public ItemStack windowClick_QUICK_MOVE(int slot);
+	void sendPlayerActionC2SPacket(PlayerActionC2SPacket.Action action, BlockPos blockPos, Direction direction);
 
-	public ItemStack windowClick_THROW(int slot);
+	void setBlockHitDelay(int delay);
 
-	public void rightClickItem();
+	void setBreakingBlock(boolean breakingBlock);
 
-	public void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec);
+	void setOverrideReach(boolean overrideReach);
 
-	public void sendPlayerActionC2SPacket(PlayerActionC2SPacket.Action action, BlockPos blockPos, Direction direction);
+	ItemStack windowClick_PICKUP(int slot);
 
-	public void setBlockHitDelay(int delay);
+	ItemStack windowClick_QUICK_MOVE(int slot);
 
-	public void setOverrideReach(boolean overrideReach);
+	ItemStack windowClick_THROW(int slot);
 }

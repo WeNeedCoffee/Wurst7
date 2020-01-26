@@ -43,12 +43,14 @@ public final class NameGenerator {
 		}
 
 		int capitalMode = (int) Math.round(Math.random() * 2);
-		if (capitalMode == 1)
+		if (capitalMode == 1) {
 			name = name.substring(0, 1).toUpperCase() + name.substring(1);
-		else if (capitalMode == 2)
+		} else if (capitalMode == 2) {
 			for (int i = 0; i < nameLength; i++)
-				if ((int) Math.round(Math.random() * 3) == 1)
+				if ((int) Math.round(Math.random() * 3) == 1) {
 					name = name.substring(0, i) + name.substring(i, i + 1).toUpperCase() + (i == nameLength ? "" : name.substring(i + 1));
+				}
+		}
 		int numberLength = (int) Math.round(Math.random() * 3) + 1;
 		int numberMode = (int) Math.round(Math.random() * 3);
 
@@ -59,13 +61,15 @@ public final class NameGenerator {
 				name = name.concat(Integer.toString(nextNumber));
 			} else if (numberMode == 0) {
 				int nextNumber = (int) (Math.round(Math.random() * 8) + 1);
-				for (int i = 0; i < numberLength; i++)
+				for (int i = 0; i < numberLength; i++) {
 					name = name.concat(Integer.toString(nextNumber));
+				}
 			} else if (numberMode == 1) {
 				int nextNumber = (int) (Math.round(Math.random() * 8) + 1);
 				name = name.concat(Integer.toString(nextNumber));
-				for (int i = 1; i < numberLength; i++)
+				for (int i = 1; i < numberLength; i++) {
 					name = name.concat("0");
+				}
 			} else if (numberMode == 2) {
 				int nextNumber = (int) (Math.round(Math.random() * 8) + 1);
 				name = name.concat(Integer.toString(nextNumber));
@@ -123,12 +127,13 @@ public final class NameGenerator {
 		}
 
 		int special = (int) Math.round(Math.random() * 8);
-		if (special == 3)
+		if (special == 3) {
 			name = "xX".concat(name).concat("Xx");
-		else if (special == 4)
+		} else if (special == 4) {
 			name = name.concat("LP");
-		else if (special == 5)
+		} else if (special == 5) {
 			name = name.concat("HD");
+		}
 
 		return name;
 	}

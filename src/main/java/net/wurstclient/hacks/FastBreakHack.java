@@ -38,23 +38,6 @@ public final class FastBreakHack extends Hack implements UpdateListener, BlockBr
 	}
 
 	@Override
-	protected void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(BlockBreakingProgressListener.class, this);
-	}
-
-	@Override
-	protected void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(BlockBreakingProgressListener.class, this);
-	}
-
-	@Override
-	public void onUpdate() {
-		IMC.getInteractionManager().setBlockHitDelay(0);
-	}
-
-	@Override
 	public void onBlockBreakingProgress(BlockBreakingProgressEvent event) {
 		if (legitMode.isChecked())
 			return;
@@ -68,5 +51,22 @@ public final class FastBreakHack extends Hack implements UpdateListener, BlockBr
 		BlockPos blockPos = event.getBlockPos();
 		Direction direction = event.getDirection();
 		im.sendPlayerActionC2SPacket(action, blockPos, direction);
+	}
+
+	@Override
+	protected void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(BlockBreakingProgressListener.class, this);
+	}
+
+	@Override
+	protected void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(BlockBreakingProgressListener.class, this);
+	}
+
+	@Override
+	public void onUpdate() {
+		IMC.getInteractionManager().setBlockHitDelay(0);
 	}
 }

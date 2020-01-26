@@ -35,6 +35,17 @@ public final class EditBlockScreen extends Screen {
 		this.setting = setting;
 	}
 
+	private void done() {
+		String value = blockField.getText();
+		Block block = BlockUtils.getBlockFromName(value);
+
+		if (block != null) {
+			setting.setBlock(block);
+		}
+
+		minecraft.openScreen(prevScreen);
+	}
+
 	@Override
 	public void init() {
 		int x1 = width / 2 - 100;
@@ -56,14 +67,9 @@ public final class EditBlockScreen extends Screen {
 		addButton(doneButton);
 	}
 
-	private void done() {
-		String value = blockField.getText();
-		Block block = BlockUtils.getBlockFromName(value);
-
-		if (block != null)
-			setting.setBlock(block);
-
-		minecraft.openScreen(prevScreen);
+	@Override
+	public boolean isPauseScreen() {
+		return false;
 	}
 
 	@Override
@@ -79,11 +85,6 @@ public final class EditBlockScreen extends Screen {
 		}
 
 		return super.keyPressed(keyCode, scanCode, int_3);
-	}
-
-	@Override
-	public void tick() {
-		blockField.tick();
 	}
 
 	@Override
@@ -122,16 +123,6 @@ public final class EditBlockScreen extends Screen {
 		GL11.glPopMatrix();
 	}
 
-	@Override
-	public boolean isPauseScreen() {
-		return false;
-	}
-
-	@Override
-	public boolean shouldCloseOnEsc() {
-		return false;
-	}
-
 	private void renderIcon(ItemStack stack, int x, int y, boolean large) {
 		GL11.glPushMatrix();
 
@@ -147,16 +138,18 @@ public final class EditBlockScreen extends Screen {
 
 		GL11.glPopMatrix();
 
-		if (stack.isEmpty())
+		if (stack.isEmpty()) {
 			renderQuestionMark(x, y, large);
+		}
 	}
 
 	private void renderQuestionMark(int x, int y, boolean large) {
 		GL11.glPushMatrix();
 
 		GL11.glTranslated(x, y, 0);
-		if (large)
+		if (large) {
 			GL11.glScaled(2, 2, 2);
+		}
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		TextRenderer tr = WurstClient.MC.textRenderer;
@@ -164,5 +157,15 @@ public final class EditBlockScreen extends Screen {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 
 		GL11.glPopMatrix();
+	}
+
+	@Override
+	public boolean shouldCloseOnEsc() {
+		return false;
+	}
+
+	@Override
+	public void tick() {
+		blockField.tick();
 	}
 }

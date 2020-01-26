@@ -19,8 +19,8 @@ public abstract class OtherFeature extends Feature {
 	}
 
 	@Override
-	public final String getName() {
-		return name;
+	public void doPrimaryAction() {
+
 	}
 
 	@Override
@@ -29,8 +29,8 @@ public abstract class OtherFeature extends Feature {
 	}
 
 	@Override
-	public boolean isEnabled() {
-		return false;
+	public final String getName() {
+		return name;
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public abstract class OtherFeature extends Feature {
 	}
 
 	@Override
-	public void doPrimaryAction() {
-
+	public boolean isEnabled() {
+		return false;
 	}
 }

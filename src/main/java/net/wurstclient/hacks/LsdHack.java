@@ -22,21 +22,23 @@ public final class LsdHack extends Hack {
 	}
 
 	@Override
+	public void onDisable() {
+		if (MC.gameRenderer.getShader() != null) {
+			MC.gameRenderer.disableShader();
+		}
+	}
+
+	@Override
 	public void onEnable() {
 		if (!(MC.getCameraEntity() instanceof PlayerEntity)) {
 			setEnabled(false);
 			return;
 		}
 
-		if (MC.gameRenderer.getShader() != null)
+		if (MC.gameRenderer.getShader() != null) {
 			MC.gameRenderer.disableShader();
+		}
 
 		((IGameRenderer) MC.gameRenderer).loadWurstShader(new Identifier("shaders/post/wobble.json"));
-	}
-
-	@Override
-	public void onDisable() {
-		if (MC.gameRenderer.getShader() != null)
-			MC.gameRenderer.disableShader();
 	}
 }

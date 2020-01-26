@@ -12,8 +12,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface HitResultRayTraceListener extends Listener {
-	public void onHitResultRayTrace(float float_1);
-
 	public static class HitResultRayTraceEvent extends Event<HitResultRayTraceListener> {
 		private float float_1;
 
@@ -23,8 +21,9 @@ public interface HitResultRayTraceListener extends Listener {
 
 		@Override
 		public void fire(ArrayList<HitResultRayTraceListener> listeners) {
-			for (HitResultRayTraceListener listener : listeners)
+			for (HitResultRayTraceListener listener : listeners) {
 				listener.onHitResultRayTrace(float_1);
+			}
 		}
 
 		@Override
@@ -32,4 +31,6 @@ public interface HitResultRayTraceListener extends Listener {
 			return HitResultRayTraceListener.class;
 		}
 	}
+
+	void onHitResultRayTrace(float float_1);
 }

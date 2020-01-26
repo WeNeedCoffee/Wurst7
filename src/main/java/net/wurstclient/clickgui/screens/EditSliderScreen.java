@@ -30,6 +30,16 @@ public final class EditSliderScreen extends Screen {
 		this.slider = slider;
 	}
 
+	private void done() {
+		String value = valueField.getText();
+
+		if (MathUtils.isDouble(value)) {
+			slider.setValue(Double.parseDouble(value));
+		}
+
+		minecraft.openScreen(prevScreen);
+	}
+
 	@Override
 	public void init() {
 		int x1 = width / 2 - 100;
@@ -52,13 +62,9 @@ public final class EditSliderScreen extends Screen {
 		addButton(doneButton);
 	}
 
-	private void done() {
-		String value = valueField.getText();
-
-		if (MathUtils.isDouble(value))
-			slider.setValue(Double.parseDouble(value));
-
-		minecraft.openScreen(prevScreen);
+	@Override
+	public boolean isPauseScreen() {
+		return false;
 	}
 
 	@Override
@@ -77,11 +83,6 @@ public final class EditSliderScreen extends Screen {
 	}
 
 	@Override
-	public void tick() {
-		valueField.tick();
-	}
-
-	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
 		renderBackground();
 		drawCenteredString(minecraft.textRenderer, slider.getName(), width / 2, 20, 0xFFFFFF);
@@ -91,12 +92,12 @@ public final class EditSliderScreen extends Screen {
 	}
 
 	@Override
-	public boolean isPauseScreen() {
+	public boolean shouldCloseOnEsc() {
 		return false;
 	}
 
 	@Override
-	public boolean shouldCloseOnEsc() {
-		return false;
+	public void tick() {
+		valueField.tick();
 	}
 }

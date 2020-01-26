@@ -31,14 +31,6 @@ public enum DefaultAutoBuildTemplates {
 
 	WURST("Wurst", new int[][] { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 }, { 0, 1, 1 }, { 1, 1, 1 }, { 2, 1, 1 }, { 2, 1, 0 }, { 2, 0, 0 }, { 2, 1, -1 }, { 1, 1, -1 }, { 0, 1, -1 }, { -1, 1, -1 }, { -1, 1, 0 }, { -1, 0, 0 }, { -2, 0, 0 }, { -2, 1, 0 }, { -2, 1, 1 }, { -1, 1, 1 }, { -1, 2, 0 }, { 0, 2, 0 }, { 1, 2, 0 }, { 2, 2, 0 }, { 3, 1, 0 }, { -2, 1, -1 }, { -2, 2, 0 }, { -3, 1, 0 } });
 
-	private final String name;
-	private final int[][] data;
-
-	private DefaultAutoBuildTemplates(String name, int[][] data) {
-		this.name = name;
-		this.data = data;
-	}
-
 	public static void createFiles(Path folder) {
 		for (DefaultAutoBuildTemplates template : DefaultAutoBuildTemplates.values()) {
 			JsonObject json = toJson(template);
@@ -60,5 +52,14 @@ public enum DefaultAutoBuildTemplates {
 		json.add("blocks", blocks);
 
 		return json;
+	}
+
+	private final String name;
+
+	private final int[][] data;
+
+	private DefaultAutoBuildTemplates(String name, int[][] data) {
+		this.name = name;
+		this.data = data;
 	}
 }

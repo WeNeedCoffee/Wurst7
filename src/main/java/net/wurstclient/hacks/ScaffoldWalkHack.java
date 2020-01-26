@@ -34,13 +34,13 @@ public final class ScaffoldWalkHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
@@ -56,18 +56,21 @@ public final class ScaffoldWalkHack extends Hack implements UpdateListener {
 		for (int i = 0; i < 9; i++) {
 			// filter out non-block items
 			ItemStack stack = MC.player.inventory.getInvStack(i);
-			if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem))
+			if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
 				continue;
+			}
 
 			// filter out non-solid blocks
 			Block block = Block.getBlockFromItem(stack.getItem());
 			BlockState state = block.getDefaultState();
-			if (!block.isFullOpaque(state, EmptyBlockView.INSTANCE, BlockPos.ORIGIN))
+			if (!block.isFullOpaque(state, EmptyBlockView.INSTANCE, BlockPos.ORIGIN)) {
 				continue;
+			}
 
 			// filter out blocks that would fall
-			if (block instanceof FallingBlock && FallingBlock.canFallThrough(BlockUtils.getState(belowPlayer.down())))
+			if (block instanceof FallingBlock && FallingBlock.canFallThrough(BlockUtils.getState(belowPlayer.down()))) {
 				continue;
+			}
 
 			newSlot = i;
 			break;
@@ -95,18 +98,21 @@ public final class ScaffoldWalkHack extends Hack implements UpdateListener {
 			Direction side2 = side.getOpposite();
 
 			// check if side is visible (facing away from player)
-			if (eyesPos.squaredDistanceTo(new Vec3d(pos).add(0.5, 0.5, 0.5)) >= eyesPos.squaredDistanceTo(new Vec3d(neighbor).add(0.5, 0.5, 0.5)))
+			if (eyesPos.squaredDistanceTo(new Vec3d(pos).add(0.5, 0.5, 0.5)) >= eyesPos.squaredDistanceTo(new Vec3d(neighbor).add(0.5, 0.5, 0.5))) {
 				continue;
+			}
 
 			// check if neighbor can be right clicked
-			if (!BlockUtils.canBeClicked(neighbor))
+			if (!BlockUtils.canBeClicked(neighbor)) {
 				continue;
+			}
 
 			Vec3d hitVec = new Vec3d(neighbor).add(0.5, 0.5, 0.5).add(new Vec3d(side2.getVector()).multiply(0.5));
 
 			// check if hitVec is within range (4.25 blocks)
-			if (eyesPos.squaredDistanceTo(hitVec) > 18.0625)
+			if (eyesPos.squaredDistanceTo(hitVec) > 18.0625) {
 				continue;
+			}
 
 			// place block
 			Rotation rotation = RotationUtils.getNeededRotations(hitVec);

@@ -24,6 +24,33 @@ public final class EnabledHacksFile {
 		this.path = path;
 	}
 
+	private JsonArray createJson(HackList hax) {
+		Stream<Hack> enabledHax = hax.getAllHax().stream().filter(Hack::isEnabled).filter(Hack::isStateSaved);
+
+		JsonArray json = new JsonArray();
+		enabledHax.map(Hack::getName).forEach(name -> json.add(name));
+
+		return json;
+	}
+
+	private void enableHacks(HackList hax, WsonArray wson) {
+		try {
+			disableSaving = true;
+
+			for (String name : wson.getAllStrings()) {
+				Hack hack = hax.getHackByName(name);
+				if (hack == null || !hack.isStateSaved()) {
+					continue;
+				}
+
+				hack.setEnabled(true);
+			}
+
+		} finally {
+			disableSaving = false;
+		}
+	}
+
 	public void load(HackList hackList) {
 		try {
 			WsonArray wson = JsonUtils.parseFileToArray(path);
@@ -40,23 +67,6 @@ public final class EnabledHacksFile {
 		save(hackList);
 	}
 
-	private void enableHacks(HackList hax, WsonArray wson) {
-		try {
-			disableSaving = true;
-
-			for (String name : wson.getAllStrings()) {
-				Hack hack = hax.getHackByName(name);
-				if (hack == null || !hack.isStateSaved())
-					continue;
-
-				hack.setEnabled(true);
-			}
-
-		} finally {
-			disableSaving = false;
-		}
-	}
-
 	public void save(HackList hax) {
 		if (disableSaving)
 			return;
@@ -70,14 +80,5 @@ public final class EnabledHacksFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonArray createJson(HackList hax) {
-		Stream<Hack> enabledHax = hax.getAllHax().stream().filter(Hack::isEnabled).filter(Hack::isStateSaved);
-
-		JsonArray json = new JsonArray();
-		enabledHax.map(Hack::getName).forEach(name -> json.add(name));
-
-		return json;
 	}
 }

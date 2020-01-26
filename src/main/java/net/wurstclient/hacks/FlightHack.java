@@ -29,6 +29,12 @@ public final class FlightHack extends Hack implements UpdateListener, IsPlayerIn
 	}
 
 	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(IsPlayerInWaterListener.class, this);
+	}
+
+	@Override
 	public void onEnable() {
 		WURST.getHax().jetpackHack.setEnabled(false);
 
@@ -37,9 +43,8 @@ public final class FlightHack extends Hack implements UpdateListener, IsPlayerIn
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(IsPlayerInWaterListener.class, this);
+	public void onIsPlayerInWater(IsPlayerInWaterEvent event) {
+		event.setInWater(false);
 	}
 
 	@Override
@@ -52,15 +57,12 @@ public final class FlightHack extends Hack implements UpdateListener, IsPlayerIn
 		player.setVelocity(0, 0, 0);
 		Vec3d velcity = player.getVelocity();
 
-		if (MC.options.keyJump.isPressed())
+		if (MC.options.keyJump.isPressed()) {
 			player.setVelocity(velcity.add(0, speed.getValue(), 0));
+		}
 
-		if (MC.options.keySneak.isPressed())
+		if (MC.options.keySneak.isPressed()) {
 			player.setVelocity(velcity.subtract(0, speed.getValue(), 0));
-	}
-
-	@Override
-	public void onIsPlayerInWater(IsPlayerInWaterEvent event) {
-		event.setInWater(false);
+		}
 	}
 }

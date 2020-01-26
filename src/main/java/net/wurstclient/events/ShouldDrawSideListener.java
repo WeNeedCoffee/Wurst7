@@ -13,14 +13,24 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface ShouldDrawSideListener extends Listener {
-	public void onShouldDrawSide(ShouldDrawSideEvent event);
-
 	public static class ShouldDrawSideEvent extends Event<ShouldDrawSideListener> {
 		private final BlockState state;
 		private Boolean rendered;
 
 		public ShouldDrawSideEvent(BlockState state) {
 			this.state = state;
+		}
+
+		@Override
+		public void fire(ArrayList<ShouldDrawSideListener> listeners) {
+			for (ShouldDrawSideListener listener : listeners) {
+				listener.onShouldDrawSide(this);
+			}
+		}
+
+		@Override
+		public Class<ShouldDrawSideListener> getListenerType() {
+			return ShouldDrawSideListener.class;
 		}
 
 		public BlockState getState() {
@@ -34,16 +44,7 @@ public interface ShouldDrawSideListener extends Listener {
 		public void setRendered(boolean rendered) {
 			this.rendered = rendered;
 		}
-
-		@Override
-		public void fire(ArrayList<ShouldDrawSideListener> listeners) {
-			for (ShouldDrawSideListener listener : listeners)
-				listener.onShouldDrawSide(this);
-		}
-
-		@Override
-		public Class<ShouldDrawSideListener> getListenerType() {
-			return ShouldDrawSideListener.class;
-		}
 	}
+
+	void onShouldDrawSide(ShouldDrawSideEvent event);
 }

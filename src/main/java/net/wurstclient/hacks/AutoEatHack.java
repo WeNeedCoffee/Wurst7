@@ -34,6 +34,29 @@ import net.wurstclient.settings.EnumSetting;
 
 @SearchTags({ "auto eat", "AutoFood", "auto food", "AutoFeeder", "auto feeder", "AutoFeeding", "auto feeding", "AutoSoup", "auto soup" })
 public final class AutoEatHack extends Hack implements UpdateListener {
+	public enum FoodPriority {
+		HIGH_HUNGER("High Food Points", Comparator.<FoodComponent>comparingInt(food -> food.getHunger())),
+
+		HIGH_SATURATION("High Saturation", Comparator.<FoodComponent>comparingDouble(food -> food.getSaturationModifier())),
+
+		LOW_HUNGER("Low Food Points", Comparator.<FoodComponent>comparingInt(food -> food.getHunger()).reversed()),
+
+		LOW_SATURATION("Low Saturation", Comparator.<FoodComponent>comparingDouble(food -> food.getSaturationModifier()).reversed());
+
+		private final String name;
+		private final Comparator<FoodComponent> comparator;
+
+		private FoodPriority(String name, Comparator<FoodComponent> comparator) {
+			this.name = name;
+			this.comparator = comparator;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final CheckboxSetting eatWhileWalking = new CheckboxSetting("Eat while walking", "Slows you down, not recommended.", false);
 
 	private final EnumSetting<FoodPriority> foodPriority = new EnumSetting<>("Prefer food with", FoodPriority.values(), FoodPriority.HIGH_SATURATION);
@@ -56,42 +79,6 @@ public final class AutoEatHack extends Hack implements UpdateListener {
 		addSetting(allowChorus);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		stopIfEating();
-	}
-
-	@Override
-	public void onUpdate() {
-		if (!shouldEat()) {
-			stopIfEating();
-			return;
-		}
-
-		int bestSlot = getBestSlot();
-		if (bestSlot == -1) {
-			stopIfEating();
-			return;
-		}
-
-		// save old slot
-		if (!isEating())
-			oldSlot = MC.player.inventory.selectedSlot;
-
-		// set slot
-		MC.player.inventory.selectedSlot = bestSlot;
-
-		// eat food
-		MC.options.keyUse.setPressed(true);
-		IMC.getInteractionManager().rightClickItem();
-	}
-
 	private int getBestSlot() {
 		int bestSlot = -1;
 		FoodComponent bestFood = null;
@@ -100,12 +87,14 @@ public final class AutoEatHack extends Hack implements UpdateListener {
 		for (int i = 0; i < 9; i++) {
 			// filter out non-food items
 			Item item = MC.player.inventory.getInvStack(i).getItem();
-			if (!item.isFood())
+			if (!item.isFood()) {
 				continue;
+			}
 
 			FoodComponent food = item.getFoodComponent();
-			if (!isAllowedFood(food))
+			if (!isAllowedFood(food)) {
 				continue;
+			}
 
 			// compare to previously found food
 			if (bestFood == null || comparator.compare(food, bestFood) > 0) {
@@ -130,22 +119,6 @@ public final class AutoEatHack extends Hack implements UpdateListener {
 			if (!allowPoison.isChecked() && effect == StatusEffects.POISON)
 				return false;
 		}
-
-		return true;
-	}
-
-	private boolean shouldEat() {
-		if (MC.player.abilities.creativeMode)
-			return false;
-
-		if (!MC.player.canConsume(false))
-			return false;
-
-		if (!eatWhileWalking.isChecked() && (MC.player.forwardSpeed != 0 || MC.player.sidewaysSpeed != 0))
-			return false;
-
-		if (isClickable(MC.crosshairTarget))
-			return false;
 
 		return true;
 	}
@@ -175,6 +148,59 @@ public final class AutoEatHack extends Hack implements UpdateListener {
 		return oldSlot != -1;
 	}
 
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		stopIfEating();
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onUpdate() {
+		if (!shouldEat()) {
+			stopIfEating();
+			return;
+		}
+
+		int bestSlot = getBestSlot();
+		if (bestSlot == -1) {
+			stopIfEating();
+			return;
+		}
+
+		// save old slot
+		if (!isEating()) {
+			oldSlot = MC.player.inventory.selectedSlot;
+		}
+
+		// set slot
+		MC.player.inventory.selectedSlot = bestSlot;
+
+		// eat food
+		MC.options.keyUse.setPressed(true);
+		IMC.getInteractionManager().rightClickItem();
+	}
+
+	private boolean shouldEat() {
+		if (MC.player.abilities.creativeMode)
+			return false;
+
+		if (!MC.player.canConsume(false))
+			return false;
+
+		if (!eatWhileWalking.isChecked() && (MC.player.forwardSpeed != 0 || MC.player.sidewaysSpeed != 0))
+			return false;
+
+		if (isClickable(MC.crosshairTarget))
+			return false;
+
+		return true;
+	}
+
 	private void stopIfEating() {
 		if (!isEating())
 			return;
@@ -183,28 +209,5 @@ public final class AutoEatHack extends Hack implements UpdateListener {
 
 		MC.player.inventory.selectedSlot = oldSlot;
 		oldSlot = -1;
-	}
-
-	public static enum FoodPriority {
-		HIGH_HUNGER("High Food Points", Comparator.<FoodComponent>comparingInt(food -> food.getHunger())),
-
-		HIGH_SATURATION("High Saturation", Comparator.<FoodComponent>comparingDouble(food -> food.getSaturationModifier())),
-
-		LOW_HUNGER("Low Food Points", Comparator.<FoodComponent>comparingInt(food -> food.getHunger()).reversed()),
-
-		LOW_SATURATION("Low Saturation", Comparator.<FoodComponent>comparingDouble(food -> food.getSaturationModifier()).reversed());
-
-		private final String name;
-		private final Comparator<FoodComponent> comparator;
-
-		private FoodPriority(String name, Comparator<FoodComponent> comparator) {
-			this.name = name;
-			this.comparator = comparator;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
 	}
 }

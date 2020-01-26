@@ -29,19 +29,19 @@ public class BlockStateMixin extends AbstractState<Block, BlockState> implements
 		super(object_1, immutableMap_1);
 	}
 
-	@Inject(at = { @At("TAIL") }, method = { "isSimpleFullBlock(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Z" }, cancellable = true)
-	private void onIsSimpleFullBlock(CallbackInfoReturnable<Boolean> cir) {
-		IsNormalCubeEvent event = new IsNormalCubeEvent();
-		WurstClient.INSTANCE.getEventManager().fire(event);
-
-		cir.setReturnValue(cir.getReturnValue() && !event.isCancelled());
-	}
-
 	@Inject(at = { @At("TAIL") }, method = { "getAmbientOcclusionLightLevel(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)F" }, cancellable = true)
 	private void onGetAmbientOcclusionLightLevel(BlockView blockView, BlockPos blockPos, CallbackInfoReturnable<Float> cir) {
 		GetAmbientOcclusionLightLevelEvent event = new GetAmbientOcclusionLightLevelEvent((BlockState) (Object) this, cir.getReturnValueF());
 
 		WurstClient.INSTANCE.getEventManager().fire(event);
 		cir.setReturnValue(event.getLightLevel());
+	}
+
+	@Inject(at = { @At("TAIL") }, method = { "isSimpleFullBlock(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Z" }, cancellable = true)
+	private void onIsSimpleFullBlock(CallbackInfoReturnable<Boolean> cir) {
+		IsNormalCubeEvent event = new IsNormalCubeEvent();
+		WurstClient.INSTANCE.getEventManager().fire(event);
+
+		cir.setReturnValue(cir.getReturnValue() && !event.isCancelled());
 	}
 }

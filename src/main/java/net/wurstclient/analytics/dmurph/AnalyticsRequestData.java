@@ -66,57 +66,6 @@ public class AnalyticsRequestData {
 	private String utmcmd = "(none)";
 	private String utmcct = null;
 
-	public void setReferrer(String argSite, String argPage) {
-		utmcmd = "referral";
-		utmcct = argPage;
-		utmccn = "(referral)";
-		utmcsr = argSite;
-		utmctr = null;
-	}
-
-	public void setSearchReferrer(String argSearchSource, String argSearchKeywords) {
-		utmcsr = argSearchSource;
-		utmctr = argSearchKeywords;
-		utmcmd = "organic";
-		utmccn = "(organic)";
-		utmcct = null;
-	}
-
-	/**
-	 * @return the utmcsr
-	 */
-	public String getUtmcsr() {
-		return utmcsr;
-	}
-
-	/**
-	 * @return the utmccn
-	 */
-	public String getUtmccn() {
-		return utmccn;
-	}
-
-	/**
-	 * @return the utmctr
-	 */
-	public String getUtmctr() {
-		return utmctr;
-	}
-
-	/**
-	 * @return the utmcmd
-	 */
-	public String getUtmcmd() {
-		return utmcmd;
-	}
-
-	/**
-	 * @return the utmcct
-	 */
-	public String getUtmcct() {
-		return utmcct;
-	}
-
 	/**
 	 * @return the eventAction
 	 */
@@ -164,6 +113,41 @@ public class AnalyticsRequestData {
 	 */
 	public String getPageURL() {
 		return pageURL;
+	}
+
+	/**
+	 * @return the utmccn
+	 */
+	public String getUtmccn() {
+		return utmccn;
+	}
+
+	/**
+	 * @return the utmcct
+	 */
+	public String getUtmcct() {
+		return utmcct;
+	}
+
+	/**
+	 * @return the utmcmd
+	 */
+	public String getUtmcmd() {
+		return utmcmd;
+	}
+
+	/**
+	 * @return the utmcsr
+	 */
+	public String getUtmcsr() {
+		return utmcsr;
+	}
+
+	/**
+	 * @return the utmctr
+	 */
+	public String getUtmctr() {
+		return utmctr;
 	}
 
 	/**
@@ -229,5 +213,21 @@ public class AnalyticsRequestData {
 	 */
 	public void setPageURL(String argPageURL) {
 		pageURL = argPageURL;
+	}
+
+	public void setReferrer(String argSite, String argPage) {
+		utmcmd = "referral";
+		utmcct = argPage;
+		utmccn = "(referral)";
+		utmcsr = argSite;
+		utmctr = null;
+	}
+
+	public void setSearchReferrer(String argSearchSource, String argSearchKeywords) {
+		utmcsr = argSearchSource;
+		utmctr = argSearchKeywords;
+		utmcmd = "organic";
+		utmccn = "(organic)";
+		utmcct = null;
 	}
 }

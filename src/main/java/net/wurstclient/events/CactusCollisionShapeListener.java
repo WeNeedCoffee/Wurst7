@@ -13,28 +13,29 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface CactusCollisionShapeListener extends Listener {
-	public void onCactusCollisionShape(CactusCollisionShapeEvent event);
-
 	public static class CactusCollisionShapeEvent extends Event<CactusCollisionShapeListener> {
 		private VoxelShape collisionShape;
 
-		public VoxelShape getCollisionShape() {
-			return collisionShape;
-		}
-
-		public void setCollisionShape(VoxelShape collisionShape) {
-			this.collisionShape = collisionShape;
-		}
-
 		@Override
 		public void fire(ArrayList<CactusCollisionShapeListener> listeners) {
-			for (CactusCollisionShapeListener listener : listeners)
+			for (CactusCollisionShapeListener listener : listeners) {
 				listener.onCactusCollisionShape(this);
+			}
+		}
+
+		public VoxelShape getCollisionShape() {
+			return collisionShape;
 		}
 
 		@Override
 		public Class<CactusCollisionShapeListener> getListenerType() {
 			return CactusCollisionShapeListener.class;
 		}
+
+		public void setCollisionShape(VoxelShape collisionShape) {
+			this.collisionShape = collisionShape;
+		}
 	}
+
+	void onCactusCollisionShape(CactusCollisionShapeEvent event);
 }

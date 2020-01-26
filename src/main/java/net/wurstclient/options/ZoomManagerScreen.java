@@ -47,14 +47,6 @@ public class ZoomManagerScreen extends Screen implements PressAKeyCallback {
 		addButton(scrollButton = new ButtonWidget(width / 2 - 79, height / 4 + 96 - 16, 158, 20, "Use Mouse Wheel: " + onOrOff(scroll.isChecked()), b -> toggleScroll()));
 	}
 
-	private void toggleScroll() {
-		ZoomOtf zoom = WurstClient.INSTANCE.getOtfs().zoomOtf;
-		CheckboxSetting scroll = zoom.getScrollSetting();
-
-		scroll.setChecked(!scroll.isChecked());
-		scrollButton.setMessage("Use Mouse Wheel: " + onOrOff(scroll.isChecked()));
-	}
-
 	private String onOrOff(boolean on) {
 		return on ? "ON" : "OFF";
 	}
@@ -77,5 +69,13 @@ public class ZoomManagerScreen extends Screen implements PressAKeyCallback {
 		minecraft.options.write();
 		KeyBinding.updateKeysByCode();
 		keyButton.setMessage("Zoom Key: " + key);
+	}
+
+	private void toggleScroll() {
+		ZoomOtf zoom = WurstClient.INSTANCE.getOtfs().zoomOtf;
+		CheckboxSetting scroll = zoom.getScrollSetting();
+
+		scroll.setChecked(!scroll.isChecked());
+		scrollButton.setMessage("Use Mouse Wheel: " + onOrOff(scroll.isChecked()));
 	}
 }

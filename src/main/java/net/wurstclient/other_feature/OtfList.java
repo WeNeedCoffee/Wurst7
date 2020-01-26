@@ -34,8 +34,9 @@ public final class OtfList {
 	public OtfList() {
 		try {
 			for (Field field : OtfList.class.getDeclaredFields()) {
-				if (!field.getName().endsWith("Otf"))
+				if (!field.getName().endsWith("Otf")) {
 					continue;
+				}
 
 				OtherFeature otf = (OtherFeature) field.get(this);
 				otfs.put(otf.getName(), otf);
@@ -48,15 +49,15 @@ public final class OtfList {
 		}
 	}
 
-	public OtherFeature getOtfByName(String name) {
-		return otfs.get(name);
+	public int countOtfs() {
+		return otfs.size();
 	}
 
 	public Collection<OtherFeature> getAllOtfs() {
 		return otfs.values();
 	}
 
-	public int countOtfs() {
-		return otfs.size();
+	public OtherFeature getOtfByName(String name) {
+		return otfs.get(name);
 	}
 }

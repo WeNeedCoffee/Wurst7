@@ -25,7 +25,8 @@ public abstract class ClientConnectionMixin extends SimpleChannelInboundHandler<
 		PacketInputEvent event = new PacketInputEvent(packet);
 		WurstClient.INSTANCE.getEventManager().fire(event);
 
-		if (event.isCancelled())
+		if (event.isCancelled()) {
 			ci.cancel();
+		}
 	}
 }

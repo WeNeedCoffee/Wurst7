@@ -20,8 +20,9 @@ public final class AutoRespawnHack extends Hack implements DeathListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(DeathListener.class, this);
+	public void onDeath() {
+		MC.player.requestRespawn();
+		MC.openScreen(null);
 	}
 
 	@Override
@@ -30,8 +31,7 @@ public final class AutoRespawnHack extends Hack implements DeathListener {
 	}
 
 	@Override
-	public void onDeath() {
-		MC.player.requestRespawn();
-		MC.openScreen(null);
+	public void onEnable() {
+		EVENTS.add(DeathListener.class, this);
 	}
 }

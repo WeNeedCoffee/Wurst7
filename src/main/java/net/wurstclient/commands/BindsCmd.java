@@ -24,6 +24,19 @@ public final class BindsCmd extends Command {
 		super("binds", "Allows you to manage keybinds through the chat.", ".binds add <key> <hacks>", ".binds add <key> <commands>", ".binds remove <key>", ".binds list [<page>]", ".binds remove-all", ".binds reset", "Multiple hacks/commands must be separated by ';'.");
 	}
 
+	private void add(String[] args) throws CmdException {
+		if (args.length < 3)
+			throw new CmdSyntaxError();
+
+		String displayKey = args[1];
+		String key = parseKey(displayKey);
+		String[] cmdArgs = Arrays.copyOfRange(args, 2, args.length);
+		String commands = String.join(" ", cmdArgs);
+
+		WURST.getKeybinds().add(key, commands);
+		ChatUtils.message("Keybind set: " + displayKey + " -> " + commands);
+	}
+
 	@Override
 	public void call(String[] args) throws CmdException {
 		if (args.length < 1)
@@ -55,50 +68,6 @@ public final class BindsCmd extends Command {
 		}
 	}
 
-	private void add(String[] args) throws CmdException {
-		if (args.length < 3)
-			throw new CmdSyntaxError();
-
-		String displayKey = args[1];
-		String key = parseKey(displayKey);
-		String[] cmdArgs = Arrays.copyOfRange(args, 2, args.length);
-		String commands = String.join(" ", cmdArgs);
-
-		WURST.getKeybinds().add(key, commands);
-		ChatUtils.message("Keybind set: " + displayKey + " -> " + commands);
-	}
-
-	private void remove(String[] args) throws CmdException {
-		if (args.length != 2)
-			throw new CmdSyntaxError();
-
-		String displayKey = args[1];
-		String key = parseKey(displayKey);
-
-		String commands = WURST.getKeybinds().getCommands(key);
-		if (commands == null)
-			throw new CmdError("Nothing to remove.");
-
-		WURST.getKeybinds().remove(key);
-		ChatUtils.message("Keybind removed: " + displayKey + " -> " + commands);
-	}
-
-	private String parseKey(String displayKey) throws CmdSyntaxError {
-		String key = displayKey.toLowerCase();
-
-		String prefix = "key.keyboard.";
-		if (!key.startsWith(prefix))
-			key = prefix + key;
-
-		try {
-			InputUtil.fromName(key);
-			return key;
-
-		} catch (IllegalArgumentException e) {
-			throw new CmdSyntaxError("Unknown key: " + displayKey);
-		}
-	}
-
 	private void list(String[] args) throws CmdException {
 		if (args.length > 2)
 			throw new CmdSyntaxError();
@@ -119,8 +88,26 @@ public final class BindsCmd extends Command {
 		int end = Math.min(page * 8, binds.size());
 
 		ChatUtils.message("Keybind list (page " + page + "/" + pages + ")");
-		for (int i = start; i < end; i++)
+		for (int i = start; i < end; i++) {
 			ChatUtils.message(binds.get(i).toString());
+		}
+	}
+
+	private String parseKey(String displayKey) throws CmdSyntaxError {
+		String key = displayKey.toLowerCase();
+
+		String prefix = "key.keyboard.";
+		if (!key.startsWith(prefix)) {
+			key = prefix + key;
+		}
+
+		try {
+			InputUtil.fromName(key);
+			return key;
+
+		} catch (IllegalArgumentException e) {
+			throw new CmdSyntaxError("Unknown key: " + displayKey);
+		}
 	}
 
 	private int parsePage(String[] args) throws CmdSyntaxError {
@@ -131,6 +118,21 @@ public final class BindsCmd extends Command {
 			throw new CmdSyntaxError("Not a number: " + args[1]);
 
 		return Integer.parseInt(args[1]);
+	}
+
+	private void remove(String[] args) throws CmdException {
+		if (args.length != 2)
+			throw new CmdSyntaxError();
+
+		String displayKey = args[1];
+		String key = parseKey(displayKey);
+
+		String commands = WURST.getKeybinds().getCommands(key);
+		if (commands == null)
+			throw new CmdError("Nothing to remove.");
+
+		WURST.getKeybinds().remove(key);
+		ChatUtils.message("Keybind removed: " + displayKey + " -> " + commands);
 	}
 
 	private void removeAll() {

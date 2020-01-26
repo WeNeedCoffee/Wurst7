@@ -86,13 +86,6 @@ public class AnalyticsConfigData {
 	}
 
 	/**
-	 * @return the userLanguage
-	 */
-	public String getUserLanguage() {
-		return userLanguage;
-	}
-
-	/**
 	 * @return the user agent used for the network requests
 	 */
 	public String getUserAgent() {
@@ -100,14 +93,17 @@ public class AnalyticsConfigData {
 	}
 
 	/**
+	 * @return the userLanguage
+	 */
+	public String getUserLanguage() {
+		return userLanguage;
+	}
+
+	/**
 	 * @return the visitor data, used to track unique visitors
 	 */
 	public VisitorData getVisitorData() {
 		return visitorData;
-	}
-
-	public void setVisitorData(VisitorData visitorData) {
-		this.visitorData = visitorData;
 	}
 
 	/**
@@ -146,6 +142,10 @@ public class AnalyticsConfigData {
 		screenResolution = argScreenResolution;
 	}
 
+	public void setUserAgent(String userAgent) {
+		this.userAgent = userAgent;
+	}
+
 	/**
 	 * Sets the user language, like "EN-us"
 	 *
@@ -155,7 +155,7 @@ public class AnalyticsConfigData {
 		userLanguage = argUserLanguage;
 	}
 
-	public void setUserAgent(String userAgent) {
-		this.userAgent = userAgent;
+	public void setVisitorData(VisitorData visitorData) {
+		this.visitorData = visitorData;
 	}
 }

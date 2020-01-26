@@ -18,14 +18,6 @@ public class Keybind implements Comparable<Keybind> {
 		this.commands = Objects.requireNonNull(commands);
 	}
 
-	public String getKey() {
-		return key;
-	}
-
-	public String getCommands() {
-		return commands;
-	}
-
 	@Override
 	public int compareTo(Keybind o) {
 		return key.compareToIgnoreCase(o.key);
@@ -38,6 +30,14 @@ public class Keybind implements Comparable<Keybind> {
 
 		Keybind otherKeybind = (Keybind) obj;
 		return key.equalsIgnoreCase(otherKeybind.key);
+	}
+
+	public String getCommands() {
+		return commands;
+	}
+
+	public String getKey() {
+		return key;
 	}
 
 	@Override

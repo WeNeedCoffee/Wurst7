@@ -13,8 +13,6 @@ import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface ChatOutputListener extends Listener {
-	public void onSentMessage(ChatOutputEvent event);
-
 	public static class ChatOutputEvent extends CancellableEvent<ChatOutputListener> {
 		private final String originalMessage;
 		private String message;
@@ -24,12 +22,24 @@ public interface ChatOutputListener extends Listener {
 			originalMessage = message;
 		}
 
-		public String getMessage() {
-			return message;
+		@Override
+		public void fire(ArrayList<ChatOutputListener> listeners) {
+			for (ChatOutputListener listener : listeners) {
+				listener.onSentMessage(this);
+
+				if (isCancelled()) {
+					break;
+				}
+			}
 		}
 
-		public void setMessage(String message) {
-			this.message = message;
+		@Override
+		public Class<ChatOutputListener> getListenerType() {
+			return ChatOutputListener.class;
+		}
+
+		public String getMessage() {
+			return message;
 		}
 
 		public String getOriginalMessage() {
@@ -40,19 +50,10 @@ public interface ChatOutputListener extends Listener {
 			return !originalMessage.equals(message);
 		}
 
-		@Override
-		public void fire(ArrayList<ChatOutputListener> listeners) {
-			for (ChatOutputListener listener : listeners) {
-				listener.onSentMessage(this);
-
-				if (isCancelled())
-					break;
-			}
-		}
-
-		@Override
-		public Class<ChatOutputListener> getListenerType() {
-			return ChatOutputListener.class;
+		public void setMessage(String message) {
+			this.message = message;
 		}
 	}
+
+	void onSentMessage(ChatOutputEvent event);
 }

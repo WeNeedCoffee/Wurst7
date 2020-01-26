@@ -41,6 +41,27 @@ public final class XRayHack extends Hack implements UpdateListener, SetOpaqueCub
 		return "X-Wurst";
 	}
 
+	private boolean isVisible(Block block) {
+		String name = BlockUtils.getName(block);
+		int index = Collections.binarySearch(oreNames, name);
+		return index >= 0;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(SetOpaqueCubeListener.class, this);
+		EVENTS.remove(GetAmbientOcclusionLightLevelListener.class, this);
+		EVENTS.remove(ShouldDrawSideListener.class, this);
+		EVENTS.remove(TesselateBlockListener.class, this);
+		EVENTS.remove(RenderBlockEntityListener.class, this);
+		MC.worldRenderer.reload();
+
+		if (!WURST.getHax().fullbrightHack.isEnabled()) {
+			MC.options.gamma = 0.5F;
+		}
+	}
+
 	@Override
 	public void onEnable() {
 		oreNames = new ArrayList<>(ores.getBlockNames());
@@ -55,32 +76,20 @@ public final class XRayHack extends Hack implements UpdateListener, SetOpaqueCub
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(SetOpaqueCubeListener.class, this);
-		EVENTS.remove(GetAmbientOcclusionLightLevelListener.class, this);
-		EVENTS.remove(ShouldDrawSideListener.class, this);
-		EVENTS.remove(TesselateBlockListener.class, this);
-		EVENTS.remove(RenderBlockEntityListener.class, this);
-		MC.worldRenderer.reload();
-
-		if (!WURST.getHax().fullbrightHack.isEnabled())
-			MC.options.gamma = 0.5F;
+	public void onGetAmbientOcclusionLightLevel(GetAmbientOcclusionLightLevelEvent event) {
+		event.setLightLevel(1);
 	}
 
 	@Override
-	public void onUpdate() {
-		MC.options.gamma = 16;
+	public void onRenderBlockEntity(RenderBlockEntityEvent event) {
+		if (!isVisible(BlockUtils.getBlock(event.getBlockEntity().getPos()))) {
+			event.cancel();
+		}
 	}
 
 	@Override
 	public void onSetOpaqueCube(SetOpaqueCubeEvent event) {
 		event.cancel();
-	}
-
-	@Override
-	public void onGetAmbientOcclusionLightLevel(GetAmbientOcclusionLightLevelEvent event) {
-		event.setLightLevel(1);
 	}
 
 	@Override
@@ -90,23 +99,17 @@ public final class XRayHack extends Hack implements UpdateListener, SetOpaqueCub
 
 	@Override
 	public void onTesselateBlock(TesselateBlockEvent event) {
-		if (!isVisible(event.getState().getBlock()))
+		if (!isVisible(event.getState().getBlock())) {
 			event.cancel();
+		}
 	}
 
 	@Override
-	public void onRenderBlockEntity(RenderBlockEntityEvent event) {
-		if (!isVisible(BlockUtils.getBlock(event.getBlockEntity().getPos())))
-			event.cancel();
+	public void onUpdate() {
+		MC.options.gamma = 16;
 	}
 
 	public void openBlockListEditor(Screen prevScreen) {
 		MC.openScreen(new EditBlockListScreen(prevScreen, ores));
-	}
-
-	private boolean isVisible(Block block) {
-		String name = BlockUtils.getName(block);
-		int index = Collections.binarySearch(oreNames, name);
-		return index >= 0;
 	}
 }

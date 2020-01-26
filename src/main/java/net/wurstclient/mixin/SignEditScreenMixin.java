@@ -28,6 +28,16 @@ public abstract class SignEditScreenMixin extends Screen {
 		super(text_1);
 	}
 
+	@Shadow
+	private void finishEditing() {
+
+	}
+
+	@Inject(at = { @At("HEAD") }, method = { "finishEditing()V" })
+	private void onFinishEditing(CallbackInfo ci) {
+		WurstClient.INSTANCE.getHax().autoSignHack.setSignText(sign.text);
+	}
+
 	@Inject(at = { @At("HEAD") }, method = { "init()V" })
 	private void onInit(CallbackInfo ci) {
 		AutoSignHack autoSignHack = WurstClient.INSTANCE.getHax().autoSignHack;
@@ -36,19 +46,10 @@ public abstract class SignEditScreenMixin extends Screen {
 		if (autoSignText == null)
 			return;
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 4; i++) {
 			sign.text[i] = autoSignText[i];
+		}
 
 		finishEditing();
-	}
-
-	@Inject(at = { @At("HEAD") }, method = { "finishEditing()V" })
-	private void onFinishEditing(CallbackInfo ci) {
-		WurstClient.INSTANCE.getHax().autoSignHack.setSignText(sign.text);
-	}
-
-	@Shadow
-	private void finishEditing() {
-
 	}
 }

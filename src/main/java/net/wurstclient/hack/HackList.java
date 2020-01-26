@@ -236,8 +236,9 @@ public final class HackList implements UpdateListener {
 
 		try {
 			for (Field field : HackList.class.getDeclaredFields()) {
-				if (!field.getName().endsWith("Hack"))
+				if (!field.getName().endsWith("Hack")) {
 					continue;
+				}
 
 				Hack hack = (Hack) field.get(this);
 				hax.put(hack.getName(), hack);
@@ -252,6 +253,18 @@ public final class HackList implements UpdateListener {
 		eventManager.add(UpdateListener.class, this);
 	}
 
+	public int countHax() {
+		return hax.size();
+	}
+
+	public Collection<Hack> getAllHax() {
+		return Collections.unmodifiableCollection(hax.values());
+	}
+
+	public Hack getHackByName(String name) {
+		return hax.get(name);
+	}
+
 	@Override
 	public void onUpdate() {
 		enabledHacksFile.load(this);
@@ -260,17 +273,5 @@ public final class HackList implements UpdateListener {
 
 	public void saveEnabledHax() {
 		enabledHacksFile.save(this);
-	}
-
-	public Hack getHackByName(String name) {
-		return hax.get(name);
-	}
-
-	public Collection<Hack> getAllHax() {
-		return Collections.unmodifiableCollection(hax.values());
-	}
-
-	public int countHax() {
-		return hax.size();
 	}
 }

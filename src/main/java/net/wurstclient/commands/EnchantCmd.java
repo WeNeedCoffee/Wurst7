@@ -29,22 +29,20 @@ public final class EnchantCmd extends Command {
 		ChatUtils.message("Item enchanted.");
 	}
 
-	private ItemStack getHeldItem() throws CmdError {
-		ItemStack stack = MC.player.inventory.getMainHandStack();
-
-		if (stack.isEmpty())
-			throw new CmdError("There is no item in your hand.");
-
-		return stack;
+	@Override
+	public void doPrimaryAction() {
+		WURST.getCmdProcessor().process("enchant");
 	}
 
 	private void enchant(ItemStack stack) {
 		for (Enchantment enchantment : Registry.ENCHANTMENT) {
-			if (enchantment == Enchantments.SILK_TOUCH)
+			if (enchantment == Enchantments.SILK_TOUCH) {
 				continue;
+			}
 
-			if (enchantment.isCursed())
+			if (enchantment.isCursed()) {
 				continue;
+			}
 
 			if (enchantment == Enchantments.QUICK_CHARGE) {
 				stack.addEnchantment(enchantment, 5);
@@ -55,13 +53,17 @@ public final class EnchantCmd extends Command {
 		}
 	}
 
-	@Override
-	public String getPrimaryAction() {
-		return "Enchant Held Item";
+	private ItemStack getHeldItem() throws CmdError {
+		ItemStack stack = MC.player.inventory.getMainHandStack();
+
+		if (stack.isEmpty())
+			throw new CmdError("There is no item in your hand.");
+
+		return stack;
 	}
 
 	@Override
-	public void doPrimaryAction() {
-		WURST.getCmdProcessor().process("enchant");
+	public String getPrimaryAction() {
+		return "Enchant Held Item";
 	}
 }

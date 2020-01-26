@@ -32,14 +32,26 @@ public final class KaboomHack extends Hack implements UpdateListener {
 		addSetting(power);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
+	private ArrayList<BlockPos> getBlocksByDistanceReversed(double range) {
+		Vec3d eyesVec = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
+		double rangeSq = Math.pow(range + 0.5, 2);
+		int rangeI = (int) Math.ceil(range);
+
+		BlockPos center = new BlockPos(RotationUtils.getEyesPos());
+		BlockPos min = center.add(-rangeI, -rangeI, -rangeI);
+		BlockPos max = center.add(rangeI, rangeI, rangeI);
+
+		return BlockUtils.getAllInBox(min, max).stream().filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).sorted(Comparator.comparingDouble(pos -> -eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toCollection(() -> new ArrayList<>()));
 	}
 
 	@Override
 	public void onDisable() {
 		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
@@ -55,22 +67,11 @@ public final class KaboomHack extends Hack implements UpdateListener {
 		ArrayList<BlockPos> blocks = getBlocksByDistanceReversed(6);
 
 		// break all blocks
-		for (int i = 0; i < power.getValueI(); i++)
+		for (int i = 0; i < power.getValueI(); i++) {
 			BlockBreaker.breakBlocksWithPacketSpam(blocks);
+		}
 
 		// disable
 		setEnabled(false);
-	}
-
-	private ArrayList<BlockPos> getBlocksByDistanceReversed(double range) {
-		Vec3d eyesVec = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
-		double rangeSq = Math.pow(range + 0.5, 2);
-		int rangeI = (int) Math.ceil(range);
-
-		BlockPos center = new BlockPos(RotationUtils.getEyesPos());
-		BlockPos min = center.add(-rangeI, -rangeI, -rangeI);
-		BlockPos max = center.add(rangeI, rangeI, rangeI);
-
-		return BlockUtils.getAllInBox(min, max).stream().filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).sorted(Comparator.comparingDouble(pos -> -eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toCollection(() -> new ArrayList<>()));
 	}
 }

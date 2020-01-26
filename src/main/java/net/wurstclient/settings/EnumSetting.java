@@ -33,56 +33,6 @@ public final class EnumSetting<T extends Enum<T>> extends Setting {
 		this(name, "", values, selected);
 	}
 
-	public T[] getValues() {
-		return values;
-	}
-
-	public T getSelected() {
-		return selected;
-	}
-
-	public T getDefaultSelected() {
-		return defaultSelected;
-	}
-
-	public void setSelected(T selected) {
-		this.selected = Objects.requireNonNull(selected);
-		WurstClient.INSTANCE.saveSettings();
-	}
-
-	public boolean setSelected(String selected) {
-		for (T value : values) {
-			if (!value.toString().equalsIgnoreCase(selected))
-				continue;
-
-			setSelected(value);
-			return true;
-		}
-
-		return false;
-	}
-
-	public void selectNext() {
-		int next = selected.ordinal() + 1;
-		if (next >= values.length)
-			next = 0;
-
-		setSelected(values[next]);
-	}
-
-	public void selectPrev() {
-		int prev = selected.ordinal() - 1;
-		if (prev < 0)
-			prev = values.length - 1;
-
-		setSelected(values[prev]);
-	}
-
-	@Override
-	public Component getComponent() {
-		return new ComboBoxComponent<>(this);
-	}
-
 	@Override
 	public void fromJson(JsonElement json) {
 		if (!JsonUtils.isString(json))
@@ -92,8 +42,12 @@ public final class EnumSetting<T extends Enum<T>> extends Setting {
 	}
 
 	@Override
-	public JsonElement toJson() {
-		return new JsonPrimitive(selected.toString());
+	public Component getComponent() {
+		return new ComboBoxComponent<>(this);
+	}
+
+	public T getDefaultSelected() {
+		return defaultSelected;
 	}
 
 	@Override
@@ -113,5 +67,54 @@ public final class EnumSetting<T extends Enum<T>> extends Setting {
 		}
 
 		return pkb;
+	}
+
+	public T getSelected() {
+		return selected;
+	}
+
+	public T[] getValues() {
+		return values;
+	}
+
+	public void selectNext() {
+		int next = selected.ordinal() + 1;
+		if (next >= values.length) {
+			next = 0;
+		}
+
+		setSelected(values[next]);
+	}
+
+	public void selectPrev() {
+		int prev = selected.ordinal() - 1;
+		if (prev < 0) {
+			prev = values.length - 1;
+		}
+
+		setSelected(values[prev]);
+	}
+
+	public boolean setSelected(String selected) {
+		for (T value : values) {
+			if (!value.toString().equalsIgnoreCase(selected)) {
+				continue;
+			}
+
+			setSelected(value);
+			return true;
+		}
+
+		return false;
+	}
+
+	public void setSelected(T selected) {
+		this.selected = Objects.requireNonNull(selected);
+		WurstClient.INSTANCE.saveSettings();
+	}
+
+	@Override
+	public JsonElement toJson() {
+		return new JsonPrimitive(selected.toString());
 	}
 }

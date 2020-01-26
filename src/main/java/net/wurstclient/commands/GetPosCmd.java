@@ -39,12 +39,12 @@ public final class GetPosCmd extends Command {
 	}
 
 	@Override
-	public String getPrimaryAction() {
-		return "Get Position";
+	public void doPrimaryAction() {
+		WURST.getCmdProcessor().process("getpos");
 	}
 
 	@Override
-	public void doPrimaryAction() {
-		WURST.getCmdProcessor().process("getpos");
+	public String getPrimaryAction() {
+		return "Get Position";
 	}
 }

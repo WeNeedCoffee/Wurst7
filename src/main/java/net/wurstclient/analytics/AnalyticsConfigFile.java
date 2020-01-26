@@ -23,6 +23,19 @@ public final class AnalyticsConfigFile {
 		this.path = path;
 	}
 
+	private JsonObject createJson(WurstAnalyticsTracker tracker) {
+		JsonObject json = new JsonObject();
+		json.addProperty("enabled", tracker.isEnabled());
+
+		VisitorData visitorData = tracker.getConfigData().getVisitorData();
+		json.addProperty("id", visitorData.getVisitorId());
+		json.addProperty("first_launch", visitorData.getTimestampFirst());
+		json.addProperty("last_launch", visitorData.getTimestampCurrent());
+		json.addProperty("launches", visitorData.getVisits());
+
+		return json;
+	}
+
 	public void load(WurstAnalyticsTracker tracker) {
 		try {
 			WsonObject wson = JsonUtils.parseFileToObject(path);
@@ -59,18 +72,5 @@ public final class AnalyticsConfigFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonObject createJson(WurstAnalyticsTracker tracker) {
-		JsonObject json = new JsonObject();
-		json.addProperty("enabled", tracker.isEnabled());
-
-		VisitorData visitorData = tracker.getConfigData().getVisitorData();
-		json.addProperty("id", visitorData.getVisitorId());
-		json.addProperty("first_launch", visitorData.getTimestampFirst());
-		json.addProperty("last_launch", visitorData.getTimestampCurrent());
-		json.addProperty("launches", visitorData.getVisits());
-
-		return json;
 	}
 }

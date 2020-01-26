@@ -30,20 +30,18 @@ public final class BlinkHack extends Hack implements UpdateListener, PacketOutpu
 		addSetting(limit);
 	}
 
+	public void cancel() {
+		packets.clear();
+		fakePlayer.resetPlayerPosition();
+		setEnabled(false);
+	}
+
 	@Override
 	public String getRenderName() {
 		if (limit.getValueI() == 0)
 			return getName() + " [" + packets.size() + "]";
 		else
 			return getName() + " [" + packets.size() + "/" + limit.getValueI() + "]";
-	}
-
-	@Override
-	public void onEnable() {
-		fakePlayer = new FakePlayerEntity();
-
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(PacketOutputListener.class, this);
 	}
 
 	@Override
@@ -57,14 +55,11 @@ public final class BlinkHack extends Hack implements UpdateListener, PacketOutpu
 	}
 
 	@Override
-	public void onUpdate() {
-		if (limit.getValueI() == 0)
-			return;
+	public void onEnable() {
+		fakePlayer = new FakePlayerEntity();
 
-		if (packets.size() >= limit.getValueI()) {
-			setEnabled(false);
-			setEnabled(true);
-		}
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(PacketOutputListener.class, this);
 	}
 
 	@Override
@@ -83,9 +78,14 @@ public final class BlinkHack extends Hack implements UpdateListener, PacketOutpu
 		packets.addLast(packet);
 	}
 
-	public void cancel() {
-		packets.clear();
-		fakePlayer.resetPlayerPosition();
-		setEnabled(false);
+	@Override
+	public void onUpdate() {
+		if (limit.getValueI() == 0)
+			return;
+
+		if (packets.size() >= limit.getValueI()) {
+			setEnabled(false);
+			setEnabled(true);
+		}
 	}
 }

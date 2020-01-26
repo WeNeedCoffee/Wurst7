@@ -47,21 +47,21 @@ public class FakePlayerEntity extends OtherClientPlayerEntity {
 		bodyYaw = player.bodyYaw;
 	}
 
+	public void despawn() {
+		removed = true;
+	}
+
 	private void resetCapeMovement() {
 		field_7500 = getX();
 		field_7521 = getY();
 		field_7499 = getZ();
 	}
 
-	private void spawn() {
-		world.addEntity(getEntityId(), this);
-	}
-
-	public void despawn() {
-		removed = true;
-	}
-
 	public void resetPlayerPosition() {
 		player.refreshPositionAndAngles(getX(), getY(), getZ(), yaw, pitch);
+	}
+
+	private void spawn() {
+		world.addEntity(getEntityId(), this);
 	}
 }

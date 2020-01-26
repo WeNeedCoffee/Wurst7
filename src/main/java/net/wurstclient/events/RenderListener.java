@@ -12,8 +12,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface RenderListener extends Listener {
-	public void onRender(float partialTicks);
-
 	public static class RenderEvent extends Event<RenderListener> {
 		private final float partialTicks;
 
@@ -23,8 +21,9 @@ public interface RenderListener extends Listener {
 
 		@Override
 		public void fire(ArrayList<RenderListener> listeners) {
-			for (RenderListener listener : listeners)
+			for (RenderListener listener : listeners) {
 				listener.onRender(partialTicks);
+			}
 		}
 
 		@Override
@@ -32,4 +31,6 @@ public interface RenderListener extends Listener {
 			return RenderListener.class;
 		}
 	}
+
+	void onRender(float partialTicks);
 }

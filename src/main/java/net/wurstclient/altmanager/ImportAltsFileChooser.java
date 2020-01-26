@@ -41,8 +41,9 @@ public final class ImportAltsFileChooser extends JFileChooser {
 
 		File file = fileChooser.getSelectedFile();
 		try {
-			for (String line : Files.readAllLines(file.toPath()))
+			for (String line : Files.readAllLines(file.toPath())) {
 				System.out.println(line);
+			}
 
 		} catch (IOException e) {
 			e.printStackTrace();

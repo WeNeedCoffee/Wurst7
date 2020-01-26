@@ -12,15 +12,14 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface PostMotionListener extends Listener {
-	public void onPostMotion();
-
 	public static class PostMotionEvent extends Event<PostMotionListener> {
 		public static final PostMotionEvent INSTANCE = new PostMotionEvent();
 
 		@Override
 		public void fire(ArrayList<PostMotionListener> listeners) {
-			for (PostMotionListener listener : listeners)
+			for (PostMotionListener listener : listeners) {
 				listener.onPostMotion();
+			}
 		}
 
 		@Override
@@ -28,4 +27,6 @@ public interface PostMotionListener extends Listener {
 			return PostMotionListener.class;
 		}
 	}
+
+	void onPostMotion();
 }

@@ -17,39 +17,6 @@ import net.wurstclient.settings.EnumSetting;
 
 @SearchTags({ "AutoJump", "BHop", "bunny hop", "auto jump" })
 public final class BunnyHopHack extends Hack implements UpdateListener {
-	private final EnumSetting<JumpIf> jumpIf = new EnumSetting<>("Jump if", JumpIf.values(), JumpIf.SPRINTING);
-
-	public BunnyHopHack() {
-		super("BunnyHop", "Makes you jump automatically.");
-		setCategory(Category.MOVEMENT);
-		addSetting(jumpIf);
-	}
-
-	@Override
-	public String getRenderName() {
-		return getName() + " [" + jumpIf.getSelected().name + "]";
-	}
-
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onUpdate() {
-		ClientPlayerEntity player = MC.player;
-		if (!player.onGround || player.isSneaking())
-			return;
-
-		if (jumpIf.getSelected().condition.test(player))
-			player.jump();
-	}
-
 	private enum JumpIf {
 		SPRINTING("Sprinting", p -> p.isSprinting() && (p.forwardSpeed != 0 || p.sidewaysSpeed != 0)),
 
@@ -68,6 +35,40 @@ public final class BunnyHopHack extends Hack implements UpdateListener {
 		@Override
 		public String toString() {
 			return name;
+		}
+	}
+
+	private final EnumSetting<JumpIf> jumpIf = new EnumSetting<>("Jump if", JumpIf.values(), JumpIf.SPRINTING);
+
+	public BunnyHopHack() {
+		super("BunnyHop", "Makes you jump automatically.");
+		setCategory(Category.MOVEMENT);
+		addSetting(jumpIf);
+	}
+
+	@Override
+	public String getRenderName() {
+		return getName() + " [" + jumpIf.getSelected().name + "]";
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onUpdate() {
+		ClientPlayerEntity player = MC.player;
+		if (!player.onGround || player.isSneaking())
+			return;
+
+		if (jumpIf.getSelected().condition.test(player)) {
+			player.jump();
 		}
 	}
 }

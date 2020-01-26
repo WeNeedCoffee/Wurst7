@@ -21,10 +21,12 @@ public final class CmdSyntaxError extends CmdException {
 	@Override
 	public void printToChat(Command cmd) {
 		String message = getMessage();
-		if (message != null)
+		if (message != null) {
 			ChatUtils.syntaxError(message);
+		}
 
-		for (String line : cmd.getSyntax())
+		for (String line : cmd.getSyntax()) {
 			ChatUtils.message(line);
+		}
 	}
 }

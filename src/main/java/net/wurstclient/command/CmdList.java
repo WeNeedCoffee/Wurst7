@@ -90,8 +90,9 @@ public final class CmdList {
 	public CmdList() {
 		try {
 			for (Field field : CmdList.class.getDeclaredFields()) {
-				if (!field.getName().endsWith("Cmd"))
+				if (!field.getName().endsWith("Cmd")) {
 					continue;
+				}
 
 				Command cmd = (Command) field.get(this);
 				cmds.put(cmd.getName(), cmd);
@@ -104,15 +105,15 @@ public final class CmdList {
 		}
 	}
 
-	public Command getCmdByName(String name) {
-		return cmds.get("." + name);
+	public int countCmds() {
+		return cmds.size();
 	}
 
 	public Collection<Command> getAllCmds() {
 		return cmds.values();
 	}
 
-	public int countCmds() {
-		return cmds.size();
+	public Command getCmdByName(String name) {
+		return cmds.get("." + name);
 	}
 }

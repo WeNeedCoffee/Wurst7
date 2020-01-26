@@ -28,6 +28,15 @@ public final class ServerCrasherHack extends Hack {
 		setCategory(Category.ITEMS);
 	}
 
+	private CompoundTag createNBT() {
+		try {
+			return StringNbtReader.parse("{display:{Lore:['\"\u00a7r1. Place item in dispenser.\"','\"\u00a7r2. Dispense item.\"','\"\u00a7r3. Ssss... BOOM!\"'],Name:'{\"text\":\"\u00a7rServer Creeper\"}'},EntityTag:{CustomName:\"TEST\",id:\"Creeper\",CustomNameVisible:1}}");
+
+		} catch (CommandSyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	public void onEnable() {
 		if (!MC.player.abilities.creativeMode) {
@@ -44,19 +53,11 @@ public final class ServerCrasherHack extends Hack {
 		setEnabled(false);
 	}
 
-	private CompoundTag createNBT() {
-		try {
-			return StringNbtReader.parse("{display:{Lore:['\"\u00a7r1. Place item in dispenser.\"','\"\u00a7r2. Dispense item.\"','\"\u00a7r3. Ssss... BOOM!\"'],Name:'{\"text\":\"\u00a7rServer Creeper\"}'},EntityTag:{CustomName:\"TEST\",id:\"Creeper\",CustomNameVisible:1}}");
-
-		} catch (CommandSyntaxException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	private void placeStackInHotbar(ItemStack stack) {
 		for (int i = 0; i < 9; i++) {
-			if (!MC.player.inventory.getInvStack(i).isEmpty())
+			if (!MC.player.inventory.getInvStack(i).isEmpty()) {
 				continue;
+			}
 
 			MC.player.networkHandler.sendPacket(new CreativeInventoryActionC2SPacket(36 + i, stack));
 			ChatUtils.message("Item created.");

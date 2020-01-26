@@ -21,8 +21,8 @@ public final class AntiCactusHack extends Hack implements CactusCollisionShapeLi
 	}
 
 	@Override
-	protected void onEnable() {
-		EVENTS.add(CactusCollisionShapeListener.class, this);
+	public void onCactusCollisionShape(CactusCollisionShapeEvent event) {
+		event.setCollisionShape(VoxelShapes.fullCube());
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public final class AntiCactusHack extends Hack implements CactusCollisionShapeLi
 	}
 
 	@Override
-	public void onCactusCollisionShape(CactusCollisionShapeEvent event) {
-		event.setCollisionShape(VoxelShapes.fullCube());
+	protected void onEnable() {
+		EVENTS.add(CactusCollisionShapeListener.class, this);
 	}
 }

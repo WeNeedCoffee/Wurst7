@@ -20,6 +20,55 @@ public final class WsonObject {
 		this.json = Objects.requireNonNull(json);
 	}
 
+	public LinkedHashMap<String, JsonObject> getAllJsonObjects() {
+		LinkedHashMap<String, JsonObject> map = new LinkedHashMap<>();
+
+		for (Entry<String, JsonElement> entry : json.entrySet()) {
+			JsonElement value = entry.getValue();
+			if (!value.isJsonObject()) {
+				continue;
+			}
+
+			map.put(entry.getKey(), value.getAsJsonObject());
+		}
+
+		return map;
+	}
+
+	public LinkedHashMap<String, Number> getAllNumbers() {
+		LinkedHashMap<String, Number> map = new LinkedHashMap<>();
+
+		for (Entry<String, JsonElement> entry : json.entrySet()) {
+			JsonElement value = entry.getValue();
+			if (!JsonUtils.isNumber(value)) {
+				continue;
+			}
+
+			map.put(entry.getKey(), value.getAsNumber());
+		}
+
+		return map;
+	}
+
+	public LinkedHashMap<String, String> getAllStrings() {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>();
+
+		for (Entry<String, JsonElement> entry : json.entrySet()) {
+			JsonElement value = entry.getValue();
+			if (!JsonUtils.isString(value)) {
+				continue;
+			}
+
+			map.put(entry.getKey(), value.getAsString());
+		}
+
+		return map;
+	}
+
+	public WsonArray getArray(String key) throws JsonException {
+		return JsonUtils.getAsArray(json.get(key));
+	}
+
 	public boolean getBoolean(String key) throws JsonException {
 		return JsonUtils.getAsBoolean(json.get(key));
 	}
@@ -34,52 +83,6 @@ public final class WsonObject {
 
 	public String getString(String key) throws JsonException {
 		return JsonUtils.getAsString(json.get(key));
-	}
-
-	public WsonArray getArray(String key) throws JsonException {
-		return JsonUtils.getAsArray(json.get(key));
-	}
-
-	public LinkedHashMap<String, String> getAllStrings() {
-		LinkedHashMap<String, String> map = new LinkedHashMap<>();
-
-		for (Entry<String, JsonElement> entry : json.entrySet()) {
-			JsonElement value = entry.getValue();
-			if (!JsonUtils.isString(value))
-				continue;
-
-			map.put(entry.getKey(), value.getAsString());
-		}
-
-		return map;
-	}
-
-	public LinkedHashMap<String, Number> getAllNumbers() {
-		LinkedHashMap<String, Number> map = new LinkedHashMap<>();
-
-		for (Entry<String, JsonElement> entry : json.entrySet()) {
-			JsonElement value = entry.getValue();
-			if (!JsonUtils.isNumber(value))
-				continue;
-
-			map.put(entry.getKey(), value.getAsNumber());
-		}
-
-		return map;
-	}
-
-	public LinkedHashMap<String, JsonObject> getAllJsonObjects() {
-		LinkedHashMap<String, JsonObject> map = new LinkedHashMap<>();
-
-		for (Entry<String, JsonElement> entry : json.entrySet()) {
-			JsonElement value = entry.getValue();
-			if (!value.isJsonObject())
-				continue;
-
-			map.put(entry.getKey(), value.getAsJsonObject());
-		}
-
-		return map;
 	}
 
 	public JsonObject toJsonObject() {

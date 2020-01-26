@@ -20,13 +20,13 @@ public final class ChangelogOtf extends OtherFeature {
 	}
 
 	@Override
-	public String getPrimaryAction() {
-		return "View Changelog";
-	}
-
-	@Override
 	public void doPrimaryAction() {
 		String link = new Version(WurstClient.VERSION).getChangelogLink();
 		Util.getOperatingSystem().open(link);
+	}
+
+	@Override
+	public String getPrimaryAction() {
+		return "View Changelog";
 	}
 }

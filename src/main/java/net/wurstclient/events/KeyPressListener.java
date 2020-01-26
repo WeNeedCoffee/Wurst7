@@ -12,8 +12,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface KeyPressListener extends Listener {
-	public void onKeyPress(KeyPressEvent event);
-
 	public static class KeyPressEvent extends Event<KeyPressListener> {
 		private final int keyCode;
 		private final int scanCode;
@@ -29,8 +27,17 @@ public interface KeyPressListener extends Listener {
 
 		@Override
 		public void fire(ArrayList<KeyPressListener> listeners) {
-			for (KeyPressListener listener : listeners)
+			for (KeyPressListener listener : listeners) {
 				listener.onKeyPress(this);
+			}
+		}
+
+		public int getAction() {
+			return action;
+		}
+
+		public int getKeyCode() {
+			return keyCode;
 		}
 
 		@Override
@@ -38,20 +45,14 @@ public interface KeyPressListener extends Listener {
 			return KeyPressListener.class;
 		}
 
-		public int getKeyCode() {
-			return keyCode;
+		public int getModifiers() {
+			return modifiers;
 		}
 
 		public int getScanCode() {
 			return scanCode;
 		}
-
-		public int getAction() {
-			return action;
-		}
-
-		public int getModifiers() {
-			return modifiers;
-		}
 	}
+
+	void onKeyPress(KeyPressEvent event);
 }

@@ -34,31 +34,34 @@ public final class AutoDropHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
 	public void onUpdate() {
 		for (int slot = 9; slot < 45; slot++) {
 			int adjustedSlot = slot;
-			if (adjustedSlot >= 36)
+			if (adjustedSlot >= 36) {
 				adjustedSlot -= 36;
+			}
 			ItemStack stack = MC.player.inventory.getInvStack(adjustedSlot);
 
-			if (stack.isEmpty())
+			if (stack.isEmpty()) {
 				continue;
+			}
 
 			Item item = stack.getItem();
 			String itemName = Registry.ITEM.getId(item).toString();
 
-			if (!items.getItemNames().contains(itemName))
+			if (!items.getItemNames().contains(itemName)) {
 				continue;
+			}
 
 			IMC.getInteractionManager().windowClick_THROW(slot);
 		}

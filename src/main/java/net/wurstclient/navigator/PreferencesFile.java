@@ -26,12 +26,23 @@ public final class PreferencesFile {
 		this.preferences = preferences;
 	}
 
+	private JsonObject createJson() {
+		JsonObject json = new JsonObject();
+
+		for (Entry<String, Long> e : preferences.entrySet()) {
+			json.addProperty(e.getKey(), e.getValue());
+		}
+
+		return json;
+	}
+
 	public void load() {
 		try {
 			WsonObject wson = JsonUtils.parseFileToObject(path);
 
-			for (Entry<String, Number> e : wson.getAllNumbers().entrySet())
+			for (Entry<String, Number> e : wson.getAllNumbers().entrySet()) {
 				preferences.put(e.getKey(), e.getValue().longValue());
+			}
 
 		} catch (NoSuchFileException e) {
 			// The file doesn't exist yet. No problem, we'll create it later.
@@ -54,14 +65,5 @@ public final class PreferencesFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonObject createJson() {
-		JsonObject json = new JsonObject();
-
-		for (Entry<String, Long> e : preferences.entrySet())
-			json.addProperty(e.getKey(), e.getValue());
-
-		return json;
 	}
 }

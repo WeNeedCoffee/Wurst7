@@ -28,10 +28,24 @@ public final class HelpCmd extends Command {
 
 		String arg = args.length > 0 ? args[0] : "1";
 
-		if (MathUtils.isInteger(arg))
+		if (MathUtils.isInteger(arg)) {
 			listCommands(Integer.parseInt(arg));
-		else
+		} else {
 			help(arg);
+		}
+	}
+
+	private void help(String cmdName) throws CmdException {
+		if (cmdName.startsWith(".")) {
+			cmdName = cmdName.substring(1);
+		}
+
+		Command cmd = WURST.getCmds().getCmdByName(cmdName);
+		if (cmd == null)
+			throw new CmdSyntaxError("Unknown command: ." + cmdName);
+
+		ChatUtils.message("Available help for ." + cmdName + ":");
+		cmd.printHelp();
 	}
 
 	private void listCommands(int page) throws CmdException {
@@ -50,19 +64,8 @@ public final class HelpCmd extends Command {
 		int end = Math.min(page * CMDS_PER_PAGE, cmds.size());
 
 		ChatUtils.message("Command list (page " + page + "/" + pages + ")");
-		for (int i = start; i < end; i++)
+		for (int i = start; i < end; i++) {
 			ChatUtils.message("- " + cmds.get(i).getName());
-	}
-
-	private void help(String cmdName) throws CmdException {
-		if (cmdName.startsWith("."))
-			cmdName = cmdName.substring(1);
-
-		Command cmd = WURST.getCmds().getCmdByName(cmdName);
-		if (cmd == null)
-			throw new CmdSyntaxError("Unknown command: ." + cmdName);
-
-		ChatUtils.message("Available help for ." + cmdName + ":");
-		cmd.printHelp();
+		}
 	}
 }

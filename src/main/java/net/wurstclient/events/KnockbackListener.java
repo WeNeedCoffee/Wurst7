@@ -12,8 +12,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface KnockbackListener extends Listener {
-	public void onKnockback(KnockbackEvent event);
-
 	public static class KnockbackEvent extends Event<KnockbackListener> {
 		private double x;
 		private double y;
@@ -33,37 +31,9 @@ public interface KnockbackListener extends Listener {
 
 		@Override
 		public void fire(ArrayList<KnockbackListener> listeners) {
-			for (KnockbackListener listener : listeners)
+			for (KnockbackListener listener : listeners) {
 				listener.onKnockback(this);
-		}
-
-		@Override
-		public Class<KnockbackListener> getListenerType() {
-			return KnockbackListener.class;
-		}
-
-		public double getX() {
-			return x;
-		}
-
-		public void setX(double x) {
-			this.x = x;
-		}
-
-		public double getY() {
-			return y;
-		}
-
-		public void setY(double y) {
-			this.y = y;
-		}
-
-		public double getZ() {
-			return z;
-		}
-
-		public void setZ(double z) {
-			this.z = z;
+			}
 		}
 
 		public double getDefaultX() {
@@ -77,5 +47,36 @@ public interface KnockbackListener extends Listener {
 		public double getDefaultZ() {
 			return defaultZ;
 		}
+
+		@Override
+		public Class<KnockbackListener> getListenerType() {
+			return KnockbackListener.class;
+		}
+
+		public double getX() {
+			return x;
+		}
+
+		public double getY() {
+			return y;
+		}
+
+		public double getZ() {
+			return z;
+		}
+
+		public void setX(double x) {
+			this.x = x;
+		}
+
+		public void setY(double y) {
+			this.y = y;
+		}
+
+		public void setZ(double z) {
+			this.z = z;
+		}
 	}
+
+	void onKnockback(KnockbackEvent event);
 }

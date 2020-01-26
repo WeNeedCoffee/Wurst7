@@ -38,10 +38,6 @@ public final class ItemListSetting extends Setting {
 		defaultNames = itemNames.toArray(new String[0]);
 	}
 
-	public List<String> getItemNames() {
-		return Collections.unmodifiableList(itemNames);
-	}
-
 	public void add(Item item) {
 		String name = Registry.ITEM.getId(item).toString();
 		if (Collections.binarySearch(itemNames, name) >= 0)
@@ -50,25 +46,6 @@ public final class ItemListSetting extends Setting {
 		itemNames.add(name);
 		Collections.sort(itemNames);
 		WurstClient.INSTANCE.saveSettings();
-	}
-
-	public void remove(int index) {
-		if (index < 0 || index >= itemNames.size())
-			return;
-
-		itemNames.remove(index);
-		WurstClient.INSTANCE.saveSettings();
-	}
-
-	public void resetToDefaults() {
-		itemNames.clear();
-		itemNames.addAll(Arrays.asList(defaultNames));
-		WurstClient.INSTANCE.saveSettings();
-	}
-
-	@Override
-	public Component getComponent() {
-		return new ItemListEditButton(this);
 	}
 
 	@Override
@@ -86,14 +63,37 @@ public final class ItemListSetting extends Setting {
 	}
 
 	@Override
-	public JsonElement toJson() {
-		JsonArray json = new JsonArray();
-		itemNames.forEach(s -> json.add(s));
-		return json;
+	public Component getComponent() {
+		return new ItemListEditButton(this);
+	}
+
+	public List<String> getItemNames() {
+		return Collections.unmodifiableList(itemNames);
 	}
 
 	@Override
 	public Set<PossibleKeybind> getPossibleKeybinds(String featureName) {
 		return new LinkedHashSet<>();
+	}
+
+	public void remove(int index) {
+		if (index < 0 || index >= itemNames.size())
+			return;
+
+		itemNames.remove(index);
+		WurstClient.INSTANCE.saveSettings();
+	}
+
+	public void resetToDefaults() {
+		itemNames.clear();
+		itemNames.addAll(Arrays.asList(defaultNames));
+		WurstClient.INSTANCE.saveSettings();
+	}
+
+	@Override
+	public JsonElement toJson() {
+		JsonArray json = new JsonArray();
+		itemNames.forEach(s -> json.add(s));
+		return json;
 	}
 }

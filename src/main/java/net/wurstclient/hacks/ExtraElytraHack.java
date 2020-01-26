@@ -41,10 +41,47 @@ public final class ExtraElytraHack extends Hack implements UpdateListener {
 		addSetting(stopInWater);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		jumpTimer = 0;
+	private void controlHeight() {
+		if (!heightCtrl.isChecked())
+			return;
+
+		Vec3d v = MC.player.getVelocity();
+
+		if (MC.options.keyJump.isPressed()) {
+			MC.player.setVelocity(v.x, v.y + 0.08, v.z);
+		} else if (MC.options.keySneak.isPressed()) {
+			MC.player.setVelocity(v.x, v.y - 0.04, v.z);
+		}
+	}
+
+	private void controlSpeed() {
+		if (!speedCtrl.isChecked())
+			return;
+
+		float yaw = (float) Math.toRadians(MC.player.yaw);
+		Vec3d forward = new Vec3d(-MathHelper.sin(yaw) * 0.05, 0, MathHelper.cos(yaw) * 0.05);
+
+		Vec3d v = MC.player.getVelocity();
+
+		if (MC.options.keyForward.isPressed()) {
+			MC.player.setVelocity(v.add(forward));
+		} else if (MC.options.keyBack.isPressed()) {
+			MC.player.setVelocity(v.subtract(forward));
+		}
+	}
+
+	private void doInstantFly() {
+		if (!instantFly.isChecked())
+			return;
+
+		if (jumpTimer <= 0) {
+			jumpTimer = 20;
+			MC.player.setJumping(false);
+			MC.player.setSprinting(true);
+			MC.player.jump();
+		}
+
+		sendStartStopPacket();
 	}
 
 	@Override
@@ -53,9 +90,16 @@ public final class ExtraElytraHack extends Hack implements UpdateListener {
 	}
 
 	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		jumpTimer = 0;
+	}
+
+	@Override
 	public void onUpdate() {
-		if (jumpTimer > 0)
+		if (jumpTimer > 0) {
 			jumpTimer--;
+		}
 
 		ItemStack chest = MC.player.getEquippedStack(EquipmentSlot.CHEST);
 		if (chest.getItem() != Items.ELYTRA)
@@ -72,53 +116,13 @@ public final class ExtraElytraHack extends Hack implements UpdateListener {
 			return;
 		}
 
-		if (ElytraItem.isUsable(chest) && MC.options.keyJump.isPressed())
+		if (ElytraItem.isUsable(chest) && MC.options.keyJump.isPressed()) {
 			doInstantFly();
+		}
 	}
 
 	private void sendStartStopPacket() {
 		ClientCommandC2SPacket packet = new ClientCommandC2SPacket(MC.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING);
 		MC.player.networkHandler.sendPacket(packet);
-	}
-
-	private void controlHeight() {
-		if (!heightCtrl.isChecked())
-			return;
-
-		Vec3d v = MC.player.getVelocity();
-
-		if (MC.options.keyJump.isPressed())
-			MC.player.setVelocity(v.x, v.y + 0.08, v.z);
-		else if (MC.options.keySneak.isPressed())
-			MC.player.setVelocity(v.x, v.y - 0.04, v.z);
-	}
-
-	private void controlSpeed() {
-		if (!speedCtrl.isChecked())
-			return;
-
-		float yaw = (float) Math.toRadians(MC.player.yaw);
-		Vec3d forward = new Vec3d(-MathHelper.sin(yaw) * 0.05, 0, MathHelper.cos(yaw) * 0.05);
-
-		Vec3d v = MC.player.getVelocity();
-
-		if (MC.options.keyForward.isPressed())
-			MC.player.setVelocity(v.add(forward));
-		else if (MC.options.keyBack.isPressed())
-			MC.player.setVelocity(v.subtract(forward));
-	}
-
-	private void doInstantFly() {
-		if (!instantFly.isChecked())
-			return;
-
-		if (jumpTimer <= 0) {
-			jumpTimer = 20;
-			MC.player.setJumping(false);
-			MC.player.setSprinting(true);
-			MC.player.jump();
-		}
-
-		sendStartStopPacket();
 	}
 }

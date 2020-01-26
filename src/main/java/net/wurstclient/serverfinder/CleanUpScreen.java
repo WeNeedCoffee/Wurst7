@@ -23,48 +23,45 @@ import net.wurstclient.mixinterface.IMultiplayerScreen;
 import net.wurstclient.mixinterface.IServerList;
 
 public class CleanUpScreen extends Screen {
-	private MultiplayerScreen prevScreen;
-	private ButtonWidget cleanUpButton;
+	private final class CleanUpButton extends ButtonWidget {
+		private final Supplier<String> messageSupplier;
+		private final List<String> tooltip;
 
+		public CleanUpButton(int x, int y, Supplier<String> messageSupplier, String tooltip, PressAction pressAction) {
+			super(x, y, 200, 20, messageSupplier.get(), pressAction);
+			this.messageSupplier = messageSupplier;
+
+			if (tooltip.isEmpty()) {
+				this.tooltip = Arrays.asList(new String[0]);
+			} else {
+				String[] lines = tooltip.split("\n");
+				this.tooltip = Arrays.asList(lines);
+			}
+
+			addButton(this);
+		}
+
+		@Override
+		public void onPress() {
+			super.onPress();
+			setMessage(messageSupplier.get());
+		}
+	}
+
+	private MultiplayerScreen prevScreen;
+
+	private ButtonWidget cleanUpButton;
 	private boolean removeAll;
 	private boolean cleanupFailed = true;
 	private boolean cleanupOutdated = true;
 	private boolean cleanupRename = true;
 	private boolean cleanupUnknown = true;
+
 	private boolean cleanupGriefMe;
 
 	public CleanUpScreen(MultiplayerScreen prevScreen) {
 		super(new LiteralText(""));
 		this.prevScreen = prevScreen;
-	}
-
-	@Override
-	public void init() {
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 168 + 12, () -> "Cancel", "", b -> minecraft.openScreen(prevScreen)));
-
-		addButton(cleanUpButton = new CleanUpButton(width / 2 - 100, height / 4 + 144 + 12, () -> "Clean Up", "Start the Clean Up with the settings\n" + "you specified above.\n" + "It might look like the game is not\n" + "responding for a couple of seconds.", b -> cleanUp()));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 - 24 + 12, () -> "Unknown Hosts: " + removeOrKeep(cleanupUnknown), "Servers that clearly don't exist.", b -> cleanupUnknown = !cleanupUnknown));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 0 + 12, () -> "Outdated Servers: " + removeOrKeep(cleanupOutdated), "Servers that run a different Minecraft\n" + "version than you.", b -> cleanupOutdated = !cleanupOutdated));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 24 + 12, () -> "Failed Ping: " + removeOrKeep(cleanupFailed), "All servers that failed the last ping.\n" + "Make sure that the last ping is complete\n" + "before you do this. That means: Go back,\n" + "press the refresh button and wait until\n" + "all servers are done refreshing.", b -> cleanupFailed = !cleanupFailed));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 48 + 12, () -> "\"Grief me\" Servers: " + removeOrKeep(cleanupGriefMe), "All servers where the name starts with \"Grief me\"\n" + "Useful for removing servers found by ServerFinder.", b -> cleanupGriefMe = !cleanupGriefMe));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 72 + 12, () -> "\u00a7cRemove all Servers: " + yesOrNo(removeAll), "This will completely clear your server\n" + "list. \u00a7cUse with caution!\u00a7r", b -> removeAll = !removeAll));
-
-		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 96 + 12, () -> "Rename all Servers: " + yesOrNo(cleanupRename), "Renames your servers to \"Grief me #1\",\n" + "\"Grief me #2\", etc.", b -> cleanupRename = !cleanupRename));
-
-		WurstClient.INSTANCE.getAnalytics().trackPageView("/multiplayer/clean-up", "Clean Up");
-	}
-
-	private String yesOrNo(boolean b) {
-		return b ? "Yes" : "No";
-	}
-
-	private String removeOrKeep(boolean b) {
-		return b ? "Remove" : "Keep";
 	}
 
 	private void cleanUp() {
@@ -89,7 +86,7 @@ public class CleanUpScreen extends Screen {
 			}
 		}
 
-		if (cleanupRename)
+		if (cleanupRename) {
 			for (int i = 0; i < prevScreen.getServerList().size(); i++) {
 				ServerInfo server = prevScreen.getServerList().get(i);
 				server.name = "Grief me #" + (i + 1);
@@ -97,16 +94,43 @@ public class CleanUpScreen extends Screen {
 				((IMultiplayerScreen) prevScreen).getServerListSelector().setSelected(null);
 				((IMultiplayerScreen) prevScreen).getServerListSelector().setServers(prevScreen.getServerList());
 			}
+		}
 
 		minecraft.openScreen(prevScreen);
 	}
 
 	@Override
+	public void init() {
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 168 + 12, () -> "Cancel", "", b -> minecraft.openScreen(prevScreen)));
+
+		addButton(cleanUpButton = new CleanUpButton(width / 2 - 100, height / 4 + 144 + 12, () -> "Clean Up", "Start the Clean Up with the settings\n" + "you specified above.\n" + "It might look like the game is not\n" + "responding for a couple of seconds.", b -> cleanUp()));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 - 24 + 12, () -> "Unknown Hosts: " + removeOrKeep(cleanupUnknown), "Servers that clearly don't exist.", b -> cleanupUnknown = !cleanupUnknown));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 0 + 12, () -> "Outdated Servers: " + removeOrKeep(cleanupOutdated), "Servers that run a different Minecraft\n" + "version than you.", b -> cleanupOutdated = !cleanupOutdated));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 24 + 12, () -> "Failed Ping: " + removeOrKeep(cleanupFailed), "All servers that failed the last ping.\n" + "Make sure that the last ping is complete\n" + "before you do this. That means: Go back,\n" + "press the refresh button and wait until\n" + "all servers are done refreshing.", b -> cleanupFailed = !cleanupFailed));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 48 + 12, () -> "\"Grief me\" Servers: " + removeOrKeep(cleanupGriefMe), "All servers where the name starts with \"Grief me\"\n" + "Useful for removing servers found by ServerFinder.", b -> cleanupGriefMe = !cleanupGriefMe));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 72 + 12, () -> "\u00a7cRemove all Servers: " + yesOrNo(removeAll), "This will completely clear your server\n" + "list. \u00a7cUse with caution!\u00a7r", b -> removeAll = !removeAll));
+
+		addButton(new CleanUpButton(width / 2 - 100, height / 4 + 96 + 12, () -> "Rename all Servers: " + yesOrNo(cleanupRename), "Renames your servers to \"Grief me #1\",\n" + "\"Grief me #2\", etc.", b -> cleanupRename = !cleanupRename));
+
+		WurstClient.INSTANCE.getAnalytics().trackPageView("/multiplayer/clean-up", "Clean Up");
+	}
+
+	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
-		if (keyCode == GLFW.GLFW_KEY_ENTER)
+		if (keyCode == GLFW.GLFW_KEY_ENTER) {
 			cleanUpButton.onPress();
+		}
 
 		return super.keyPressed(keyCode, scanCode, int_3);
+	}
+
+	private String removeOrKeep(boolean b) {
+		return b ? "Remove" : "Keep";
 	}
 
 	@Override
@@ -120,40 +144,21 @@ public class CleanUpScreen extends Screen {
 
 	private void renderButtonTooltip(int mouseX, int mouseY) {
 		for (AbstractButtonWidget button : buttons) {
-			if (!button.isHovered() || !(button instanceof CleanUpButton))
+			if (!button.isHovered() || !(button instanceof CleanUpButton)) {
 				continue;
+			}
 
 			CleanUpButton woButton = (CleanUpButton) button;
-			if (woButton.tooltip.isEmpty())
+			if (woButton.tooltip.isEmpty()) {
 				continue;
+			}
 
 			renderTooltip(woButton.tooltip, mouseX, mouseY);
 			break;
 		}
 	}
 
-	private final class CleanUpButton extends ButtonWidget {
-		private final Supplier<String> messageSupplier;
-		private final List<String> tooltip;
-
-		public CleanUpButton(int x, int y, Supplier<String> messageSupplier, String tooltip, PressAction pressAction) {
-			super(x, y, 200, 20, messageSupplier.get(), pressAction);
-			this.messageSupplier = messageSupplier;
-
-			if (tooltip.isEmpty())
-				this.tooltip = Arrays.asList(new String[0]);
-			else {
-				String[] lines = tooltip.split("\n");
-				this.tooltip = Arrays.asList(lines);
-			}
-
-			addButton(this);
-		}
-
-		@Override
-		public void onPress() {
-			super.onPress();
-			setMessage(messageSupplier.get());
-		}
+	private String yesOrNo(boolean b) {
+		return b ? "Yes" : "No";
 	}
 }

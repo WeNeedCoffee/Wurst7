@@ -27,6 +27,18 @@ public class FriendsCmd extends Command {
 		addSetting(middleClickFriends);
 	}
 
+	private void add(String[] args) throws CmdException {
+		if (args.length != 2)
+			throw new CmdSyntaxError();
+
+		String name = args[1];
+		if (WURST.getFriends().contains(name))
+			throw new CmdError("\"" + name + "\" is already in your friends list.");
+
+		WURST.getFriends().addAndSave(name);
+		ChatUtils.message("Added friend \"" + name + "\".");
+	}
+
 	@Override
 	public void call(String[] args) throws CmdException {
 		if (args.length < 1 || args.length > 2)
@@ -54,36 +66,8 @@ public class FriendsCmd extends Command {
 		}
 	}
 
-	private void add(String[] args) throws CmdException {
-		if (args.length != 2)
-			throw new CmdSyntaxError();
-
-		String name = args[1];
-		if (WURST.getFriends().contains(name))
-			throw new CmdError("\"" + name + "\" is already in your friends list.");
-
-		WURST.getFriends().addAndSave(name);
-		ChatUtils.message("Added friend \"" + name + "\".");
-	}
-
-	private void remove(String[] args) throws CmdException {
-		if (args.length != 2)
-			throw new CmdSyntaxError();
-
-		String name = args[1];
-		if (!WURST.getFriends().contains(name))
-			throw new CmdError("\"" + name + "\" is not in your friends list.");
-
-		WURST.getFriends().removeAndSave(name);
-		ChatUtils.message("Removed friend \"" + name + "\".");
-	}
-
-	private void removeAll(String[] args) throws CmdException {
-		if (args.length > 1)
-			throw new CmdSyntaxError();
-
-		WURST.getFriends().removeAllAndSave();
-		ChatUtils.message("All friends removed. Oof.");
+	public CheckboxSetting getMiddleClickFriends() {
+		return middleClickFriends;
 	}
 
 	private void list(String[] args) throws CmdException {
@@ -104,8 +88,9 @@ public class FriendsCmd extends Command {
 		int end = Math.min(page * FRIENDS_PER_PAGE, friends.size());
 
 		ChatUtils.message("Friends list (page " + page + "/" + pages + ")");
-		for (int i = start; i < end; i++)
+		for (int i = start; i < end; i++) {
 			ChatUtils.message(friends.get(i).toString());
+		}
 	}
 
 	private int parsePage(String[] args) throws CmdSyntaxError {
@@ -118,7 +103,23 @@ public class FriendsCmd extends Command {
 		return Integer.parseInt(args[1]);
 	}
 
-	public CheckboxSetting getMiddleClickFriends() {
-		return middleClickFriends;
+	private void remove(String[] args) throws CmdException {
+		if (args.length != 2)
+			throw new CmdSyntaxError();
+
+		String name = args[1];
+		if (!WURST.getFriends().contains(name))
+			throw new CmdError("\"" + name + "\" is not in your friends list.");
+
+		WURST.getFriends().removeAndSave(name);
+		ChatUtils.message("Removed friend \"" + name + "\".");
+	}
+
+	private void removeAll(String[] args) throws CmdException {
+		if (args.length > 1)
+			throw new CmdSyntaxError();
+
+		WURST.getFriends().removeAllAndSave();
+		ChatUtils.message("All friends removed. Oof.");
 	}
 }

@@ -25,16 +25,17 @@ public final class SkinDerpHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-	}
-
-	@Override
 	public void onDisable() {
 		EVENTS.remove(UpdateListener.class, this);
 
-		for (PlayerModelPart part : PlayerModelPart.values())
+		for (PlayerModelPart part : PlayerModelPart.values()) {
 			MC.options.setPlayerModelPart(part, true);
+		}
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override
@@ -44,7 +45,8 @@ public final class SkinDerpHack extends Hack implements UpdateListener {
 
 		Set<PlayerModelPart> activeParts = MC.options.getEnabledPlayerModelParts();
 
-		for (PlayerModelPart part : PlayerModelPart.values())
+		for (PlayerModelPart part : PlayerModelPart.values()) {
 			MC.options.setPlayerModelPart(part, !activeParts.contains(part));
+		}
 	}
 }

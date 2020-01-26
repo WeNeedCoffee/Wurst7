@@ -75,7 +75,7 @@ import java.util.regex.MatchResult;
  * @author Daniel Murphy, Stefan Brozinski
  */
 public class JGoogleAnalyticsTracker {
-	public static enum DispatchMode {
+	public enum DispatchMode {
 		/**
 		 * Each tracking call will wait until the http request completes before
 		 * returning
@@ -92,11 +92,16 @@ public class JGoogleAnalyticsTracker {
 		SINGLE_THREAD
 	}
 
+	public enum GoogleAnalyticsVersion {
+		V_4_7_2
+	}
+
 	private static Logger logger = Logger.getLogger(JGoogleAnalyticsTracker.class.getName());
 	private static final ThreadGroup asyncThreadGroup = new ThreadGroup("Async Google Analytics Threads");
 	private static long asyncThreadsRunning = 0;
 	private static Proxy proxy = Proxy.NO_PROXY;
 	private static LinkedList<String> fifo = new LinkedList<>();
+
 	private static volatile Thread backgroundThread = null;
 	// the thread used in 'queued' mode.
 
@@ -108,104 +113,59 @@ public class JGoogleAnalyticsTracker {
 		JGoogleAnalyticsTracker.setProxy(System.getenv("http_proxy"));
 	}
 
-	public static enum GoogleAnalyticsVersion {
-		V_4_7_2
-	}
-
-	private GoogleAnalyticsVersion gaVersion;
-	private AnalyticsConfigData configData;
-	private IGoogleAnalyticsURLBuilder builder;
-	private DispatchMode mode;
-	private boolean enabled;
-
-	public JGoogleAnalyticsTracker(AnalyticsConfigData argConfigData, GoogleAnalyticsVersion argVersion) {
-		this(argConfigData, argVersion, DispatchMode.SINGLE_THREAD);
-	}
-
-	public JGoogleAnalyticsTracker(AnalyticsConfigData argConfigData, GoogleAnalyticsVersion argVersion, DispatchMode argMode) {
-		gaVersion = argVersion;
-		configData = argConfigData;
-		createBuilder();
-		enabled = true;
-		setDispatchMode(argMode);
-	}
-
 	/**
-	 * Sets the dispatch mode
+	 * Wait for background tasks to complete.
+	 * <p>
+	 * This works in queued and asynchronous mode.
 	 *
-	 * @see DispatchMode
-	 * @param argMode the mode to to put the tracker in. If this is null, the
-	 *                tracker defaults to {@link DispatchMode#SINGLE_THREAD}
+	 * @param timeoutMillis The maximum number of milliseconds to wait.
 	 */
-	public void setDispatchMode(DispatchMode argMode) {
-		if (argMode == null)
-			argMode = DispatchMode.SINGLE_THREAD;
-		if (argMode == DispatchMode.SINGLE_THREAD)
-			startBackgroundThread();
-		mode = argMode;
+	public static void completeBackgroundTasks(long timeoutMillis) {
+
+		boolean fifoEmpty = false;
+		boolean asyncThreadsCompleted = false;
+
+		long absTimeout = System.currentTimeMillis() + timeoutMillis;
+		while (System.currentTimeMillis() < absTimeout) {
+			synchronized (fifo) {
+				fifoEmpty = fifo.size() == 0;
+			}
+
+			synchronized (JGoogleAnalyticsTracker.class) {
+				asyncThreadsCompleted = asyncThreadsRunning == 0;
+			}
+
+			if (fifoEmpty && asyncThreadsCompleted) {
+				break;
+			}
+
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				break;
+			}
+		}
 	}
 
-	/**
-	 * Gets the current dispatch mode. Default is
-	 * {@link DispatchMode#SINGLE_THREAD}.
-	 *
-	 * @see DispatchMode
-	 * @return
-	 */
-	public DispatchMode getDispatchMode() {
-		return mode;
-	}
-
-	/**
-	 * Convenience method to check if the tracker is in synchronous mode.
-	 *
-	 * @return
-	 */
-	public boolean isSynchronous() {
-		return mode == DispatchMode.SYNCHRONOUS;
-	}
-
-	/**
-	 * Convenience method to check if the tracker is in single-thread mode
-	 *
-	 * @return
-	 */
-	public boolean isSingleThreaded() {
-		return mode == DispatchMode.SINGLE_THREAD;
-	}
-
-	/**
-	 * Convenience method to check if the tracker is in multi-thread mode
-	 *
-	 * @return
-	 */
-	public boolean isMultiThreaded() {
-		return mode == DispatchMode.MULTI_THREAD;
-	}
-
-	/**
-	 * Resets the session cookie.
-	 */
-	public void resetSession() {
-		builder.resetSession();
-	}
-
-	/**
-	 * Sets if the api dispatches tracking requests.
-	 *
-	 * @param argEnabled
-	 */
-	public void setEnabled(boolean argEnabled) {
-		enabled = argEnabled;
-	}
-
-	/**
-	 * If the api is dispatching tracking requests (default of true).
-	 *
-	 * @return
-	 */
-	public boolean isEnabled() {
-		return enabled;
+	private static void dispatchRequest(String argURL, String userAgent) {
+		try {
+			URL url = new URL(argURL);
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection(proxy);
+			connection.setRequestMethod("GET");
+			connection.setInstanceFollowRedirects(true);
+			if (userAgent != null) {
+				connection.addRequestProperty("User-Agent", userAgent);
+			}
+			connection.connect();
+			int responseCode = connection.getResponseCode();
+			if (responseCode != HttpURLConnection.HTTP_OK) {
+				logger.log(Level.SEVERE, "JGoogleAnalyticsTracker: Error requesting url '" + argURL + "', received response code " + responseCode);
+			} else {
+				logger.log(Level.CONFIG, "JGoogleAnalyticsTracker: Tracking success for url '" + argURL + "'");
+			}
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "Error making tracking request", e);
+		}
 	}
 
 	/**
@@ -236,11 +196,13 @@ public class JGoogleAnalyticsTracker {
 				s.findInLine("(http://|)([^:/]+)(:|)([0-9]*)(/|)");
 				MatchResult m = s.match();
 
-				if (m.groupCount() >= 2)
+				if (m.groupCount() >= 2) {
 					proxyAddr = m.group(2);
+				}
 
-				if (m.groupCount() >= 4 && !(m.group(4).length() == 0))
+				if (m.groupCount() >= 4 && !(m.group(4).length() == 0)) {
 					proxyPort = Integer.parseInt(m.group(4));
+				}
 			}
 
 			if (proxyAddr != null) {
@@ -251,36 +213,296 @@ public class JGoogleAnalyticsTracker {
 	}
 
 	/**
-	 * Wait for background tasks to complete.
+	 * Stop the long-lived background thread.
 	 * <p>
-	 * This works in queued and asynchronous mode.
+	 * This method is needed for debugging purposes only. Calling it in an
+	 * application is not really required: The background thread will terminate
+	 * automatically when the application exits.
 	 *
-	 * @param timeoutMillis The maximum number of milliseconds to wait.
+	 * @param timeoutMillis If nonzero, wait for thread completion before
+	 *                      returning.
 	 */
-	public static void completeBackgroundTasks(long timeoutMillis) {
-
-		boolean fifoEmpty = false;
-		boolean asyncThreadsCompleted = false;
-
-		long absTimeout = System.currentTimeMillis() + timeoutMillis;
-		while (System.currentTimeMillis() < absTimeout) {
-			synchronized (fifo) {
-				fifoEmpty = fifo.size() == 0;
-			}
-
-			synchronized (JGoogleAnalyticsTracker.class) {
-				asyncThreadsCompleted = asyncThreadsRunning == 0;
-			}
-
-			if (fifoEmpty && asyncThreadsCompleted)
-				break;
-
+	public synchronized static void stopBackgroundThread(long timeoutMillis) {
+		backgroundThreadMayRun = false;
+		fifo.notify();
+		if (backgroundThread != null && timeoutMillis > 0) {
 			try {
-				Thread.sleep(100);
+				backgroundThread.join(timeoutMillis);
 			} catch (InterruptedException e) {
-				break;
 			}
+			backgroundThread = null;
 		}
+	}
+
+	private GoogleAnalyticsVersion gaVersion;
+
+	private AnalyticsConfigData configData;
+
+	private IGoogleAnalyticsURLBuilder builder;
+
+	private DispatchMode mode;
+
+	private boolean enabled;
+
+	public JGoogleAnalyticsTracker(AnalyticsConfigData argConfigData, GoogleAnalyticsVersion argVersion) {
+		this(argConfigData, argVersion, DispatchMode.SINGLE_THREAD);
+	}
+
+	public JGoogleAnalyticsTracker(AnalyticsConfigData argConfigData, GoogleAnalyticsVersion argVersion, DispatchMode argMode) {
+		gaVersion = argVersion;
+		configData = argConfigData;
+		createBuilder();
+		enabled = true;
+		setDispatchMode(argMode);
+	}
+
+	private void createBuilder() {
+		switch (gaVersion) {
+			case V_4_7_2:
+				builder = new GoogleAnalyticsV4_7_2(configData);
+				break;
+			default:
+				builder = new GoogleAnalyticsV4_7_2(configData);
+				break;
+		}
+	}
+
+	public AnalyticsConfigData getConfigData() {
+		return configData;
+	}
+
+	/**
+	 * Gets the current dispatch mode. Default is
+	 * {@link DispatchMode#SINGLE_THREAD}.
+	 *
+	 * @see DispatchMode
+	 * @return
+	 */
+	public DispatchMode getDispatchMode() {
+		return mode;
+	}
+
+	/**
+	 * If the api is dispatching tracking requests (default of true).
+	 *
+	 * @return
+	 */
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	/**
+	 * Convenience method to check if the tracker is in multi-thread mode
+	 *
+	 * @return
+	 */
+	public boolean isMultiThreaded() {
+		return mode == DispatchMode.MULTI_THREAD;
+	}
+
+	/**
+	 * Convenience method to check if the tracker is in single-thread mode
+	 *
+	 * @return
+	 */
+	public boolean isSingleThreaded() {
+		return mode == DispatchMode.SINGLE_THREAD;
+	}
+
+	/**
+	 * Convenience method to check if the tracker is in synchronous mode.
+	 *
+	 * @return
+	 */
+	public boolean isSynchronous() {
+		return mode == DispatchMode.SYNCHRONOUS;
+	}
+
+	/**
+	 * Makes a custom tracking request based from the given data.
+	 *
+	 * @param argData
+	 * @throws NullPointerException if argData is null or if the URL builder is
+	 *                              null
+	 */
+	public synchronized void makeCustomRequest(AnalyticsRequestData argData) {
+		if (!enabled) {
+			logger.log(Level.CONFIG, "Ignoring tracking request, enabled is false");
+			return;
+		}
+		if (argData == null)
+			throw new NullPointerException("Data cannot be null");
+		if (builder == null)
+			throw new NullPointerException("Class was not initialized");
+		final String url = builder.buildURL(argData);
+		final String userAgent = configData.getUserAgent();
+
+		switch (mode) {
+			case MULTI_THREAD:
+				Thread t = new Thread(asyncThreadGroup, "AnalyticsThread-" + asyncThreadGroup.activeCount()) {
+					@Override
+					public void run() {
+						synchronized (JGoogleAnalyticsTracker.class) {
+							asyncThreadsRunning++;
+						}
+						try {
+							dispatchRequest(url, userAgent);
+						} finally {
+							synchronized (JGoogleAnalyticsTracker.class) {
+								asyncThreadsRunning--;
+							}
+						}
+					}
+				};
+				t.setDaemon(true);
+				t.start();
+				break;
+			case SYNCHRONOUS:
+				dispatchRequest(url, userAgent);
+				break;
+			default: // in case it's null, we default to the single-thread
+				synchronized (fifo) {
+					fifo.addLast(url);
+					fifo.notify();
+				}
+				if (!backgroundThreadMayRun) {
+					logger.log(Level.SEVERE, "A tracker request has been added to the queue but the background thread isn't running.", url);
+				}
+				break;
+		}
+	}
+
+	/**
+	 * Resets the session cookie.
+	 */
+	public void resetSession() {
+		builder.resetSession();
+	}
+
+	/**
+	 * Sets the dispatch mode
+	 *
+	 * @see DispatchMode
+	 * @param argMode the mode to to put the tracker in. If this is null, the
+	 *                tracker defaults to {@link DispatchMode#SINGLE_THREAD}
+	 */
+	public void setDispatchMode(DispatchMode argMode) {
+		if (argMode == null) {
+			argMode = DispatchMode.SINGLE_THREAD;
+		}
+		if (argMode == DispatchMode.SINGLE_THREAD) {
+			startBackgroundThread();
+		}
+		mode = argMode;
+	}
+
+	/**
+	 * Sets if the api dispatches tracking requests.
+	 *
+	 * @param argEnabled
+	 */
+	public void setEnabled(boolean argEnabled) {
+		enabled = argEnabled;
+	}
+
+	/**
+	 * If the background thread for 'queued' mode is not running, start it now.
+	 */
+	private synchronized void startBackgroundThread() {
+		if (backgroundThread == null) {
+			backgroundThreadMayRun = true;
+			backgroundThread = new Thread(asyncThreadGroup, "AnalyticsBackgroundThread") {
+				@Override
+				public void run() {
+					logger.log(Level.CONFIG, "AnalyticsBackgroundThread started");
+					while (backgroundThreadMayRun) {
+						try {
+							String url = null;
+
+							synchronized (fifo) {
+								if (fifo.isEmpty()) {
+									fifo.wait();
+								}
+
+								if (!fifo.isEmpty()) {
+									// Get a reference to the oldest element
+									// in
+									// the FIFO, but leave it in the FIFO
+									// until
+									// it is processed.
+									url = fifo.getFirst();
+								}
+							}
+
+							if (url != null) {
+								try {
+									dispatchRequest(url, configData.getUserAgent());
+								} finally {
+									// Now that we have completed the HTTP
+									// request to GA, remove the element
+									// from
+									// the FIFO.
+									synchronized (fifo) {
+										fifo.removeFirst();
+									}
+								}
+							}
+						} catch (Exception e) {
+							logger.log(Level.SEVERE, "Got exception from dispatch thread", e);
+						}
+					}
+				}
+			};
+
+			// Don't prevent the application from terminating.
+			// Use completeBackgroundTasks() before exit if you want to ensure
+			// that all pending GA requests are sent.
+			backgroundThread.setDaemon(true);
+
+			backgroundThread.start();
+		}
+	}
+
+	/**
+	 * Tracks an event. To provide more info about the page, use
+	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
+	 *
+	 * @param argCategory
+	 * @param argAction
+	 */
+	public void trackEvent(String argCategory, String argAction) {
+		trackEvent(argCategory, argAction, null, null);
+	}
+
+	/**
+	 * Tracks an event. To provide more info about the page, use
+	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
+	 *
+	 * @param argCategory
+	 * @param argAction
+	 * @param argLabel
+	 */
+	public void trackEvent(String argCategory, String argAction, String argLabel) {
+		trackEvent(argCategory, argAction, argLabel, null);
+	}
+
+	/**
+	 * Tracks an event. To provide more info about the page, use
+	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
+	 *
+	 * @param argCategory required
+	 * @param argAction   required
+	 * @param argLabel    optional
+	 * @param argValue    optional
+	 */
+	public void trackEvent(String argCategory, String argAction, String argLabel, Integer argValue) {
+		AnalyticsRequestData data = new AnalyticsRequestData();
+		data.setEventCategory(argCategory);
+		data.setEventAction(argAction);
+		data.setEventLabel(argLabel);
+		data.setEventValue(argValue);
+
+		makeCustomRequest(data);
 	}
 
 	/**
@@ -345,210 +567,5 @@ public class JGoogleAnalyticsTracker {
 		data.setPageURL(argPageURL);
 		data.setSearchReferrer(argSearchSource, argSearchKeywords);
 		makeCustomRequest(data);
-	}
-
-	/**
-	 * Tracks an event. To provide more info about the page, use
-	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
-	 *
-	 * @param argCategory
-	 * @param argAction
-	 */
-	public void trackEvent(String argCategory, String argAction) {
-		trackEvent(argCategory, argAction, null, null);
-	}
-
-	/**
-	 * Tracks an event. To provide more info about the page, use
-	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
-	 *
-	 * @param argCategory
-	 * @param argAction
-	 * @param argLabel
-	 */
-	public void trackEvent(String argCategory, String argAction, String argLabel) {
-		trackEvent(argCategory, argAction, argLabel, null);
-	}
-
-	/**
-	 * Tracks an event. To provide more info about the page, use
-	 * {@link #makeCustomRequest(AnalyticsRequestData)}.
-	 *
-	 * @param argCategory required
-	 * @param argAction   required
-	 * @param argLabel    optional
-	 * @param argValue    optional
-	 */
-	public void trackEvent(String argCategory, String argAction, String argLabel, Integer argValue) {
-		AnalyticsRequestData data = new AnalyticsRequestData();
-		data.setEventCategory(argCategory);
-		data.setEventAction(argAction);
-		data.setEventLabel(argLabel);
-		data.setEventValue(argValue);
-
-		makeCustomRequest(data);
-	}
-
-	/**
-	 * Makes a custom tracking request based from the given data.
-	 *
-	 * @param argData
-	 * @throws NullPointerException if argData is null or if the URL builder is
-	 *                              null
-	 */
-	public synchronized void makeCustomRequest(AnalyticsRequestData argData) {
-		if (!enabled) {
-			logger.log(Level.CONFIG, "Ignoring tracking request, enabled is false");
-			return;
-		}
-		if (argData == null)
-			throw new NullPointerException("Data cannot be null");
-		if (builder == null)
-			throw new NullPointerException("Class was not initialized");
-		final String url = builder.buildURL(argData);
-		final String userAgent = configData.getUserAgent();
-
-		switch (mode) {
-			case MULTI_THREAD:
-				Thread t = new Thread(asyncThreadGroup, "AnalyticsThread-" + asyncThreadGroup.activeCount()) {
-					@Override
-					public void run() {
-						synchronized (JGoogleAnalyticsTracker.class) {
-							asyncThreadsRunning++;
-						}
-						try {
-							dispatchRequest(url, userAgent);
-						} finally {
-							synchronized (JGoogleAnalyticsTracker.class) {
-								asyncThreadsRunning--;
-							}
-						}
-					}
-				};
-				t.setDaemon(true);
-				t.start();
-				break;
-			case SYNCHRONOUS:
-				dispatchRequest(url, userAgent);
-				break;
-			default: // in case it's null, we default to the single-thread
-				synchronized (fifo) {
-					fifo.addLast(url);
-					fifo.notify();
-				}
-				if (!backgroundThreadMayRun)
-					logger.log(Level.SEVERE, "A tracker request has been added to the queue but the background thread isn't running.", url);
-				break;
-		}
-	}
-
-	private static void dispatchRequest(String argURL, String userAgent) {
-		try {
-			URL url = new URL(argURL);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection(proxy);
-			connection.setRequestMethod("GET");
-			connection.setInstanceFollowRedirects(true);
-			if (userAgent != null)
-				connection.addRequestProperty("User-Agent", userAgent);
-			connection.connect();
-			int responseCode = connection.getResponseCode();
-			if (responseCode != HttpURLConnection.HTTP_OK)
-				logger.log(Level.SEVERE, "JGoogleAnalyticsTracker: Error requesting url '" + argURL + "', received response code " + responseCode);
-			else
-				logger.log(Level.CONFIG, "JGoogleAnalyticsTracker: Tracking success for url '" + argURL + "'");
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Error making tracking request", e);
-		}
-	}
-
-	private void createBuilder() {
-		switch (gaVersion) {
-			case V_4_7_2:
-				builder = new GoogleAnalyticsV4_7_2(configData);
-				break;
-			default:
-				builder = new GoogleAnalyticsV4_7_2(configData);
-				break;
-		}
-	}
-
-	/**
-	 * If the background thread for 'queued' mode is not running, start it now.
-	 */
-	private synchronized void startBackgroundThread() {
-		if (backgroundThread == null) {
-			backgroundThreadMayRun = true;
-			backgroundThread = new Thread(asyncThreadGroup, "AnalyticsBackgroundThread") {
-				@Override
-				public void run() {
-					logger.log(Level.CONFIG, "AnalyticsBackgroundThread started");
-					while (backgroundThreadMayRun)
-						try {
-							String url = null;
-
-							synchronized (fifo) {
-								if (fifo.isEmpty())
-									fifo.wait();
-
-								if (!fifo.isEmpty())
-									// Get a reference to the oldest element
-									// in
-									// the FIFO, but leave it in the FIFO
-									// until
-									// it is processed.
-									url = fifo.getFirst();
-							}
-
-							if (url != null)
-								try {
-									dispatchRequest(url, configData.getUserAgent());
-								} finally {
-									// Now that we have completed the HTTP
-									// request to GA, remove the element
-									// from
-									// the FIFO.
-									synchronized (fifo) {
-										fifo.removeFirst();
-									}
-								}
-						} catch (Exception e) {
-							logger.log(Level.SEVERE, "Got exception from dispatch thread", e);
-						}
-				}
-			};
-
-			// Don't prevent the application from terminating.
-			// Use completeBackgroundTasks() before exit if you want to ensure
-			// that all pending GA requests are sent.
-			backgroundThread.setDaemon(true);
-
-			backgroundThread.start();
-		}
-	}
-
-	/**
-	 * Stop the long-lived background thread.
-	 * <p>
-	 * This method is needed for debugging purposes only. Calling it in an
-	 * application is not really required: The background thread will terminate
-	 * automatically when the application exits.
-	 *
-	 * @param timeoutMillis If nonzero, wait for thread completion before
-	 *                      returning.
-	 */
-	public synchronized static void stopBackgroundThread(long timeoutMillis) {
-		backgroundThreadMayRun = false;
-		fifo.notify();
-		if (backgroundThread != null && timeoutMillis > 0) {
-			try {
-				backgroundThread.join(timeoutMillis);
-			} catch (InterruptedException e) {
-			}
-			backgroundThread = null;
-		}
-	}
-
-	public AnalyticsConfigData getConfigData() {
-		return configData;
 	}
 }

@@ -23,12 +23,33 @@ public abstract class Command extends Feature {
 		this.description = Objects.requireNonNull(description);
 
 		Objects.requireNonNull(syntax);
-		if (syntax.length > 0)
+		if (syntax.length > 0) {
 			syntax[0] = "Syntax: " + syntax[0];
+		}
 		this.syntax = syntax;
 	}
 
 	public abstract void call(String[] args) throws CmdException;
+
+	@Override
+	public final Category getCategory() {
+		return category;
+	}
+
+	@Override
+	public final String getDescription() {
+		String description = this.description;
+
+		if (syntax.length > 0) {
+			description += "\n";
+		}
+
+		for (String line : syntax) {
+			description += "\n" + line;
+		}
+
+		return description;
+	}
 
 	@Override
 	public final String getName() {
@@ -40,34 +61,18 @@ public abstract class Command extends Feature {
 		return "";
 	}
 
-	@Override
-	public final String getDescription() {
-		String description = this.description;
-
-		if (syntax.length > 0)
-			description += "\n";
-
-		for (String line : syntax)
-			description += "\n" + line;
-
-		return description;
-	}
-
 	public final String[] getSyntax() {
 		return syntax;
 	}
 
 	public final void printHelp() {
-		for (String line : description.split("\n"))
+		for (String line : description.split("\n")) {
 			ChatUtils.message(line);
+		}
 
-		for (String line : syntax)
+		for (String line : syntax) {
 			ChatUtils.message(line);
-	}
-
-	@Override
-	public final Category getCategory() {
-		return category;
+		}
 	}
 
 	protected final void setCategory(Category category) {

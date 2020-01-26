@@ -17,10 +17,48 @@ import net.wurstclient.mixinterface.IClientPlayerEntity;
 public enum RotationUtils {
 	;
 
-	public static Vec3d getEyesPos() {
-		ClientPlayerEntity player = WurstClient.MC.player;
+	public static final class Rotation {
+		private final float yaw;
+		private final float pitch;
 
-		return new Vec3d(player.getX(), player.getY() + player.getEyeHeight(player.getPose()), player.getZ());
+		public Rotation(float yaw, float pitch) {
+			this.yaw = MathHelper.wrapDegrees(yaw);
+			this.pitch = MathHelper.wrapDegrees(pitch);
+		}
+
+		public float getPitch() {
+			return pitch;
+		}
+
+		public float getYaw() {
+			return yaw;
+		}
+	}
+
+	public static double getAngleToLastReportedLookVec(Vec3d vec) {
+		Rotation needed = getNeededRotations(vec);
+
+		IClientPlayerEntity player = WurstClient.IMC.getPlayer();
+		float lastReportedYaw = MathHelper.wrapDegrees(player.getLastYaw());
+		float lastReportedPitch = MathHelper.wrapDegrees(player.getLastPitch());
+
+		float diffYaw = lastReportedYaw - needed.yaw;
+		float diffPitch = lastReportedPitch - needed.pitch;
+
+		return Math.sqrt(diffYaw * diffYaw + diffPitch * diffPitch);
+	}
+
+	public static double getAngleToLookVec(Vec3d vec) {
+		Rotation needed = getNeededRotations(vec);
+
+		ClientPlayerEntity player = WurstClient.MC.player;
+		float currentYaw = MathHelper.wrapDegrees(player.yaw);
+		float currentPitch = MathHelper.wrapDegrees(player.pitch);
+
+		float diffYaw = currentYaw - needed.yaw;
+		float diffPitch = currentPitch - needed.pitch;
+
+		return Math.sqrt(diffYaw * diffYaw + diffPitch * diffPitch);
 	}
 
 	public static Vec3d getClientLookVec() {
@@ -36,16 +74,10 @@ public enum RotationUtils {
 		return new Vec3d(f2 * f3, f4, f1 * f3);
 	}
 
-	public static Vec3d getServerLookVec() {
-		RotationFaker rotationFaker = WurstClient.INSTANCE.getRotationFaker();
-		float serverYaw = rotationFaker.getServerYaw();
-		float serverPitch = rotationFaker.getServerPitch();
+	public static Vec3d getEyesPos() {
+		ClientPlayerEntity player = WurstClient.MC.player;
 
-		float f = MathHelper.cos(-serverYaw * 0.017453292F - (float) Math.PI);
-		float f1 = MathHelper.sin(-serverYaw * 0.017453292F - (float) Math.PI);
-		float f2 = -MathHelper.cos(-serverPitch * 0.017453292F);
-		float f3 = MathHelper.sin(-serverPitch * 0.017453292F);
-		return new Vec3d(f1 * f2, f3, f * f2);
+		return new Vec3d(player.getX(), player.getY() + player.getEyeHeight(player.getPose()), player.getZ());
 	}
 
 	public static Rotation getNeededRotations(Vec3d vec) {
@@ -63,47 +95,15 @@ public enum RotationUtils {
 		return new Rotation(yaw, pitch);
 	}
 
-	public static double getAngleToLookVec(Vec3d vec) {
-		Rotation needed = getNeededRotations(vec);
+	public static Vec3d getServerLookVec() {
+		RotationFaker rotationFaker = WurstClient.INSTANCE.getRotationFaker();
+		float serverYaw = rotationFaker.getServerYaw();
+		float serverPitch = rotationFaker.getServerPitch();
 
-		ClientPlayerEntity player = WurstClient.MC.player;
-		float currentYaw = MathHelper.wrapDegrees(player.yaw);
-		float currentPitch = MathHelper.wrapDegrees(player.pitch);
-
-		float diffYaw = currentYaw - needed.yaw;
-		float diffPitch = currentPitch - needed.pitch;
-
-		return Math.sqrt(diffYaw * diffYaw + diffPitch * diffPitch);
-	}
-
-	public static double getAngleToLastReportedLookVec(Vec3d vec) {
-		Rotation needed = getNeededRotations(vec);
-
-		IClientPlayerEntity player = WurstClient.IMC.getPlayer();
-		float lastReportedYaw = MathHelper.wrapDegrees(player.getLastYaw());
-		float lastReportedPitch = MathHelper.wrapDegrees(player.getLastPitch());
-
-		float diffYaw = lastReportedYaw - needed.yaw;
-		float diffPitch = lastReportedPitch - needed.pitch;
-
-		return Math.sqrt(diffYaw * diffYaw + diffPitch * diffPitch);
-	}
-
-	public static final class Rotation {
-		private final float yaw;
-		private final float pitch;
-
-		public Rotation(float yaw, float pitch) {
-			this.yaw = MathHelper.wrapDegrees(yaw);
-			this.pitch = MathHelper.wrapDegrees(pitch);
-		}
-
-		public float getYaw() {
-			return yaw;
-		}
-
-		public float getPitch() {
-			return pitch;
-		}
+		float f = MathHelper.cos(-serverYaw * 0.017453292F - (float) Math.PI);
+		float f1 = MathHelper.sin(-serverYaw * 0.017453292F - (float) Math.PI);
+		float f2 = -MathHelper.cos(-serverPitch * 0.017453292F);
+		float f3 = MathHelper.sin(-serverPitch * 0.017453292F);
+		return new Vec3d(f1 * f2, f3, f * f2);
 	}
 }

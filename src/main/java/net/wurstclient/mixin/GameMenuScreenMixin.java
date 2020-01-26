@@ -31,33 +31,8 @@ public abstract class GameMenuScreenMixin extends Screen {
 		super(text_1);
 	}
 
-	@Inject(at = { @At("TAIL") }, method = { "initWidgets()V" })
-	private void onInitWidgets(CallbackInfo ci) {
-		if (!WurstClient.INSTANCE.isEnabled())
-			return;
-
-		addWurstOptionsButton();
-		removeFeedbackAndBugReportButtons();
-	}
-
 	private void addWurstOptionsButton() {
 		addButton(new ButtonWidget(width / 2 - 102, height / 4 + 56, 204, 20, "            Options", b -> minecraft.openScreen(new WurstOptionsScreen(this))));
-	}
-
-	private void removeFeedbackAndBugReportButtons() {
-		for (Iterator<AbstractButtonWidget> itr = buttons.iterator(); itr.hasNext();) {
-			AbstractButtonWidget button = itr.next();
-
-			if (isFeedbackOrBugReportButton(button))
-				itr.remove();
-		}
-
-		for (Iterator<Element> itr = children.iterator(); itr.hasNext();) {
-			Element element = itr.next();
-
-			if (isFeedbackOrBugReportButton(element))
-				itr.remove();
-		}
 	}
 
 	private boolean isFeedbackOrBugReportButton(Element element) {
@@ -76,6 +51,15 @@ public abstract class GameMenuScreenMixin extends Screen {
 			return false;
 
 		return true;
+	}
+
+	@Inject(at = { @At("TAIL") }, method = { "initWidgets()V" })
+	private void onInitWidgets(CallbackInfo ci) {
+		if (!WurstClient.INSTANCE.isEnabled())
+			return;
+
+		addWurstOptionsButton();
+		removeFeedbackAndBugReportButtons();
 	}
 
 	@Inject(at = { @At("TAIL") }, method = { "render(IIF)V" })
@@ -102,5 +86,23 @@ public abstract class GameMenuScreenMixin extends Screen {
 		float u = 0;
 		float v = 0;
 		blit(x, y, u, v, w, h, fw, fh);
+	}
+
+	private void removeFeedbackAndBugReportButtons() {
+		for (Iterator<AbstractButtonWidget> itr = buttons.iterator(); itr.hasNext();) {
+			AbstractButtonWidget button = itr.next();
+
+			if (isFeedbackOrBugReportButton(button)) {
+				itr.remove();
+			}
+		}
+
+		for (Iterator<Element> itr = children.iterator(); itr.hasNext();) {
+			Element element = itr.next();
+
+			if (isFeedbackOrBugReportButton(element)) {
+				itr.remove();
+			}
+		}
 	}
 }

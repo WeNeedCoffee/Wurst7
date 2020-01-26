@@ -32,13 +32,30 @@ import net.wurstclient.util.RotationUtils.Rotation;
 
 @SearchTags({ "build random", "RandomBuild", "random build", "PlaceRandom", "place random", "RandomPlace", "random place" })
 public final class BuildRandomHack extends Hack implements UpdateListener, RenderListener {
+	private enum Mode {
+		FAST("Fast"),
+
+		LEGIT("Legit");
+
+		private final String name;
+
+		private Mode(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final EnumSetting<Mode> mode = new EnumSetting<>("Mode", "\u00a7lFast\u00a7r mode can place blocks behind other blocks.\n" + "\u00a7lLegit\u00a7r mode can bypass NoCheat+.", Mode.values(), Mode.FAST);
 
 	private final CheckboxSetting checkItem = new CheckboxSetting("Check held item", "Only builds when you are actually holding a block.\n" + "Turn this off to build with fire, water, lava,\n" + "spawn eggs, or if you just want to right click\n" + "with an empty hand in random places.", true);
 
 	private final CheckboxSetting fastPlace = new CheckboxSetting("Always FastPlace", "Builds as if FastPlace was enabled,\n" + "even if it's not.", false);
-
 	private final Random random = new Random();
+
 	private BlockPos lastPos;
 
 	public BuildRandomHack() {
@@ -49,10 +66,12 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 		addSetting(fastPlace);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(RenderListener.class, this);
+	private boolean checkHeldItem() {
+		if (!checkItem.isChecked())
+			return true;
+
+		ItemStack stack = MC.player.inventory.getMainHandStack();
+		return !stack.isEmpty() && stack.getItem() instanceof BlockItem;
 	}
 
 	@Override
@@ -63,41 +82,9 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 	}
 
 	@Override
-	public void onUpdate() {
-		lastPos = null;
-
-		if (WURST.getHax().freecamHack.isEnabled())
-			return;
-
-		// check timer
-		if (!fastPlace.isChecked() && IMC.getItemUseCooldown() > 0)
-			return;
-
-		if (!checkHeldItem())
-			return;
-
-		// set mode & range
-		boolean legitMode = mode.getSelected() == Mode.LEGIT;
-		int range = legitMode ? 5 : 6;
-		int bound = range * 2 + 1;
-
-		BlockPos pos;
-		int attempts = 0;
-
-		do {
-			// generate random position
-			pos = new BlockPos(MC.player).add(random.nextInt(bound) - range, random.nextInt(bound) - range, random.nextInt(bound) - range);
-			attempts++;
-
-		} while (attempts < 128 && !tryToPlaceBlock(legitMode, pos));
-	}
-
-	private boolean checkHeldItem() {
-		if (!checkItem.isChecked())
-			return true;
-
-		ItemStack stack = MC.player.inventory.getMainHandStack();
-		return !stack.isEmpty() && stack.getItem() instanceof BlockItem;
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -139,25 +126,34 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
-	private boolean tryToPlaceBlock(boolean legitMode, BlockPos pos) {
-		if (!BlockUtils.getState(pos).getMaterial().isReplaceable())
-			return false;
+	@Override
+	public void onUpdate() {
+		lastPos = null;
 
-		if (legitMode) {
-			if (!placeBlockLegit(pos))
-				return false;
+		if (WURST.getHax().freecamHack.isEnabled())
+			return;
 
-			IMC.setItemUseCooldown(4);
-		} else {
-			if (!placeBlockSimple_old(pos))
-				return false;
+		// check timer
+		if (!fastPlace.isChecked() && IMC.getItemUseCooldown() > 0)
+			return;
 
-			MC.player.swingHand(Hand.MAIN_HAND);
-			IMC.setItemUseCooldown(4);
-		}
+		if (!checkHeldItem())
+			return;
 
-		lastPos = pos;
-		return true;
+		// set mode & range
+		boolean legitMode = mode.getSelected() == Mode.LEGIT;
+		int range = legitMode ? 5 : 6;
+		int bound = range * 2 + 1;
+
+		BlockPos pos;
+		int attempts = 0;
+
+		do {
+			// generate random position
+			pos = new BlockPos(MC.player).add(random.nextInt(bound) - range, random.nextInt(bound) - range, random.nextInt(bound) - range);
+			attempts++;
+
+		} while (attempts < 128 && !tryToPlaceBlock(legitMode, pos));
 	}
 
 	private boolean placeBlockLegit(BlockPos pos) {
@@ -169,23 +165,27 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 			BlockPos neighbor = pos.offset(side);
 
 			// check if neighbor can be right clicked
-			if (!BlockUtils.canBeClicked(neighbor))
+			if (!BlockUtils.canBeClicked(neighbor)) {
 				continue;
+			}
 
 			Vec3d dirVec = new Vec3d(side.getVector());
 			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
 
 			// check if hitVec is within range (4.25 blocks)
-			if (eyesPos.squaredDistanceTo(hitVec) > 18.0625)
+			if (eyesPos.squaredDistanceTo(hitVec) > 18.0625) {
 				continue;
+			}
 
 			// check if side is visible (facing away from player)
-			if (distanceSqPosVec > eyesPos.squaredDistanceTo(posVec.add(dirVec)))
+			if (distanceSqPosVec > eyesPos.squaredDistanceTo(posVec.add(dirVec))) {
 				continue;
+			}
 
 			// check line of sight
-			if (MC.world.rayTrace(new RayTraceContext(eyesPos, hitVec, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.MISS)
+			if (MC.world.rayTrace(new RayTraceContext(eyesPos, hitVec, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.MISS) {
 				continue;
+			}
 
 			// face block
 			Rotation rotation = RotationUtils.getNeededRotations(hitVec);
@@ -211,14 +211,16 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 			BlockPos neighbor = pos.offset(side);
 
 			// check if neighbor can be right clicked
-			if (!BlockUtils.canBeClicked(neighbor))
+			if (!BlockUtils.canBeClicked(neighbor)) {
 				continue;
+			}
 
 			Vec3d hitVec = posVec.add(new Vec3d(side.getVector()).multiply(0.5));
 
 			// check if hitVec is within range (6 blocks)
-			if (eyesPos.squaredDistanceTo(hitVec) > 36)
+			if (eyesPos.squaredDistanceTo(hitVec) > 36) {
 				continue;
+			}
 
 			// place block
 			IMC.getInteractionManager().rightClickBlock(neighbor, side.getOpposite(), hitVec);
@@ -229,20 +231,24 @@ public final class BuildRandomHack extends Hack implements UpdateListener, Rende
 		return false;
 	}
 
-	private enum Mode {
-		FAST("Fast"),
+	private boolean tryToPlaceBlock(boolean legitMode, BlockPos pos) {
+		if (!BlockUtils.getState(pos).getMaterial().isReplaceable())
+			return false;
 
-		LEGIT("Legit");
+		if (legitMode) {
+			if (!placeBlockLegit(pos))
+				return false;
 
-		private final String name;
+			IMC.setItemUseCooldown(4);
+		} else {
+			if (!placeBlockSimple_old(pos))
+				return false;
 
-		private Mode(String name) {
-			this.name = name;
+			MC.player.swingHand(Hand.MAIN_HAND);
+			IMC.setItemUseCooldown(4);
 		}
 
-		@Override
-		public String toString() {
-			return name;
-		}
+		lastPos = pos;
+		return true;
 	}
 }

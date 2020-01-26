@@ -28,12 +28,14 @@ public final class DirectLoginScreen extends AltEditorScreen {
 			message = "";
 			LoginManager.changeCrackedName(getEmail());
 
-		} else
+		} else {
 			message = LoginManager.login(getEmail(), getPassword());
+		}
 
-		if (message.isEmpty())
+		if (message.isEmpty()) {
 			minecraft.openScreen(new TitleScreen());
-		else
+		} else {
 			doErrorEffect();
+		}
 	}
 }

@@ -23,17 +23,18 @@ public final class AutoSignHack extends Hack {
 		setCategory(Category.BLOCKS);
 	}
 
+	public Text[] getSignText() {
+		return signText;
+	}
+
 	@Override
 	public void onDisable() {
 		signText = null;
 	}
 
-	public Text[] getSignText() {
-		return signText;
-	}
-
 	public void setSignText(Text[] signText) {
-		if (isEnabled() && this.signText == null)
+		if (isEnabled() && this.signText == null) {
 			this.signText = signText;
+		}
 	}
 }

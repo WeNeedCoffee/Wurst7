@@ -18,7 +18,8 @@ import net.wurstclient.WurstClient;
 public class PlayerInventoryMixin {
 	@Inject(at = { @At("HEAD") }, method = { "scrollInHotbar(D)V" }, cancellable = true)
 	private void onScrollInHotbar(double scrollAmount, CallbackInfo ci) {
-		if (WurstClient.INSTANCE.getZoomKey().isPressed())
+		if (WurstClient.INSTANCE.getZoomKey().isPressed()) {
 			ci.cancel();
+		}
 	}
 }

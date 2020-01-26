@@ -29,26 +29,8 @@ public abstract class Feature {
 
 	private final String searchTags = getClass().isAnnotationPresent(SearchTags.class) ? String.join("\u00a7", getClass().getAnnotation(SearchTags.class).value()) : "";
 
-	public abstract String getName();
-
-	public abstract String getDescription();
-
-	public Category getCategory() {
-		return null;
-	}
-
-	public abstract String getPrimaryAction();
-
-	public void doPrimaryAction() {
-
-	}
-
-	public boolean isEnabled() {
-		return false;
-	}
-
-	public final Map<String, Setting> getSettings() {
-		return Collections.unmodifiableMap(settings);
+	protected final void addPossibleKeybind(String command, String description) {
+		possibleKeybinds.add(new PossibleKeybind(command, description));
 	}
 
 	protected final void addSetting(Setting setting) {
@@ -61,15 +43,33 @@ public abstract class Feature {
 		possibleKeybinds.addAll(setting.getPossibleKeybinds(getName()));
 	}
 
-	protected final void addPossibleKeybind(String command, String description) {
-		possibleKeybinds.add(new PossibleKeybind(command, description));
+	public void doPrimaryAction() {
+
 	}
+
+	public Category getCategory() {
+		return null;
+	}
+
+	public abstract String getDescription();
+
+	public abstract String getName();
+
+	public final Set<PossibleKeybind> getPossibleKeybinds() {
+		return Collections.unmodifiableSet(possibleKeybinds);
+	}
+
+	public abstract String getPrimaryAction();
 
 	public final String getSearchTags() {
 		return searchTags;
 	}
 
-	public final Set<PossibleKeybind> getPossibleKeybinds() {
-		return Collections.unmodifiableSet(possibleKeybinds);
+	public final Map<String, Setting> getSettings() {
+		return Collections.unmodifiableMap(settings);
+	}
+
+	public boolean isEnabled() {
+		return false;
 	}
 }

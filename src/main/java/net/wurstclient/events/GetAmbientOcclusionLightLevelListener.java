@@ -13,8 +13,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface GetAmbientOcclusionLightLevelListener extends Listener {
-	public void onGetAmbientOcclusionLightLevel(GetAmbientOcclusionLightLevelEvent event);
-
 	public static class GetAmbientOcclusionLightLevelEvent extends Event<GetAmbientOcclusionLightLevelListener> {
 		private final BlockState state;
 		private float lightLevel;
@@ -26,31 +24,34 @@ public interface GetAmbientOcclusionLightLevelListener extends Listener {
 			defaultLightLevel = lightLevel;
 		}
 
-		public BlockState getState() {
-			return state;
-		}
-
-		public float getLightLevel() {
-			return lightLevel;
-		}
-
-		public void setLightLevel(float lightLevel) {
-			this.lightLevel = lightLevel;
+		@Override
+		public void fire(ArrayList<GetAmbientOcclusionLightLevelListener> listeners) {
+			for (GetAmbientOcclusionLightLevelListener listener : listeners) {
+				listener.onGetAmbientOcclusionLightLevel(this);
+			}
 		}
 
 		public float getDefaultLightLevel() {
 			return defaultLightLevel;
 		}
 
-		@Override
-		public void fire(ArrayList<GetAmbientOcclusionLightLevelListener> listeners) {
-			for (GetAmbientOcclusionLightLevelListener listener : listeners)
-				listener.onGetAmbientOcclusionLightLevel(this);
+		public float getLightLevel() {
+			return lightLevel;
 		}
 
 		@Override
 		public Class<GetAmbientOcclusionLightLevelListener> getListenerType() {
 			return GetAmbientOcclusionLightLevelListener.class;
 		}
+
+		public BlockState getState() {
+			return state;
+		}
+
+		public void setLightLevel(float lightLevel) {
+			this.lightLevel = lightLevel;
+		}
 	}
+
+	void onGetAmbientOcclusionLightLevel(GetAmbientOcclusionLightLevelEvent event);
 }

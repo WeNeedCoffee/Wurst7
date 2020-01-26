@@ -27,9 +27,9 @@ public final class TCmd extends Command {
 		if (hack == null)
 			throw new CmdError("Unknown hack: " + args[0]);
 
-		if (args.length == 1)
+		if (args.length == 1) {
 			hack.setEnabled(!hack.isEnabled());
-		else
+		} else {
 			switch (args[1].toLowerCase()) {
 				case "on":
 					hack.setEnabled(true);
@@ -42,5 +42,6 @@ public final class TCmd extends Command {
 				default:
 					throw new CmdSyntaxError();
 			}
+		}
 	}
 }

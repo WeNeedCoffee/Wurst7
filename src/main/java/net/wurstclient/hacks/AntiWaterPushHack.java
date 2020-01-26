@@ -20,13 +20,13 @@ public final class AntiWaterPushHack extends Hack implements VelocityFromFluidLi
 	}
 
 	@Override
-	protected void onEnable() {
-		EVENTS.add(VelocityFromFluidListener.class, this);
+	protected void onDisable() {
+		EVENTS.remove(VelocityFromFluidListener.class, this);
 	}
 
 	@Override
-	protected void onDisable() {
-		EVENTS.remove(VelocityFromFluidListener.class, this);
+	protected void onEnable() {
+		EVENTS.add(VelocityFromFluidListener.class, this);
 	}
 
 	@Override

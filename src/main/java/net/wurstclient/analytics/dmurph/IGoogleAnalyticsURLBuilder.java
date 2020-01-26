@@ -29,22 +29,22 @@ package net.wurstclient.analytics.dmurph;
 public interface IGoogleAnalyticsURLBuilder {
 
 	/**
-	 * Reset the session cookie.
+	 * Build the url request from the data.
+	 *
+	 * @param argData
+	 * @return
 	 */
-	public void resetSession();
+	String buildURL(AnalyticsRequestData argData);
 
 	/**
 	 * Gets the version for this builder.
 	 *
 	 * @return
 	 */
-	public String getGoogleAnalyticsVersion();
+	String getGoogleAnalyticsVersion();
 
 	/**
-	 * Build the url request from the data.
-	 *
-	 * @param argData
-	 * @return
+	 * Reset the session cookie.
 	 */
-	public String buildURL(AnalyticsRequestData argData);
+	void resetSession();
 }

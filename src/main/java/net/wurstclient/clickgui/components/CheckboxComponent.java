@@ -27,63 +27,6 @@ public final class CheckboxComponent extends Component {
 		setHeight(getDefaultHeight());
 	}
 
-	@Override
-	public void handleMouseClick(double mouseX, double mouseY, int mouseButton) {
-		switch (mouseButton) {
-			case 0:
-				setting.setChecked(!setting.isChecked());
-				break;
-
-			case 1:
-				setting.setChecked(setting.isCheckedByDefault());
-				break;
-		}
-	}
-
-	@Override
-	public void render(int mouseX, int mouseY, float partialTicks) {
-		int x1 = getX();
-		int x2 = x1 + getWidth();
-		int x3 = x1 + 11;
-		int y1 = getY();
-		int y2 = y1 + getHeight();
-
-		boolean hovering = isHovering(mouseX, mouseY, x1, x2, y1, y2);
-
-		if (hovering && mouseX >= x3)
-			setTooltip();
-
-		if (setting.isLocked())
-			hovering = false;
-
-		drawBackground(x2, x3, y1, y2);
-		drawBox(x1, x3, y1, y2, hovering);
-
-		if (setting.isChecked())
-			drawCheck(x1, y1, hovering);
-
-		drawName(x3, y1);
-	}
-
-	private boolean isHovering(int mouseX, int mouseY, int x1, int x2, int y1, int y2) {
-		Window parent = getParent();
-		boolean scrollEnabled = parent.isScrollingEnabled();
-		int scroll = scrollEnabled ? parent.getScrollOffset() : 0;
-
-		return mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2 && mouseY >= -scroll && mouseY < parent.getHeight() - 13 - scroll;
-	}
-
-	private void setTooltip() {
-		String tooltip = setting.getDescription();
-
-		if (setting.isLocked()) {
-			tooltip += "\n\nThis checkbox is locked to ";
-			tooltip += setting.isChecked() + ".";
-		}
-
-		GUI.setTooltip(tooltip);
-	}
-
 	private void drawBackground(int x2, int x3, int y1, int y2) {
 		float[] bgColor = GUI.getBgColor();
 		float opacity = GUI.getOpacity();
@@ -132,10 +75,11 @@ public final class CheckboxComponent extends Component {
 		double yc5 = y1 + 8.5;
 
 		// check
-		if (setting.isLocked())
+		if (setting.isLocked()) {
 			GL11.glColor4f(0.5F, 0.5F, 0.5F, 0.75F);
-		else
+		} else {
 			GL11.glColor4f(0, hovering ? 1 : 0.85F, 0, 1);
+		}
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glVertex2d(xc2, yc3);
 		GL11.glVertex2d(xc3, yc4);
@@ -174,12 +118,72 @@ public final class CheckboxComponent extends Component {
 	}
 
 	@Override
+	public int getDefaultHeight() {
+		return 11;
+	}
+
+	@Override
 	public int getDefaultWidth() {
 		return MC.textRenderer.getStringWidth(setting.getName()) + 13;
 	}
 
 	@Override
-	public int getDefaultHeight() {
-		return 11;
+	public void handleMouseClick(double mouseX, double mouseY, int mouseButton) {
+		switch (mouseButton) {
+			case 0:
+				setting.setChecked(!setting.isChecked());
+				break;
+
+			case 1:
+				setting.setChecked(setting.isCheckedByDefault());
+				break;
+		}
+	}
+
+	private boolean isHovering(int mouseX, int mouseY, int x1, int x2, int y1, int y2) {
+		Window parent = getParent();
+		boolean scrollEnabled = parent.isScrollingEnabled();
+		int scroll = scrollEnabled ? parent.getScrollOffset() : 0;
+
+		return mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2 && mouseY >= -scroll && mouseY < parent.getHeight() - 13 - scroll;
+	}
+
+	@Override
+	public void render(int mouseX, int mouseY, float partialTicks) {
+		int x1 = getX();
+		int x2 = x1 + getWidth();
+		int x3 = x1 + 11;
+		int y1 = getY();
+		int y2 = y1 + getHeight();
+
+		boolean hovering = isHovering(mouseX, mouseY, x1, x2, y1, y2);
+
+		if (hovering && mouseX >= x3) {
+			setTooltip();
+		}
+
+		if (setting.isLocked()) {
+			hovering = false;
+		}
+
+		drawBackground(x2, x3, y1, y2);
+		drawBox(x1, x3, y1, y2, hovering);
+
+		if (setting.isChecked()) {
+			drawCheck(x1, y1, hovering);
+		}
+
+		drawName(x3, y1);
+	}
+
+	private void setTooltip() {
+		String tooltip = setting.getDescription();
+
+		if (setting.isLocked()) {
+			tooltip += "\n\nThis checkbox is locked to ";
+			tooltip += setting.isChecked() + ".";
+		}
+
+		GUI.setTooltip(tooltip);
 	}
 }

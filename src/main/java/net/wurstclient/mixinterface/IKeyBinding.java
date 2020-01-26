@@ -8,5 +8,5 @@
 package net.wurstclient.mixinterface;
 
 public interface IKeyBinding {
-	public boolean isActallyPressed();
+	boolean isActallyPressed();
 }

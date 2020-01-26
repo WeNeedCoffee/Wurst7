@@ -41,6 +41,10 @@ import net.wurstclient.util.RotationUtils.Rotation;
 import net.wurstclient.util.json.JsonException;
 
 public final class AutoBuildHack extends Hack implements UpdateListener, RightClickListener, RenderListener {
+	private enum Status {
+		NO_TEMPLATE, LOADING, IDLE, BUILDING;
+	}
+
 	private final FileSetting templateSetting = new FileSetting("Template", "Determines what to build.\n\n" + "Templates are just JSON files. Feel free to\n" + "add your own or to edit / delete the\n" + "default templates.\n\n" + "If you mess up, simply press the\n" + "'Reset to Defaults' button or\n" + "delete the folder.", "autobuild", folder -> DefaultAutoBuildTemplates.createFiles(folder));
 
 	private final SliderSetting range = new SliderSetting("Range", "How far to reach when placing blocks.\n" + "Recommended values:\n" + "6.0 for vanilla\n" + "4.25 for NoCheat+", 6, 1, 10, 0.05, ValueDisplay.DECIMAL);
@@ -50,9 +54,9 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 	private final CheckboxSetting instaBuild = new CheckboxSetting("InstaBuild", "Builds small templates (<= 64 blocks) instantly.\n" + "For best results, stand close to the block you're placing.", true);
 
 	private final CheckboxSetting fastPlace = new CheckboxSetting("Always FastPlace", "Builds as if FastPlace was enabled,\n" + "even if it's not.", true);
-
 	private Status status = Status.NO_TEMPLATE;
 	private AutoBuildTemplate template;
+
 	private LinkedHashSet<BlockPos> remainingBlocks = new LinkedHashSet<>();
 
 	public AutoBuildHack() {
@@ -63,6 +67,68 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		addSetting(checkLOS);
 		addSetting(instaBuild);
 		addSetting(fastPlace);
+	}
+
+	private void buildInstantly() {
+		Vec3d eyesPos = RotationUtils.getEyesPos();
+		IClientPlayerInteractionManager im = IMC.getInteractionManager();
+		double rangeSq = Math.pow(range.getValue(), 2);
+
+		for (BlockPos pos : remainingBlocks) {
+			if (!BlockUtils.getState(pos).getMaterial().isReplaceable()) {
+				continue;
+			}
+
+			Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+
+			for (Direction side : Direction.values()) {
+				BlockPos neighbor = pos.offset(side);
+
+				// check if neighbor can be right-clicked
+				if (!BlockUtils.canBeClicked(neighbor)) {
+					continue;
+				}
+
+				Vec3d sideVec = new Vec3d(side.getVector());
+				Vec3d hitVec = posVec.add(sideVec.multiply(0.5));
+
+				// check if hitVec is within range
+				if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
+					continue;
+				}
+
+				// place block
+				im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
+
+				break;
+			}
+		}
+
+		remainingBlocks.clear();
+	}
+
+	private void buildNormally() {
+		updateRemainingBlocks();
+
+		if (remainingBlocks.isEmpty()) {
+			status = Status.IDLE;
+			return;
+		}
+
+		if (!fastPlace.isChecked() && IMC.getItemUseCooldown() > 0)
+			return;
+
+		placeNextBlock();
+	}
+
+	private void drawGreenBox() {
+		GL11.glDepthMask(false);
+		GL11.glColor4f(0F, 1F, 0F, 0.15F);
+		RenderUtils.drawSolidBox();
+		GL11.glDepthMask(true);
+
+		GL11.glColor4f(0F, 0F, 0F, 0.5F);
+		RenderUtils.drawOutlinedBox();
 	}
 
 	@Override
@@ -92,48 +158,6 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		return name;
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(RightClickListener.class, this);
-		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RightClickListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		remainingBlocks.clear();
-
-		if (template == null)
-			status = Status.NO_TEMPLATE;
-		else
-			status = Status.IDLE;
-	}
-
-	@Override
-	public void onUpdate() {
-		switch (status) {
-			case NO_TEMPLATE:
-				loadSelectedTemplate();
-				break;
-
-			case LOADING:
-				break;
-
-			case IDLE:
-				if (!template.isSelected(templateSetting))
-					loadSelectedTemplate();
-				break;
-
-			case BUILDING:
-				buildNormally();
-				break;
-		}
-	}
-
 	private void loadSelectedTemplate() {
 		status = Status.LOADING;
 		Path path = templateSetting.getSelectedFile();
@@ -155,137 +179,26 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		}
 	}
 
-	private void buildNormally() {
-		updateRemainingBlocks();
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RightClickListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
 
-		if (remainingBlocks.isEmpty()) {
+		remainingBlocks.clear();
+
+		if (template == null) {
+			status = Status.NO_TEMPLATE;
+		} else {
 			status = Status.IDLE;
-			return;
 		}
-
-		if (!fastPlace.isChecked() && IMC.getItemUseCooldown() > 0)
-			return;
-
-		placeNextBlock();
-	}
-
-	private void updateRemainingBlocks() {
-		for (Iterator<BlockPos> itr = remainingBlocks.iterator(); itr.hasNext();) {
-			BlockPos pos = itr.next();
-			BlockState state = BlockUtils.getState(pos);
-
-			if (!state.getMaterial().isReplaceable())
-				itr.remove();
-		}
-	}
-
-	private void placeNextBlock() {
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		double rangeSq = Math.pow(range.getValue(), 2);
-
-		for (BlockPos pos : remainingBlocks)
-			if (tryToPlace(pos, eyesPos, rangeSq))
-				break;
-	}
-
-	private boolean tryToPlace(BlockPos pos, Vec3d eyesPos, double rangeSq) {
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
-
-		for (Direction side : Direction.values()) {
-			BlockPos neighbor = pos.offset(side);
-
-			// check if neighbor can be right clicked
-			if (!BlockUtils.canBeClicked(neighbor) || BlockUtils.getState(neighbor).getMaterial().isReplaceable())
-				continue;
-
-			Vec3d dirVec = new Vec3d(side.getVector());
-			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
-
-			// check if hitVec is within range
-			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq)
-				continue;
-
-			// check if side is visible (facing away from player)
-			if (distanceSqPosVec > eyesPos.squaredDistanceTo(posVec.add(dirVec)))
-				continue;
-
-			// check line of sight
-			if (checkLOS.isChecked() && MC.world.rayTrace(new RayTraceContext(eyesPos, hitVec, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.MISS)
-				continue;
-
-			// face block
-			Rotation rotation = RotationUtils.getNeededRotations(hitVec);
-			PlayerMoveC2SPacket.LookOnly packet = new PlayerMoveC2SPacket.LookOnly(rotation.getYaw(), rotation.getPitch(), MC.player.onGround);
-			MC.player.networkHandler.sendPacket(packet);
-
-			// place block
-			IMC.getInteractionManager().rightClickBlock(neighbor, side.getOpposite(), hitVec);
-			MC.player.swingHand(Hand.MAIN_HAND);
-			IMC.setItemUseCooldown(4);
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override
-	public void onRightClick(RightClickEvent event) {
-		if (status != Status.IDLE)
-			return;
-
-		HitResult hitResult = MC.crosshairTarget;
-		if (hitResult == null || hitResult.getPos() == null || hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult))
-			return;
-
-		BlockHitResult blockHitResult = (BlockHitResult) hitResult;
-		BlockPos hitResultPos = blockHitResult.getBlockPos();
-		if (!BlockUtils.canBeClicked(hitResultPos))
-			return;
-
-		BlockPos startPos = hitResultPos.offset(blockHitResult.getSide());
-		Direction direction = MC.player.getHorizontalFacing();
-		remainingBlocks = template.getPositions(startPos, direction);
-
-		if (instaBuild.isChecked() && template.size() <= 64)
-			buildInstantly();
-		else
-			status = Status.BUILDING;
-	}
-
-	private void buildInstantly() {
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		IClientPlayerInteractionManager im = IMC.getInteractionManager();
-		double rangeSq = Math.pow(range.getValue(), 2);
-
-		for (BlockPos pos : remainingBlocks) {
-			if (!BlockUtils.getState(pos).getMaterial().isReplaceable())
-				continue;
-
-			Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-
-			for (Direction side : Direction.values()) {
-				BlockPos neighbor = pos.offset(side);
-
-				// check if neighbor can be right-clicked
-				if (!BlockUtils.canBeClicked(neighbor))
-					continue;
-
-				Vec3d sideVec = new Vec3d(side.getVector());
-				Vec3d hitVec = posVec.add(sideVec.multiply(0.5));
-
-				// check if hitVec is within range
-				if (eyesPos.squaredDistanceTo(hitVec) > rangeSq)
-					continue;
-
-				// place block
-				im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
-
-				break;
-			}
-		}
-
-		remainingBlocks.clear();
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(RightClickListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -313,8 +226,9 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		int blocksDrawn = 0;
 		for (Iterator<BlockPos> itr = remainingBlocks.iterator(); itr.hasNext() && blocksDrawn < 1024;) {
 			BlockPos pos = itr.next();
-			if (!BlockUtils.getState(pos).getMaterial().isReplaceable())
+			if (!BlockUtils.getState(pos).getMaterial().isReplaceable()) {
 				continue;
+			}
 
 			GL11.glPushMatrix();
 			GL11.glTranslated(pos.getX(), pos.getY(), pos.getZ());
@@ -323,10 +237,11 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 
 			Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
 
-			if (eyesPos.squaredDistanceTo(posVec) <= rangeSq)
+			if (eyesPos.squaredDistanceTo(posVec) <= rangeSq) {
 				drawGreenBox();
-			else
+			} else {
 				RenderUtils.drawOutlinedBox();
+			}
 
 			GL11.glPopMatrix();
 			blocksDrawn++;
@@ -341,17 +256,116 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		GL11.glColor4f(1, 1, 1, 1);
 	}
 
-	private void drawGreenBox() {
-		GL11.glDepthMask(false);
-		GL11.glColor4f(0F, 1F, 0F, 0.15F);
-		RenderUtils.drawSolidBox();
-		GL11.glDepthMask(true);
+	@Override
+	public void onRightClick(RightClickEvent event) {
+		if (status != Status.IDLE)
+			return;
 
-		GL11.glColor4f(0F, 0F, 0F, 0.5F);
-		RenderUtils.drawOutlinedBox();
+		HitResult hitResult = MC.crosshairTarget;
+		if (hitResult == null || hitResult.getPos() == null || hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult))
+			return;
+
+		BlockHitResult blockHitResult = (BlockHitResult) hitResult;
+		BlockPos hitResultPos = blockHitResult.getBlockPos();
+		if (!BlockUtils.canBeClicked(hitResultPos))
+			return;
+
+		BlockPos startPos = hitResultPos.offset(blockHitResult.getSide());
+		Direction direction = MC.player.getHorizontalFacing();
+		remainingBlocks = template.getPositions(startPos, direction);
+
+		if (instaBuild.isChecked() && template.size() <= 64) {
+			buildInstantly();
+		} else {
+			status = Status.BUILDING;
+		}
 	}
 
-	private enum Status {
-		NO_TEMPLATE, LOADING, IDLE, BUILDING;
+	@Override
+	public void onUpdate() {
+		switch (status) {
+			case NO_TEMPLATE:
+				loadSelectedTemplate();
+				break;
+
+			case LOADING:
+				break;
+
+			case IDLE:
+				if (!template.isSelected(templateSetting)) {
+					loadSelectedTemplate();
+				}
+				break;
+
+			case BUILDING:
+				buildNormally();
+				break;
+		}
+	}
+
+	private void placeNextBlock() {
+		Vec3d eyesPos = RotationUtils.getEyesPos();
+		double rangeSq = Math.pow(range.getValue(), 2);
+
+		for (BlockPos pos : remainingBlocks)
+			if (tryToPlace(pos, eyesPos, rangeSq)) {
+				break;
+			}
+	}
+
+	private boolean tryToPlace(BlockPos pos, Vec3d eyesPos, double rangeSq) {
+		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
+
+		for (Direction side : Direction.values()) {
+			BlockPos neighbor = pos.offset(side);
+
+			// check if neighbor can be right clicked
+			if (!BlockUtils.canBeClicked(neighbor) || BlockUtils.getState(neighbor).getMaterial().isReplaceable()) {
+				continue;
+			}
+
+			Vec3d dirVec = new Vec3d(side.getVector());
+			Vec3d hitVec = posVec.add(dirVec.multiply(0.5));
+
+			// check if hitVec is within range
+			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
+				continue;
+			}
+
+			// check if side is visible (facing away from player)
+			if (distanceSqPosVec > eyesPos.squaredDistanceTo(posVec.add(dirVec))) {
+				continue;
+			}
+
+			// check line of sight
+			if (checkLOS.isChecked() && MC.world.rayTrace(new RayTraceContext(eyesPos, hitVec, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.MISS) {
+				continue;
+			}
+
+			// face block
+			Rotation rotation = RotationUtils.getNeededRotations(hitVec);
+			PlayerMoveC2SPacket.LookOnly packet = new PlayerMoveC2SPacket.LookOnly(rotation.getYaw(), rotation.getPitch(), MC.player.onGround);
+			MC.player.networkHandler.sendPacket(packet);
+
+			// place block
+			IMC.getInteractionManager().rightClickBlock(neighbor, side.getOpposite(), hitVec);
+			MC.player.swingHand(Hand.MAIN_HAND);
+			IMC.setItemUseCooldown(4);
+			return true;
+		}
+
+		return false;
+	}
+
+	private void updateRemainingBlocks() {
+		for (Iterator<BlockPos> itr = remainingBlocks.iterator(); itr.hasNext();) {
+			BlockPos pos = itr.next();
+			BlockState state = BlockUtils.getState(pos);
+
+			if (!state.getMaterial().isReplaceable()) {
+				itr.remove();
+			}
+		}
 	}
 }

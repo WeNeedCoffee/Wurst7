@@ -36,8 +36,9 @@ public final class ZoomOtf extends OtherFeature implements MouseScrollListener {
 	public double changeFovBasedOnZoom(double fov) {
 		GameOptions gameOptions = MinecraftClient.getInstance().options;
 
-		if (currentLevel == null)
+		if (currentLevel == null) {
 			currentLevel = level.getValue();
+		}
 
 		if (!WURST.getZoomKey().isPressed()) {
 			currentLevel = level.getValue();
@@ -50,8 +51,9 @@ public final class ZoomOtf extends OtherFeature implements MouseScrollListener {
 			return fov;
 		}
 
-		if (defaultMouseSensitivity == null)
+		if (defaultMouseSensitivity == null) {
 			defaultMouseSensitivity = gameOptions.mouseSensitivity;
+		}
 
 		// Adjust mouse sensitivity in relation to zoom level.
 		// (fov / currentLevel) / fov is a value between 0.02 (50x zoom)
@@ -61,27 +63,29 @@ public final class ZoomOtf extends OtherFeature implements MouseScrollListener {
 		return fov / currentLevel;
 	}
 
-	@Override
-	public void onMouseScroll(double amount) {
-		if (!WURST.getZoomKey().isPressed() || !scroll.isChecked())
-			return;
-
-		if (currentLevel == null)
-			currentLevel = level.getValue();
-
-		if (amount > 0)
-			currentLevel *= 1.1;
-		else if (amount < 0)
-			currentLevel *= 0.9;
-
-		currentLevel = MathUtils.clamp(currentLevel, level.getMinimum(), level.getMaximum());
-	}
-
 	public SliderSetting getLevelSetting() {
 		return level;
 	}
 
 	public CheckboxSetting getScrollSetting() {
 		return scroll;
+	}
+
+	@Override
+	public void onMouseScroll(double amount) {
+		if (!WURST.getZoomKey().isPressed() || !scroll.isChecked())
+			return;
+
+		if (currentLevel == null) {
+			currentLevel = level.getValue();
+		}
+
+		if (amount > 0) {
+			currentLevel *= 1.1;
+		} else if (amount < 0) {
+			currentLevel *= 0.9;
+		}
+
+		currentLevel = MathUtils.clamp(currentLevel, level.getMinimum(), level.getMaximum());
 	}
 }

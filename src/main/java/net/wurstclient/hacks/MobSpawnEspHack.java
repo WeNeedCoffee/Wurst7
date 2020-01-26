@@ -43,10 +43,130 @@ import net.wurstclient.util.RotationUtils;
 
 @SearchTags({ "mob spawn esp", "LightLevelESP", "light level esp", "LightLevelOverlay", "light level overlay" })
 public final class MobSpawnEspHack extends Hack implements UpdateListener, PacketInputListener, RenderListener {
+	private class ChunkScanner {
+		public Future<?> future;
+		private final Chunk chunk;
+		private final Set<BlockPos> red = new HashSet<>();
+		private final Set<BlockPos> yellow = new HashSet<>();
+		private int displayList;
+
+		private boolean doneScanning;
+		private boolean doneCompiling;
+
+		public ChunkScanner(Chunk chunk) {
+			this.chunk = chunk;
+		}
+
+		private void compileDisplayList() {
+			GL11.glNewList(displayList, GL11.GL_COMPILE);
+
+			try {
+				GL11.glColor4f(1, 0, 0, 0.5F);
+				GL11.glBegin(GL11.GL_LINES);
+				new ArrayList<>(red).forEach(pos -> {
+					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ());
+					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ() + 1);
+					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ());
+					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ() + 1);
+				});
+
+				GL11.glColor4f(1, 1, 0, 0.5F);
+				new ArrayList<>(yellow).forEach(pos -> {
+					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ());
+					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ() + 1);
+					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ());
+					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ() + 1);
+				});
+				GL11.glEnd();
+
+			} finally {
+				GL11.glEndList();
+			}
+
+			doneCompiling = true;
+		}
+
+		private void reset() {
+			if (future != null) {
+				future.cancel(true);
+			}
+
+			red.clear();
+			yellow.clear();
+
+			doneScanning = false;
+			doneCompiling = false;
+		}
+
+		private void scan() {
+			int minX = chunk.getPos().getStartX();
+			int minY = 0;
+			int minZ = chunk.getPos().getStartZ();
+			int maxX = chunk.getPos().getEndX();
+			int maxY = 255;
+			int maxZ = chunk.getPos().getEndZ();
+
+			ClientWorld world = MC.world;
+			ArrayList<BlockPos> blocks = new ArrayList<>();
+
+			for (int x = minX; x <= maxX; x++) {
+				for (int y = minY; y <= maxY; y++) {
+					for (int z = minZ; z <= maxZ; z++) {
+						BlockPos pos = new BlockPos(x, y, z);
+						BlockState state = world.getBlockState(pos);
+
+						if (state.getMaterial().blocksMovement()) {
+							continue;
+						}
+						if (!state.getFluidState().isEmpty()) {
+							continue;
+						}
+
+						BlockState stateDown = world.getBlockState(pos.down());
+						if (!stateDown.isFullOpaque(world, pos.down())) {
+							continue;
+						}
+
+						blocks.add(pos);
+					}
+				}
+			}
+
+			if (Thread.interrupted())
+				return;
+
+			red.addAll(blocks.stream().filter(pos -> world.getLightLevel(LightType.BLOCK, pos) < 8).filter(pos -> world.getLightLevel(LightType.SKY, pos) < 8).collect(Collectors.toList()));
+
+			if (Thread.interrupted())
+				return;
+
+			yellow.addAll(blocks.stream().filter(pos -> !red.contains(pos)).filter(pos -> world.getLightLevel(LightType.BLOCK, pos) < 8).collect(Collectors.toList()));
+			doneScanning = true;
+		}
+	}
+
+	private enum DrawDistance {
+		D3("3x3 chunks", 1), D5("5x5 chunks", 2), D7("7x7 chunks", 3), D9("9x9 chunks", 4), D11("11x11 chunks", 5), D13("13x13 chunks", 6), D15("15x15 chunks", 7), D17("17x17 chunks", 8), D19("19x19 chunks", 9), D21("21x21 chunks", 10), D23("23x23 chunks", 11), D25("25x25 chunks", 12);
+
+		private final String name;
+		private final int chunkRange;
+
+		private DrawDistance(String name, int chunkRange) {
+			this.name = name;
+			this.chunkRange = chunkRange;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final EnumSetting<DrawDistance> drawDistance = new EnumSetting<>("Draw distance", DrawDistance.values(), DrawDistance.D9);
 	private final SliderSetting loadingSpeed = new SliderSetting("Loading speed", 1, 1, 5, 1, v -> (int) v + "x");
 
 	private final HashMap<Chunk, ChunkScanner> scanners = new HashMap<>();
+
 	private ExecutorService pool;
 
 	public MobSpawnEspHack() {
@@ -57,23 +177,15 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 	}
 
 	@Override
-	public void onEnable() {
-		pool = MinPriorityThreadFactory.newFixedThreadPool();
-
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(PacketInputListener.class, this);
-		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
 	public void onDisable() {
 		EVENTS.remove(UpdateListener.class, this);
 		EVENTS.remove(PacketInputListener.class, this);
 		EVENTS.remove(RenderListener.class, this);
 
 		for (ChunkScanner scanner : new ArrayList<>(scanners.values())) {
-			if (scanner.displayList != 0)
+			if (scanner.displayList != 0) {
 				GL11.glDeleteLists(scanner.displayList, 1);
+			}
 
 			scanners.remove(scanner.chunk);
 		}
@@ -82,65 +194,12 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 	}
 
 	@Override
-	public void onUpdate() {
-		ClientWorld world = MC.world;
+	public void onEnable() {
+		pool = MinPriorityThreadFactory.newFixedThreadPool();
 
-		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
-		int chunkX = eyesBlock.getX() >> 4;
-		int chunkZ = eyesBlock.getZ() >> 4;
-		int chunkRange = drawDistance.getSelected().chunkRange;
-
-		ArrayList<Chunk> chunks = new ArrayList<>();
-		for (int x = chunkX - chunkRange; x <= chunkX + chunkRange; x++)
-			for (int z = chunkZ - chunkRange; z <= chunkZ + chunkRange; z++)
-				chunks.add(world.getChunk(x, z));
-
-		// create & start scanners for new chunks
-		for (Chunk chunk : chunks) {
-			if (scanners.containsKey(chunk))
-				continue;
-
-			ChunkScanner scanner = new ChunkScanner(chunk);
-			scanners.put(chunk, scanner);
-			scanner.future = pool.submit(() -> scanner.scan());
-		}
-
-		// remove old scanners that are out of range
-		for (ChunkScanner scanner : new ArrayList<>(scanners.values())) {
-			if (Math.abs(scanner.chunk.getPos().x - chunkX) <= chunkRange && Math.abs(scanner.chunk.getPos().z - chunkZ) <= chunkRange)
-				continue;
-
-			if (!scanner.doneCompiling)
-				continue;
-
-			if (scanner.displayList != 0)
-				GL11.glDeleteLists(scanner.displayList, 1);
-
-			if (scanner.future != null)
-				scanner.future.cancel(true);
-
-			scanners.remove(scanner.chunk);
-		}
-
-		// generate display lists
-		Comparator<ChunkScanner> c = Comparator.comparingInt(s -> Math.abs(s.chunk.getPos().x - chunkX) + Math.abs(s.chunk.getPos().z - chunkZ));
-		List<ChunkScanner> sortedScanners = scanners.values().stream().filter(s -> s.doneScanning).filter(s -> !s.doneCompiling).sorted(c).limit(loadingSpeed.getValueI()).collect(Collectors.toList());
-
-		for (ChunkScanner scanner : sortedScanners) {
-			if (scanner.displayList == 0)
-				scanner.displayList = GL11.glGenLists(1);
-
-			try {
-				scanner.compileDisplayList();
-
-			} catch (ConcurrentModificationException e) {
-				System.out.println("WARNING! ChunkScanner.compileDisplayList(); failed with the following exception:");
-				e.printStackTrace();
-
-				GL11.glDeleteLists(scanner.displayList, 1);
-				scanner.displayList = 0;
-			}
-		}
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(PacketInputListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -175,9 +234,11 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 			return;
 
 		ArrayList<Chunk> chunks = new ArrayList<>();
-		for (int x = chunk.getPos().x - 1; x <= chunk.getPos().x + 1; x++)
-			for (int z = chunk.getPos().z - 1; z <= chunk.getPos().z + 1; z++)
+		for (int x = chunk.getPos().x - 1; x <= chunk.getPos().x + 1; x++) {
+			for (int z = chunk.getPos().z - 1; z <= chunk.getPos().z + 1; z++) {
 				chunks.add(world.getChunk(x, z));
+			}
+		}
 
 		for (Chunk chunk2 : chunks) {
 			ChunkScanner scanner = scanners.get(chunk2);
@@ -203,8 +264,9 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 		RenderUtils.applyRenderOffset();
 
 		for (ChunkScanner scanner : new ArrayList<>(scanners.values())) {
-			if (scanner.displayList == 0)
+			if (scanner.displayList == 0) {
 				continue;
+			}
 
 			GL11.glCallList(scanner.displayList);
 		}
@@ -218,116 +280,73 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
-	private class ChunkScanner {
-		public Future<?> future;
-		private final Chunk chunk;
-		private final Set<BlockPos> red = new HashSet<>();
-		private final Set<BlockPos> yellow = new HashSet<>();
-		private int displayList;
+	@Override
+	public void onUpdate() {
+		ClientWorld world = MC.world;
 
-		private boolean doneScanning;
-		private boolean doneCompiling;
+		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
+		int chunkX = eyesBlock.getX() >> 4;
+		int chunkZ = eyesBlock.getZ() >> 4;
+		int chunkRange = drawDistance.getSelected().chunkRange;
 
-		public ChunkScanner(Chunk chunk) {
-			this.chunk = chunk;
+		ArrayList<Chunk> chunks = new ArrayList<>();
+		for (int x = chunkX - chunkRange; x <= chunkX + chunkRange; x++) {
+			for (int z = chunkZ - chunkRange; z <= chunkZ + chunkRange; z++) {
+				chunks.add(world.getChunk(x, z));
+			}
 		}
 
-		private void scan() {
-			int minX = chunk.getPos().getStartX();
-			int minY = 0;
-			int minZ = chunk.getPos().getStartZ();
-			int maxX = chunk.getPos().getEndX();
-			int maxY = 255;
-			int maxZ = chunk.getPos().getEndZ();
-
-			ClientWorld world = MC.world;
-			ArrayList<BlockPos> blocks = new ArrayList<>();
-
-			for (int x = minX; x <= maxX; x++)
-				for (int y = minY; y <= maxY; y++)
-					for (int z = minZ; z <= maxZ; z++) {
-						BlockPos pos = new BlockPos(x, y, z);
-						BlockState state = world.getBlockState(pos);
-
-						if (state.getMaterial().blocksMovement())
-							continue;
-						if (!state.getFluidState().isEmpty())
-							continue;
-
-						BlockState stateDown = world.getBlockState(pos.down());
-						if (!stateDown.isFullOpaque(world, pos.down()))
-							continue;
-
-						blocks.add(pos);
-					}
-
-			if (Thread.interrupted())
-				return;
-
-			red.addAll(blocks.stream().filter(pos -> world.getLightLevel(LightType.BLOCK, pos) < 8).filter(pos -> world.getLightLevel(LightType.SKY, pos) < 8).collect(Collectors.toList()));
-
-			if (Thread.interrupted())
-				return;
-
-			yellow.addAll(blocks.stream().filter(pos -> !red.contains(pos)).filter(pos -> world.getLightLevel(LightType.BLOCK, pos) < 8).collect(Collectors.toList()));
-			doneScanning = true;
-		}
-
-		private void compileDisplayList() {
-			GL11.glNewList(displayList, GL11.GL_COMPILE);
-
-			try {
-				GL11.glColor4f(1, 0, 0, 0.5F);
-				GL11.glBegin(GL11.GL_LINES);
-				new ArrayList<>(red).forEach(pos -> {
-					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ());
-					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ() + 1);
-					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ());
-					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ() + 1);
-				});
-
-				GL11.glColor4f(1, 1, 0, 0.5F);
-				new ArrayList<>(yellow).forEach(pos -> {
-					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ());
-					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ() + 1);
-					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ());
-					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ() + 1);
-				});
-				GL11.glEnd();
-
-			} finally {
-				GL11.glEndList();
+		// create & start scanners for new chunks
+		for (Chunk chunk : chunks) {
+			if (scanners.containsKey(chunk)) {
+				continue;
 			}
 
-			doneCompiling = true;
+			ChunkScanner scanner = new ChunkScanner(chunk);
+			scanners.put(chunk, scanner);
+			scanner.future = pool.submit(() -> scanner.scan());
 		}
 
-		private void reset() {
-			if (future != null)
-				future.cancel(true);
+		// remove old scanners that are out of range
+		for (ChunkScanner scanner : new ArrayList<>(scanners.values())) {
+			if (Math.abs(scanner.chunk.getPos().x - chunkX) <= chunkRange && Math.abs(scanner.chunk.getPos().z - chunkZ) <= chunkRange) {
+				continue;
+			}
 
-			red.clear();
-			yellow.clear();
+			if (!scanner.doneCompiling) {
+				continue;
+			}
 
-			doneScanning = false;
-			doneCompiling = false;
-		}
-	}
+			if (scanner.displayList != 0) {
+				GL11.glDeleteLists(scanner.displayList, 1);
+			}
 
-	private enum DrawDistance {
-		D3("3x3 chunks", 1), D5("5x5 chunks", 2), D7("7x7 chunks", 3), D9("9x9 chunks", 4), D11("11x11 chunks", 5), D13("13x13 chunks", 6), D15("15x15 chunks", 7), D17("17x17 chunks", 8), D19("19x19 chunks", 9), D21("21x21 chunks", 10), D23("23x23 chunks", 11), D25("25x25 chunks", 12);
+			if (scanner.future != null) {
+				scanner.future.cancel(true);
+			}
 
-		private final String name;
-		private final int chunkRange;
-
-		private DrawDistance(String name, int chunkRange) {
-			this.name = name;
-			this.chunkRange = chunkRange;
+			scanners.remove(scanner.chunk);
 		}
 
-		@Override
-		public String toString() {
-			return name;
+		// generate display lists
+		Comparator<ChunkScanner> c = Comparator.comparingInt(s -> Math.abs(s.chunk.getPos().x - chunkX) + Math.abs(s.chunk.getPos().z - chunkZ));
+		List<ChunkScanner> sortedScanners = scanners.values().stream().filter(s -> s.doneScanning).filter(s -> !s.doneCompiling).sorted(c).limit(loadingSpeed.getValueI()).collect(Collectors.toList());
+
+		for (ChunkScanner scanner : sortedScanners) {
+			if (scanner.displayList == 0) {
+				scanner.displayList = GL11.glGenLists(1);
+			}
+
+			try {
+				scanner.compileDisplayList();
+
+			} catch (ConcurrentModificationException e) {
+				System.out.println("WARNING! ChunkScanner.compileDisplayList(); failed with the following exception:");
+				e.printStackTrace();
+
+				GL11.glDeleteLists(scanner.displayList, 1);
+				scanner.displayList = 0;
+			}
 		}
 	}
 }

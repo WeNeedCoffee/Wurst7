@@ -26,27 +26,21 @@ public final class WurstAnalytics {
 		return tracker.isEnabled();
 	}
 
+	public void makeCustomRequest(AnalyticsRequestData data) {
+		tracker.makeCustomRequest(data);
+	}
+
 	public void setEnabled(boolean enabled) {
-		if (!enabled)
+		if (!enabled) {
 			trackEvent("options", "analytics", "disable");
+		}
 
 		tracker.setEnabled(enabled);
 		configFile.save(tracker);
 
-		if (enabled)
+		if (enabled) {
 			trackEvent("options", "analytics", "enable");
-	}
-
-	public void trackPageView(String url, String title) {
-		tracker.trackPageView(url, title, hostname);
-	}
-
-	public void trackPageViewFromReferrer(String url, String title, String referrerSite, String referrerPage) {
-		tracker.trackPageViewFromReferrer(url, title, hostname, referrerSite, referrerPage);
-	}
-
-	public void trackPageViewFromSearch(String url, String title, String searchSource, String keywords) {
-		tracker.trackPageViewFromSearch(url, title, hostname, searchSource, keywords);
+		}
 	}
 
 	public void trackEvent(String category, String action) {
@@ -61,7 +55,15 @@ public final class WurstAnalytics {
 		tracker.trackEvent(category, action, label, value);
 	}
 
-	public void makeCustomRequest(AnalyticsRequestData data) {
-		tracker.makeCustomRequest(data);
+	public void trackPageView(String url, String title) {
+		tracker.trackPageView(url, title, hostname);
+	}
+
+	public void trackPageViewFromReferrer(String url, String title, String referrerSite, String referrerPage) {
+		tracker.trackPageViewFromReferrer(url, title, hostname, referrerSite, referrerPage);
+	}
+
+	public void trackPageViewFromSearch(String url, String title, String searchSource, String keywords) {
+		tracker.trackPageViewFromSearch(url, title, hostname, searchSource, keywords);
 	}
 }

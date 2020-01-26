@@ -37,6 +37,11 @@ public final class ItemGeneratorHack extends Hack implements UpdateListener {
 	}
 
 	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
 	public void onEnable() {
 		EVENTS.add(UpdateListener.class, this);
 
@@ -44,11 +49,6 @@ public final class ItemGeneratorHack extends Hack implements UpdateListener {
 			ChatUtils.error("Creative mode only.");
 			setEnabled(false);
 		}
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
@@ -63,7 +63,8 @@ public final class ItemGeneratorHack extends Hack implements UpdateListener {
 			MC.player.networkHandler.sendPacket(packet);
 		}
 
-		for (int i = 9; i < 9 + stacks; i++)
+		for (int i = 9; i < 9 + stacks; i++) {
 			IMC.getInteractionManager().windowClick_THROW(i);
+		}
 	}
 }

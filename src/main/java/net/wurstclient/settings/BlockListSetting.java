@@ -39,10 +39,6 @@ public final class BlockListSetting extends Setting {
 		defaultNames = blockNames.toArray(new String[0]);
 	}
 
-	public List<String> getBlockNames() {
-		return Collections.unmodifiableList(blockNames);
-	}
-
 	public void add(Block block) {
 		String name = BlockUtils.getName(block);
 		if (Collections.binarySearch(blockNames, name) >= 0)
@@ -51,6 +47,34 @@ public final class BlockListSetting extends Setting {
 		blockNames.add(name);
 		Collections.sort(blockNames);
 		WurstClient.INSTANCE.saveSettings();
+	}
+
+	@Override
+	public void fromJson(JsonElement json) {
+		try {
+			WsonArray wson = JsonUtils.getAsArray(json);
+			blockNames.clear();
+
+			wson.getAllStrings().parallelStream().map(s -> Registry.BLOCK.get(new Identifier(s))).filter(Objects::nonNull).map(BlockUtils::getName).distinct().sorted().forEachOrdered(s -> blockNames.add(s));
+
+		} catch (JsonException e) {
+			e.printStackTrace();
+			resetToDefaults();
+		}
+	}
+
+	public List<String> getBlockNames() {
+		return Collections.unmodifiableList(blockNames);
+	}
+
+	@Override
+	public Component getComponent() {
+		return new BlockListEditButton(this);
+	}
+
+	@Override
+	public Set<PossibleKeybind> getPossibleKeybinds(String featureName) {
+		return new LinkedHashSet<>();
 	}
 
 	public void remove(int index) {
@@ -68,33 +92,9 @@ public final class BlockListSetting extends Setting {
 	}
 
 	@Override
-	public Component getComponent() {
-		return new BlockListEditButton(this);
-	}
-
-	@Override
-	public void fromJson(JsonElement json) {
-		try {
-			WsonArray wson = JsonUtils.getAsArray(json);
-			blockNames.clear();
-
-			wson.getAllStrings().parallelStream().map(s -> Registry.BLOCK.get(new Identifier(s))).filter(Objects::nonNull).map(BlockUtils::getName).distinct().sorted().forEachOrdered(s -> blockNames.add(s));
-
-		} catch (JsonException e) {
-			e.printStackTrace();
-			resetToDefaults();
-		}
-	}
-
-	@Override
 	public JsonElement toJson() {
 		JsonArray json = new JsonArray();
 		blockNames.forEach(s -> json.add(s));
 		return json;
-	}
-
-	@Override
-	public Set<PossibleKeybind> getPossibleKeybinds(String featureName) {
-		return new LinkedHashSet<>();
 	}
 }

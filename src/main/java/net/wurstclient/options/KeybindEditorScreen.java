@@ -54,27 +54,15 @@ public final class KeybindEditorScreen extends Screen implements PressAKeyCallba
 		setInitialFocus(commandField);
 		commandField.setSelected(true);
 
-		if (oldCommands != null)
+		if (oldCommands != null) {
 			commandField.setText(oldCommands);
-	}
-
-	private void save() {
-		if (oldKey != null)
-			WurstClient.INSTANCE.getKeybinds().remove(oldKey);
-
-		WurstClient.INSTANCE.getKeybinds().add(key, commandField.getText());
-		minecraft.openScreen(prevScreen);
+		}
 	}
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 		commandField.mouseClicked(mouseX, mouseY, mouseButton);
 		return super.mouseClicked(mouseX, mouseY, mouseButton);
-	}
-
-	@Override
-	public void tick() {
-		commandField.tick();
 	}
 
 	@Override
@@ -90,8 +78,22 @@ public final class KeybindEditorScreen extends Screen implements PressAKeyCallba
 		super.render(mouseX, mouseY, partialTicks);
 	}
 
+	private void save() {
+		if (oldKey != null) {
+			WurstClient.INSTANCE.getKeybinds().remove(oldKey);
+		}
+
+		WurstClient.INSTANCE.getKeybinds().add(key, commandField.getText());
+		minecraft.openScreen(prevScreen);
+	}
+
 	@Override
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	@Override
+	public void tick() {
+		commandField.tick();
 	}
 }

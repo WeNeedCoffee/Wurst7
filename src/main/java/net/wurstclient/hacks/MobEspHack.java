@@ -28,13 +28,49 @@ import net.wurstclient.util.RotationUtils;
 
 @SearchTags({ "mob esp", "MobTracers", "mob tracers" })
 public final class MobEspHack extends Hack implements UpdateListener, CameraTransformViewBobbingListener, RenderListener {
+	private enum BoxSize {
+		ACCURATE("Accurate", 0), FANCY("Fancy", 0.1);
+
+		private final String name;
+		private final double extraSize;
+
+		private BoxSize(String name, double extraSize) {
+			this.name = name;
+			this.extraSize = extraSize;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
+	private enum Style {
+		BOXES("Boxes only", true, false), LINES("Lines only", false, true), LINES_AND_BOXES("Lines and boxes", true, true);
+
+		private final String name;
+		private final boolean boxes;
+		private final boolean lines;
+
+		private Style(String name, boolean boxes, boolean lines) {
+			this.name = name;
+			this.boxes = boxes;
+			this.lines = lines;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final EnumSetting<Style> style = new EnumSetting<>("Style", Style.values(), Style.BOXES);
 
 	private final EnumSetting<BoxSize> boxSize = new EnumSetting<>("Box size", "\u00a7lAccurate\u00a7r mode shows the exact\n" + "hitbox of each mob.\n" + "\u00a7lFancy\u00a7r mode shows slightly larger\n" + "boxes that look better.", BoxSize.values(), BoxSize.FANCY);
-
 	private final CheckboxSetting filterInvisible = new CheckboxSetting("Filter invisible", "Won't show invisible mobs.", false);
 
 	private int mobBox;
+
 	private final ArrayList<MobEntity> mobs = new ArrayList<>();
 
 	public MobEspHack() {
@@ -43,6 +79,23 @@ public final class MobEspHack extends Hack implements UpdateListener, CameraTran
 		addSetting(style);
 		addSetting(boxSize);
 		addSetting(filterInvisible);
+	}
+
+	@Override
+	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
+		if (style.getSelected().lines) {
+			event.cancel();
+		}
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(CameraTransformViewBobbingListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		GL11.glDeleteLists(mobBox, 1);
+		mobBox = 0;
 	}
 
 	@Override
@@ -59,34 +112,6 @@ public final class MobEspHack extends Hack implements UpdateListener, CameraTran
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(CameraTransformViewBobbingListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		GL11.glDeleteLists(mobBox, 1);
-		mobBox = 0;
-	}
-
-	@Override
-	public void onUpdate() {
-		mobs.clear();
-
-		Stream<MobEntity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof MobEntity).map(e -> (MobEntity) e).filter(e -> !e.removed && e.getHealth() > 0);
-
-		if (filterInvisible.isChecked())
-			stream = stream.filter(e -> !e.isInvisible());
-
-		mobs.addAll(stream.collect(Collectors.toList()));
-	}
-
-	@Override
-	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
-		if (style.getSelected().lines)
-			event.cancel();
-	}
-
-	@Override
 	public void onRender(float partialTicks) {
 		// GL settings
 		GL11.glEnable(GL11.GL_BLEND);
@@ -99,11 +124,13 @@ public final class MobEspHack extends Hack implements UpdateListener, CameraTran
 		GL11.glPushMatrix();
 		RenderUtils.applyRenderOffset();
 
-		if (style.getSelected().boxes)
+		if (style.getSelected().boxes) {
 			renderBoxes(partialTicks);
+		}
 
-		if (style.getSelected().lines)
+		if (style.getSelected().lines) {
 			renderTracers(partialTicks);
+		}
 
 		GL11.glPopMatrix();
 
@@ -113,6 +140,19 @@ public final class MobEspHack extends Hack implements UpdateListener, CameraTran
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+	}
+
+	@Override
+	public void onUpdate() {
+		mobs.clear();
+
+		Stream<MobEntity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof MobEntity).map(e -> (MobEntity) e).filter(e -> !e.removed && e.getHealth() > 0);
+
+		if (filterInvisible.isChecked()) {
+			stream = stream.filter(e -> !e.isInvisible());
+		}
+
+		mobs.addAll(stream.collect(Collectors.toList()));
 	}
 
 	private void renderBoxes(double partialTicks) {
@@ -148,41 +188,5 @@ public final class MobEspHack extends Hack implements UpdateListener, CameraTran
 			GL11.glVertex3d(end.x, end.y, end.z);
 		}
 		GL11.glEnd();
-	}
-
-	private enum Style {
-		BOXES("Boxes only", true, false), LINES("Lines only", false, true), LINES_AND_BOXES("Lines and boxes", true, true);
-
-		private final String name;
-		private final boolean boxes;
-		private final boolean lines;
-
-		private Style(String name, boolean boxes, boolean lines) {
-			this.name = name;
-			this.boxes = boxes;
-			this.lines = lines;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
-	private enum BoxSize {
-		ACCURATE("Accurate", 0), FANCY("Fancy", 0.1);
-
-		private final String name;
-		private final double extraSize;
-
-		private BoxSize(String name, double extraSize) {
-			this.name = name;
-			this.extraSize = extraSize;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
 	}
 }

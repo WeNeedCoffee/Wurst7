@@ -38,14 +38,11 @@ public final class ClickGuiHack extends Hack {
 		addSetting(acBlue);
 	}
 
-	@Override
-	public void onEnable() {
-		MC.openScreen(new ClickGuiScreen(WURST.getGui()));
-		setEnabled(false);
-	}
-
-	public float getOpacity() {
-		return opacity.getValueF();
+	public float[] getAcColor() {
+		float red = acRed.getValueI() / 255F;
+		float green = acGreen.getValueI() / 255F;
+		float blue = acBlue.getValueI() / 255F;
+		return new float[] { red, green, blue };
 	}
 
 	public float[] getBgColor() {
@@ -55,10 +52,13 @@ public final class ClickGuiHack extends Hack {
 		return new float[] { red, green, blue };
 	}
 
-	public float[] getAcColor() {
-		float red = acRed.getValueI() / 255F;
-		float green = acGreen.getValueI() / 255F;
-		float blue = acBlue.getValueI() / 255F;
-		return new float[] { red, green, blue };
+	public float getOpacity() {
+		return opacity.getValueF();
+	}
+
+	@Override
+	public void onEnable() {
+		MC.openScreen(new ClickGuiScreen(WURST.getGui()));
+		setEnabled(false);
 	}
 }

@@ -29,8 +29,9 @@ public final class RenameCmd extends Command {
 			throw new CmdSyntaxError();
 
 		String message = args[0];
-		for (int i = 1; i < args.length; i++)
+		for (int i = 1; i < args.length; i++) {
 			message += " " + args[i];
+		}
 
 		message = message.replace("$", "�").replace("��", "$");
 		ItemStack item = MC.player.inventory.getMainHandStack();

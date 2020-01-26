@@ -39,8 +39,9 @@ public final class DropCmd extends Command implements UpdateListener {
 	}
 
 	private void dropAllItems() {
-		for (int i = 9; i < 45; i++)
+		for (int i = 9; i < 45; i++) {
 			IMC.getInteractionManager().windowClick_THROW(i);
+		}
 	}
 
 	@Override
@@ -55,18 +56,21 @@ public final class DropCmd extends Command implements UpdateListener {
 		slowModeSlotCounter++;
 		slowModeTimer = 5;
 
-		if (slowModeSlotCounter >= 45)
+		if (slowModeSlotCounter >= 45) {
 			EVENTS.remove(UpdateListener.class, this);
+		}
 	}
 
 	private void skipEmptySlots() {
 		while (slowModeSlotCounter < 45) {
 			int adjustedSlot = slowModeSlotCounter;
-			if (adjustedSlot >= 36)
+			if (adjustedSlot >= 36) {
 				adjustedSlot -= 36;
+			}
 
-			if (!MC.player.inventory.getInvStack(adjustedSlot).isEmpty())
+			if (!MC.player.inventory.getInvStack(adjustedSlot).isEmpty()) {
 				break;
+			}
 
 			slowModeSlotCounter++;
 		}

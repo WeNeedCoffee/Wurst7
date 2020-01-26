@@ -12,16 +12,15 @@ import net.wurstclient.event.CancellableEvent;
 import net.wurstclient.event.Listener;
 
 public interface CameraTransformViewBobbingListener extends Listener {
-	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event);
-
 	public static class CameraTransformViewBobbingEvent extends CancellableEvent<CameraTransformViewBobbingListener> {
 		@Override
 		public void fire(ArrayList<CameraTransformViewBobbingListener> listeners) {
 			for (CameraTransformViewBobbingListener listener : listeners) {
 				listener.onCameraTransformViewBobbing(this);
 
-				if (isCancelled())
+				if (isCancelled()) {
 					break;
+				}
 			}
 		}
 
@@ -30,4 +29,6 @@ public interface CameraTransformViewBobbingListener extends Listener {
 			return CameraTransformViewBobbingListener.class;
 		}
 	}
+
+	void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event);
 }

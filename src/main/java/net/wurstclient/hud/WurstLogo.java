@@ -16,6 +16,26 @@ import net.wurstclient.WurstClient;
 public final class WurstLogo {
 	private static final Identifier texture = new Identifier("wurst", "wurst_128.png");
 
+	private void drawQuads(int x1, int y1, int x2, int y2) {
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2i(x1, y1);
+		GL11.glVertex2i(x2, y1);
+		GL11.glVertex2i(x2, y2);
+		GL11.glVertex2i(x1, y2);
+		GL11.glEnd();
+	}
+
+	private String getVersionString() {
+		String version = "v" + WurstClient.VERSION;
+		version += " MC" + WurstClient.MC_VERSION;
+
+		if (WurstClient.INSTANCE.getUpdater().isOutdated()) {
+			version += " (outdated)";
+		}
+
+		return version;
+	}
+
 	public void render() {
 		if (!WurstClient.INSTANCE.getOtfs().wurstLogoOtf.isVisible())
 			return;
@@ -31,8 +51,9 @@ public final class WurstLogo {
 			float[] acColor = WurstClient.INSTANCE.getGui().getAcColor();
 			GL11.glColor4f(acColor[0], acColor[1], acColor[2], 0.5F);
 
-		} else
+		} else {
 			GL11.glColor4f(1, 1, 1, 0.5F);
+		}
 
 		drawQuads(0, 6, tr.getStringWidth(version) + 76, 17);
 
@@ -47,24 +68,5 @@ public final class WurstLogo {
 		GL11.glEnable(GL11.GL_BLEND);
 		WurstClient.MC.getTextureManager().bindTexture(texture);
 		DrawableHelper.blit(0, 3, 0, 0, 72, 18, 72, 18);
-	}
-
-	private String getVersionString() {
-		String version = "v" + WurstClient.VERSION;
-		version += " MC" + WurstClient.MC_VERSION;
-
-		if (WurstClient.INSTANCE.getUpdater().isOutdated())
-			version += " (outdated)";
-
-		return version;
-	}
-
-	private void drawQuads(int x1, int y1, int x2, int y2) {
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2i(x1, y1);
-		GL11.glVertex2i(x2, y1);
-		GL11.glVertex2i(x2, y2);
-		GL11.glVertex2i(x1, y2);
-		GL11.glEnd();
 	}
 }

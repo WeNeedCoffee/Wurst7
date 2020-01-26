@@ -41,8 +41,9 @@ public final class GiveCmd extends Command {
 		// id/name
 		Item item = Registry.ITEM.get(new Identifier(args[0]));
 
-		if (item == Items.AIR && MathUtils.isInteger(args[0]))
+		if (item == Items.AIR && MathUtils.isInteger(args[0])) {
 			item = Item.byRawId(Integer.parseInt(args[0]));
+		}
 
 		if (item == Items.AIR)
 			throw new CmdError("Item \"" + args[0] + "\" could not be found.");
@@ -64,12 +65,13 @@ public final class GiveCmd extends Command {
 
 		// nbt data
 		String nbt = null;
-		if (args.length >= 3)
+		if (args.length >= 3) {
 			nbt = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+		}
 
 		// generate item
 		ItemStack stack = new ItemStack(item, amount);
-		if (nbt != null)
+		if (nbt != null) {
 			try {
 				CompoundTag tag = StringNbtReader.parse(nbt);
 				stack.setTag(tag);
@@ -78,18 +80,20 @@ public final class GiveCmd extends Command {
 				ChatUtils.message(e.getMessage());
 				throw new CmdSyntaxError("NBT data is invalid.");
 			}
+		}
 
 		// give item
-		if (placeStackInHotbar(stack))
+		if (placeStackInHotbar(stack)) {
 			ChatUtils.message("Item" + (amount > 1 ? "s" : "") + " created.");
-		else
+		} else
 			throw new CmdError("Please clear a slot in your hotbar.");
 	}
 
 	private boolean placeStackInHotbar(ItemStack stack) {
 		for (int i = 0; i < 9; i++) {
-			if (!MC.player.inventory.getInvStack(i).isEmpty())
+			if (!MC.player.inventory.getInvStack(i).isEmpty()) {
 				continue;
+			}
 
 			MC.player.networkHandler.sendPacket(new CreativeInventoryActionC2SPacket(36 + i, stack));
 			return true;

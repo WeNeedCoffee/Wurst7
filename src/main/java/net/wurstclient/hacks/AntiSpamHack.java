@@ -27,13 +27,13 @@ public final class AntiSpamHack extends Hack implements ChatInputListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(ChatInputListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(ChatInputListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(ChatInputListener.class, this);
+	public void onEnable() {
+		EVENTS.add(ChatInputListener.class, this);
 	}
 
 	@Override
@@ -56,10 +56,11 @@ public final class AntiSpamHack extends Hack implements ChatInputListener {
 				String newLine = newLines.get(matchingLines).getString();
 
 				if (matchingLines < newLines.size() - 1) {
-					if (oldLine.equals(newLine))
+					if (oldLine.equals(newLine)) {
 						matchingLines++;
-					else
+					} else {
 						matchingLines = 0;
+					}
 
 					continue;
 				}
@@ -84,9 +85,9 @@ public final class AntiSpamHack extends Hack implements ChatInputListener {
 					}
 				}
 
-				if (oldLine.length() == newLine.length())
+				if (oldLine.length() == newLine.length()) {
 					spamCounter++;
-				else {
+				} else {
 					String addedText = oldLine.substring(newLine.length());
 					if (!addedText.startsWith(" [x") || !addedText.endsWith("]")) {
 						matchingLines = 0;
@@ -103,12 +104,14 @@ public final class AntiSpamHack extends Hack implements ChatInputListener {
 				}
 			}
 
-			for (int i2 = i + matchingLines; i2 >= i; i2--)
+			for (int i2 = i + matchingLines; i2 >= i; i2--) {
 				chatLines.remove(i2);
+			}
 			matchingLines = 0;
 		}
 
-		if (spamCounter > 1)
+		if (spamCounter > 1) {
 			event.getComponent().append(" [x" + spamCounter + "]");
+		}
 	}
 }

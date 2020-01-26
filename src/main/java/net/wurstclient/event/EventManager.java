@@ -24,6 +24,31 @@ public final class EventManager {
 		this.wurst = wurst;
 	}
 
+	public <L extends Listener> void add(Class<L> type, L listener) {
+		try {
+			@SuppressWarnings("unchecked")
+			ArrayList<L> listeners = (ArrayList<L>) listenerMap.get(type);
+
+			if (listeners == null) {
+				listeners = new ArrayList<>(Arrays.asList(listener));
+				listenerMap.put(type, listeners);
+				return;
+			}
+
+			listeners.add(listener);
+
+		} catch (Throwable e) {
+			e.printStackTrace();
+
+			CrashReport report = CrashReport.create(e, "Adding Wurst event listener");
+			CrashReportSection section = report.addElement("Affected listener");
+			section.add("Listener type", () -> type.getName());
+			section.add("Listener class", () -> listener.getClass().getName());
+
+			throw new CrashException(report);
+		}
+	}
+
 	public <L extends Listener, E extends Event<L>> void fire(E event) {
 		if (!wurst.isEnabled())
 			return;
@@ -59,38 +84,14 @@ public final class EventManager {
 		}
 	}
 
-	public <L extends Listener> void add(Class<L> type, L listener) {
-		try {
-			@SuppressWarnings("unchecked")
-			ArrayList<L> listeners = (ArrayList<L>) listenerMap.get(type);
-
-			if (listeners == null) {
-				listeners = new ArrayList<>(Arrays.asList(listener));
-				listenerMap.put(type, listeners);
-				return;
-			}
-
-			listeners.add(listener);
-
-		} catch (Throwable e) {
-			e.printStackTrace();
-
-			CrashReport report = CrashReport.create(e, "Adding Wurst event listener");
-			CrashReportSection section = report.addElement("Affected listener");
-			section.add("Listener type", () -> type.getName());
-			section.add("Listener class", () -> listener.getClass().getName());
-
-			throw new CrashException(report);
-		}
-	}
-
 	public <L extends Listener> void remove(Class<L> type, L listener) {
 		try {
 			@SuppressWarnings("unchecked")
 			ArrayList<L> listeners = (ArrayList<L>) listenerMap.get(type);
 
-			if (listeners != null)
+			if (listeners != null) {
 				listeners.remove(listener);
+			}
 
 		} catch (Throwable e) {
 			e.printStackTrace();

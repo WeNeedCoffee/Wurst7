@@ -46,23 +46,44 @@ import net.wurstclient.util.RotationUtils;
 import net.wurstclient.util.RotationUtils.Rotation;
 
 public final class KillauraLegitHack extends Hack implements UpdateListener, RenderListener {
+	private enum Priority {
+		DISTANCE("Distance", e -> MC.player.squaredDistanceTo(e)),
+
+		ANGLE("Angle", e -> RotationUtils.getAngleToLookVec(e.getBoundingBox().getCenter())),
+
+		HEALTH("Health", e -> e.getHealth());
+
+		private final String name;
+		private final Comparator<LivingEntity> comparator;
+
+		private Priority(String name, ToDoubleFunction<LivingEntity> keyExtractor) {
+			this.name = name;
+			comparator = Comparator.comparingDouble(keyExtractor);
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final SliderSetting range = new SliderSetting("Range", 4.25, 1, 4.25, 0.05, ValueDisplay.DECIMAL);
 
 	private final EnumSetting<Priority> priority = new EnumSetting<>("Priority", "Determines which entity will be attacked first.\n" + "\u00a7lDistance\u00a7r - Attacks the closest entity.\n" + "\u00a7lAngle\u00a7r - Attacks the entity that requires\n" + "the least head movement.\n" + "\u00a7lHealth\u00a7r - Attacks the weakest entity.", Priority.values(), Priority.ANGLE);
-
 	private final CheckboxSetting filterPlayers = new CheckboxSetting("Filter players", "Won't attack other players.", false);
 	private final CheckboxSetting filterSleeping = new CheckboxSetting("Filter sleeping", "Won't attack sleeping players.", true);
-	private final SliderSetting filterFlying = new SliderSetting("Filter flying", "Won't attack players that\n" + "are at least the given\n" + "distance above ground.", 0.5, 0, 2, 0.05, v -> v == 0 ? "off" : ValueDisplay.DECIMAL.getValueString(v));
 
+	private final SliderSetting filterFlying = new SliderSetting("Filter flying", "Won't attack players that\n" + "are at least the given\n" + "distance above ground.", 0.5, 0, 2, 0.05, v -> v == 0 ? "off" : ValueDisplay.DECIMAL.getValueString(v));
 	private final CheckboxSetting filterMonsters = new CheckboxSetting("Filter monsters", "Won't attack zombies, creepers, etc.", false);
 	private final CheckboxSetting filterPigmen = new CheckboxSetting("Filter pigmen", "Won't attack zombie pigmen.", false);
-	private final CheckboxSetting filterEndermen = new CheckboxSetting("Filter endermen", "Won't attack endermen.", false);
 
+	private final CheckboxSetting filterEndermen = new CheckboxSetting("Filter endermen", "Won't attack endermen.", false);
 	private final CheckboxSetting filterAnimals = new CheckboxSetting("Filter animals", "Won't attack pigs, cows, etc.", false);
 	private final CheckboxSetting filterBabies = new CheckboxSetting("Filter babies", "Won't attack baby pigs,\n" + "baby villagers, etc.", false);
-	private final CheckboxSetting filterPets = new CheckboxSetting("Filter pets", "Won't attack tamed wolves,\n" + "tamed horses, etc.", false);
 
+	private final CheckboxSetting filterPets = new CheckboxSetting("Filter pets", "Won't attack tamed wolves,\n" + "tamed horses, etc.", false);
 	private final CheckboxSetting filterVillagers = new CheckboxSetting("Filter villagers", "Won't attack villagers.", false);
+
 	private final CheckboxSetting filterGolems = new CheckboxSetting("Filter golems", "Won't attack iron golems,\n" + "snow golems and shulkers.", false);
 
 	private final CheckboxSetting filterInvisible = new CheckboxSetting("Filter invisible", "Won't attack invisible entities.", true);
@@ -86,92 +107,6 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		addSetting(filterVillagers);
 		addSetting(filterGolems);
 		addSetting(filterInvisible);
-	}
-
-	@Override
-	protected void onEnable() {
-		// disable other killauras
-		WURST.getHax().clickAuraHack.setEnabled(false);
-		WURST.getHax().killauraHack.setEnabled(false);
-		WURST.getHax().triggerBotHack.setEnabled(false);
-
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
-	protected void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-		target = null;
-	}
-
-	@Override
-	public void onUpdate() {
-		ClientPlayerEntity player = MC.player;
-		ClientWorld world = MC.world;
-
-		if (player.getAttackCooldownProgress(0) < 1)
-			return;
-
-		double rangeSq = Math.pow(range.getValue(), 2);
-		Stream<LivingEntity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> player.squaredDistanceTo(e) <= rangeSq).filter(e -> e != player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> !WURST.getFriends().contains(e.getEntityName()));
-
-		if (filterPlayers.isChecked())
-			stream = stream.filter(e -> !(e instanceof PlayerEntity));
-
-		if (filterSleeping.isChecked())
-			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
-
-		if (filterFlying.getValue() > 0)
-			stream = stream.filter(e -> {
-
-				if (!(e instanceof PlayerEntity))
-					return true;
-
-				Box box = e.getBoundingBox();
-				box = box.union(box.offset(0, -filterFlying.getValue(), 0));
-				return world.doesNotCollide(box);
-			});
-
-		if (filterMonsters.isChecked())
-			stream = stream.filter(e -> !(e instanceof Monster));
-
-		if (filterPigmen.isChecked())
-			stream = stream.filter(e -> !(e instanceof ZombiePigmanEntity));
-
-		if (filterEndermen.isChecked())
-			stream = stream.filter(e -> !(e instanceof EndermanEntity));
-
-		if (filterAnimals.isChecked())
-			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
-
-		if (filterBabies.isChecked())
-			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
-
-		if (filterPets.isChecked())
-			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed())).filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
-
-		if (filterVillagers.isChecked())
-			stream = stream.filter(e -> !(e instanceof VillagerEntity));
-
-		if (filterGolems.isChecked())
-			stream = stream.filter(e -> !(e instanceof GolemEntity));
-
-		if (filterInvisible.isChecked())
-			stream = stream.filter(e -> !e.isInvisible());
-
-		target = stream.min(priority.getSelected().comparator).orElse(null);
-		if (target == null)
-			return;
-
-		// face entity
-		if (!faceEntityClient(target))
-			return;
-
-		// attack entity
-		MC.interactionManager.attackEntity(player, target);
-		player.swingHand(Hand.MAIN_HAND);
 	}
 
 	private boolean faceEntityClient(LivingEntity entity) {
@@ -204,6 +139,24 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		float change = MathHelper.wrapDegrees(intended - current);
 		change = MathHelper.clamp(change, -maxChange, maxChange);
 		return MathHelper.wrapDegrees(current + change);
+	}
+
+	@Override
+	protected void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+		target = null;
+	}
+
+	@Override
+	protected void onEnable() {
+		// disable other killauras
+		WURST.getHax().clickAuraHack.setEnabled(false);
+		WURST.getHax().killauraHack.setEnabled(false);
+		WURST.getHax().triggerBotHack.setEnabled(false);
+
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -255,24 +208,83 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
-	private enum Priority {
-		DISTANCE("Distance", e -> MC.player.squaredDistanceTo(e)),
+	@Override
+	public void onUpdate() {
+		ClientPlayerEntity player = MC.player;
+		ClientWorld world = MC.world;
 
-		ANGLE("Angle", e -> RotationUtils.getAngleToLookVec(e.getBoundingBox().getCenter())),
+		if (player.getAttackCooldownProgress(0) < 1)
+			return;
 
-		HEALTH("Health", e -> e.getHealth());
+		double rangeSq = Math.pow(range.getValue(), 2);
+		Stream<LivingEntity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> player.squaredDistanceTo(e) <= rangeSq).filter(e -> e != player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> !WURST.getFriends().contains(e.getEntityName()));
 
-		private final String name;
-		private final Comparator<LivingEntity> comparator;
-
-		private Priority(String name, ToDoubleFunction<LivingEntity> keyExtractor) {
-			this.name = name;
-			comparator = Comparator.comparingDouble(keyExtractor);
+		if (filterPlayers.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PlayerEntity));
 		}
 
-		@Override
-		public String toString() {
-			return name;
+		if (filterSleeping.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
 		}
+
+		if (filterFlying.getValue() > 0) {
+			stream = stream.filter(e -> {
+
+				if (!(e instanceof PlayerEntity))
+					return true;
+
+				Box box = e.getBoundingBox();
+				box = box.union(box.offset(0, -filterFlying.getValue(), 0));
+				return world.doesNotCollide(box);
+			});
+		}
+
+		if (filterMonsters.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof Monster));
+		}
+
+		if (filterPigmen.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof ZombiePigmanEntity));
+		}
+
+		if (filterEndermen.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof EndermanEntity));
+		}
+
+		if (filterAnimals.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
+		}
+
+		if (filterBabies.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
+		}
+
+		if (filterPets.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed())).filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
+		}
+
+		if (filterVillagers.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof VillagerEntity));
+		}
+
+		if (filterGolems.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof GolemEntity));
+		}
+
+		if (filterInvisible.isChecked()) {
+			stream = stream.filter(e -> !e.isInvisible());
+		}
+
+		target = stream.min(priority.getSelected().comparator).orElse(null);
+		if (target == null)
+			return;
+
+		// face entity
+		if (!faceEntityClient(target))
+			return;
+
+		// attack entity
+		MC.interactionManager.attackEntity(player, target);
+		player.swingHand(Hand.MAIN_HAND);
 	}
 }

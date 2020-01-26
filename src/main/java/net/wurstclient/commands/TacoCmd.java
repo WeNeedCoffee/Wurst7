@@ -47,21 +47,13 @@ public final class TacoCmd extends Command implements GUIRenderListener, UpdateL
 	}
 
 	@Override
-	public String getPrimaryAction() {
-		return "Be a BOSS!";
-	}
-
-	@Override
 	public void doPrimaryAction() {
 		WURST.getCmdProcessor().process("taco");
 	}
 
 	@Override
-	public void onUpdate() {
-		if (ticks >= 31)
-			ticks = 0;
-		else
-			ticks++;
+	public String getPrimaryAction() {
+		return "Be a BOSS!";
 	}
 
 	@Override
@@ -75,8 +67,9 @@ public final class TacoCmd extends Command implements GUIRenderListener, UpdateL
 			float[] acColor = WURST.getGui().getAcColor();
 			GL11.glColor4f(acColor[0], acColor[1], acColor[2], 1);
 
-		} else
+		} else {
 			GL11.glColor4f(1, 1, 1, 1);
+		}
 
 		MC.getTextureManager().bindTexture(tacos[ticks / 8]);
 		Window sr = MC.getWindow();
@@ -88,5 +81,14 @@ public final class TacoCmd extends Command implements GUIRenderListener, UpdateL
 
 		GL11.glEnable(GL11.GL_CULL_FACE);
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+
+	@Override
+	public void onUpdate() {
+		if (ticks >= 31) {
+			ticks = 0;
+		} else {
+			ticks++;
+		}
 	}
 }

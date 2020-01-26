@@ -26,8 +26,9 @@ public final class AnnoyCmd extends Command implements ChatInputListener {
 	@Override
 	public void call(String[] args) throws CmdException {
 		if (args.length > 0) {
-			if (enabled)
+			if (enabled) {
 				disable();
+			}
 
 			enable(args);
 
@@ -39,21 +40,6 @@ public final class AnnoyCmd extends Command implements ChatInputListener {
 		}
 	}
 
-	private void enable(String[] args) throws CmdException {
-		if (args.length < 1)
-			throw new CmdSyntaxError();
-
-		target = String.join(" ", args);
-		ChatUtils.message("Now annoying " + target + ".");
-
-		ClientPlayerEntity player = MC.player;
-		if (player != null && target.equals(player.getName().asString()))
-			ChatUtils.warning("Annoying yourself is a bad idea!");
-
-		EVENTS.add(ChatInputListener.class, this);
-		enabled = true;
-	}
-
 	private void disable() throws CmdException {
 		EVENTS.remove(ChatInputListener.class, this);
 
@@ -63,6 +49,22 @@ public final class AnnoyCmd extends Command implements ChatInputListener {
 		}
 
 		enabled = false;
+	}
+
+	private void enable(String[] args) throws CmdException {
+		if (args.length < 1)
+			throw new CmdSyntaxError();
+
+		target = String.join(" ", args);
+		ChatUtils.message("Now annoying " + target + ".");
+
+		ClientPlayerEntity player = MC.player;
+		if (player != null && target.equals(player.getName().asString())) {
+			ChatUtils.warning("Annoying yourself is a bad idea!");
+		}
+
+		EVENTS.add(ChatInputListener.class, this);
+		enabled = true;
 	}
 
 	@Override
@@ -78,8 +80,9 @@ public final class AnnoyCmd extends Command implements ChatInputListener {
 		}
 
 		String prefix2 = target + ":";
-		if (message.contains("] " + prefix2) || message.contains("]" + prefix2))
+		if (message.contains("] " + prefix2) || message.contains("]" + prefix2)) {
 			repeat(message, prefix2);
+		}
 	}
 
 	private void repeat(String message, String prefix) {

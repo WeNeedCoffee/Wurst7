@@ -75,6 +75,77 @@ public final class TriggerBotHack extends Hack implements UpdateListener {
 		addSetting(filterInvisible);
 	}
 
+	private boolean isCorrectEntity(Entity entity) {
+		ClientPlayerEntity player = MC.player;
+		ClientWorld world = MC.world;
+
+		double rangeSq = Math.pow(range.getValue(), 2);
+		Stream<LivingEntity> stream = Stream.of(entity).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> player.squaredDistanceTo(e) <= rangeSq).filter(e -> e != player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> !WURST.getFriends().contains(e.getEntityName()));
+
+		if (filterPlayers.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PlayerEntity));
+		}
+
+		if (filterSleeping.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
+		}
+
+		if (filterFlying.getValue() > 0) {
+			stream = stream.filter(e -> {
+
+				if (!(e instanceof PlayerEntity))
+					return true;
+
+				Box box = e.getBoundingBox();
+				box = box.union(box.offset(0, -filterFlying.getValue(), 0));
+				return world.doesNotCollide(box);
+			});
+		}
+
+		if (filterMonsters.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof Monster));
+		}
+
+		if (filterPigmen.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof ZombiePigmanEntity));
+		}
+
+		if (filterEndermen.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof EndermanEntity));
+		}
+
+		if (filterAnimals.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
+		}
+
+		if (filterBabies.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
+		}
+
+		if (filterPets.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed())).filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
+		}
+
+		if (filterVillagers.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof VillagerEntity));
+		}
+
+		if (filterGolems.isChecked()) {
+			stream = stream.filter(e -> !(e instanceof GolemEntity));
+		}
+
+		if (filterInvisible.isChecked()) {
+			stream = stream.filter(e -> !e.isInvisible());
+		}
+
+		return stream.findFirst().isPresent();
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
 	@Override
 	public void onEnable() {
 		// disable other killauras
@@ -83,11 +154,6 @@ public final class TriggerBotHack extends Hack implements UpdateListener {
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 
 		EVENTS.add(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
@@ -105,59 +171,5 @@ public final class TriggerBotHack extends Hack implements UpdateListener {
 
 		MC.interactionManager.attackEntity(player, target);
 		player.swingHand(Hand.MAIN_HAND);
-	}
-
-	private boolean isCorrectEntity(Entity entity) {
-		ClientPlayerEntity player = MC.player;
-		ClientWorld world = MC.world;
-
-		double rangeSq = Math.pow(range.getValue(), 2);
-		Stream<LivingEntity> stream = Stream.of(entity).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> player.squaredDistanceTo(e) <= rangeSq).filter(e -> e != player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> !WURST.getFriends().contains(e.getEntityName()));
-
-		if (filterPlayers.isChecked())
-			stream = stream.filter(e -> !(e instanceof PlayerEntity));
-
-		if (filterSleeping.isChecked())
-			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
-
-		if (filterFlying.getValue() > 0)
-			stream = stream.filter(e -> {
-
-				if (!(e instanceof PlayerEntity))
-					return true;
-
-				Box box = e.getBoundingBox();
-				box = box.union(box.offset(0, -filterFlying.getValue(), 0));
-				return world.doesNotCollide(box);
-			});
-
-		if (filterMonsters.isChecked())
-			stream = stream.filter(e -> !(e instanceof Monster));
-
-		if (filterPigmen.isChecked())
-			stream = stream.filter(e -> !(e instanceof ZombiePigmanEntity));
-
-		if (filterEndermen.isChecked())
-			stream = stream.filter(e -> !(e instanceof EndermanEntity));
-
-		if (filterAnimals.isChecked())
-			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
-
-		if (filterBabies.isChecked())
-			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
-
-		if (filterPets.isChecked())
-			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed())).filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
-
-		if (filterVillagers.isChecked())
-			stream = stream.filter(e -> !(e instanceof VillagerEntity));
-
-		if (filterGolems.isChecked())
-			stream = stream.filter(e -> !(e instanceof GolemEntity));
-
-		if (filterInvisible.isChecked())
-			stream = stream.filter(e -> !e.isInvisible());
-
-		return stream.findFirst().isPresent();
 	}
 }

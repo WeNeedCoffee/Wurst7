@@ -28,6 +28,12 @@ public final class KeybindProcessor implements KeyPressListener {
 		this.cmdProcessor = cmdProcessor;
 	}
 
+	private String getKeyName(KeyPressEvent event) {
+		int keyCode = event.getKeyCode();
+		int scanCode = event.getScanCode();
+		return InputUtil.getKeyCode(keyCode, scanCode).getName();
+	}
+
 	@Override
 	public void onKeyPress(KeyPressEvent event) {
 		if (event.getAction() != GLFW.GLFW_PRESS)
@@ -42,10 +48,20 @@ public final class KeybindProcessor implements KeyPressListener {
 		processCmds(cmds);
 	}
 
-	private String getKeyName(KeyPressEvent event) {
-		int keyCode = event.getKeyCode();
-		int scanCode = event.getScanCode();
-		return InputUtil.getKeyCode(keyCode, scanCode).getName();
+	private void processCmd(String cmd) {
+		if (cmd.startsWith(".")) {
+			cmdProcessor.process(cmd.substring(1));
+		} else if (cmd.contains(" ")) {
+			cmdProcessor.process(cmd);
+		} else {
+			Hack hack = hax.getHackByName(cmd);
+
+			if (hack != null) {
+				hack.setEnabled(!hack.isEnabled());
+			} else {
+				cmdProcessor.process(cmd);
+			}
+		}
 	}
 
 	private void processCmds(String cmds) {
@@ -53,22 +69,8 @@ public final class KeybindProcessor implements KeyPressListener {
 			return;
 
 		cmds = cmds.replace(";", "\u00a7").replace("\u00a7\u00a7", ";");
-		for (String cmd : cmds.split("\u00a7"))
+		for (String cmd : cmds.split("\u00a7")) {
 			processCmd(cmd.trim());
-	}
-
-	private void processCmd(String cmd) {
-		if (cmd.startsWith("."))
-			cmdProcessor.process(cmd.substring(1));
-		else if (cmd.contains(" "))
-			cmdProcessor.process(cmd);
-		else {
-			Hack hack = hax.getHackByName(cmd);
-
-			if (hack != null)
-				hack.setEnabled(!hack.isEnabled());
-			else
-				cmdProcessor.process(cmd);
 		}
 	}
 }

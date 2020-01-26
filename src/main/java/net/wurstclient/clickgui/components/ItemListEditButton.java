@@ -30,6 +30,18 @@ public final class ItemListEditButton extends Component {
 	}
 
 	@Override
+	public int getDefaultHeight() {
+		return 11;
+	}
+
+	@Override
+	public int getDefaultWidth() {
+		TextRenderer fr = WurstClient.MC.textRenderer;
+		String text = setting.getName() + ": " + setting.getItemNames().size();
+		return fr.getStringWidth(text) + buttonWidth + 6;
+	}
+
+	@Override
 	public void handleMouseClick(double mouseX, double mouseY, int mouseButton) {
 		if (mouseButton != 0)
 			return;
@@ -59,8 +71,9 @@ public final class ItemListEditButton extends Component {
 		boolean hBox = hovering && mouseX >= x3;
 
 		// tooltip
-		if (hText)
+		if (hText) {
 			gui.setTooltip(setting.getDescription());
+		}
 
 		// background
 		GL11.glColor4f(bgColor[0], bgColor[1], bgColor[2], opacity);
@@ -95,17 +108,5 @@ public final class ItemListEditButton extends Component {
 		fr.draw(text, x1, y1 + 2, 0xf0f0f0);
 		fr.draw("Edit...", x3 + 2, y1 + 2, 0xf0f0f0);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-	}
-
-	@Override
-	public int getDefaultWidth() {
-		TextRenderer fr = WurstClient.MC.textRenderer;
-		String text = setting.getName() + ": " + setting.getItemNames().size();
-		return fr.getStringWidth(text) + buttonWidth + 6;
-	}
-
-	@Override
-	public int getDefaultHeight() {
-		return 11;
 	}
 }

@@ -31,61 +31,6 @@ public final class ComboBoxPopup<T extends Enum<T>> extends Popup {
 		setY(owner.getHeight());
 	}
 
-	@Override
-	public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
-		if (mouseButton != 0)
-			return;
-
-		int yi1 = getY() - 11;
-		for (T value : setting.getValues()) {
-			if (value == setting.getSelected())
-				continue;
-
-			yi1 += 11;
-			int yi2 = yi1 + 11;
-
-			if (mouseY < yi1 || mouseY >= yi2)
-				continue;
-
-			setting.setSelected(value);
-			close();
-			break;
-		}
-	}
-
-	@Override
-	public void render(int mouseX, int mouseY) {
-		int x1 = getX();
-		int x2 = x1 + getWidth();
-		int y1 = getY();
-		int y2 = y1 + getHeight();
-
-		boolean hovering = isHovering(mouseX, mouseY, x1, x2, y1, y2);
-
-		if (hovering)
-			gui.setTooltip("");
-
-		drawOutline(x1, x2, y1, y2);
-
-		int yi1 = y1 - 11;
-		for (T value : setting.getValues()) {
-			if (value == setting.getSelected())
-				continue;
-
-			yi1 += 11;
-			int yi2 = yi1 + 11;
-
-			boolean hValue = hovering && mouseY >= yi1 && mouseY < yi2;
-			drawValueBackground(x1, x2, yi1, yi2, hValue);
-
-			drawValueName(x1, yi1, value);
-		}
-	}
-
-	private boolean isHovering(int mouseX, int mouseY, int x1, int x2, int y1, int y2) {
-		return mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2;
-	}
-
 	private void drawOutline(int x1, int x2, int y1, int y2) {
 		float[] acColor = gui.getAcColor();
 		GL11.glColor4f(acColor[0], acColor[1], acColor[2], 0.5F);
@@ -120,13 +65,72 @@ public final class ComboBoxPopup<T extends Enum<T>> extends Popup {
 	}
 
 	@Override
+	public int getDefaultHeight() {
+		int numValues = setting.getValues().length;
+		return (numValues - 1) * 11;
+	}
+
+	@Override
 	public int getDefaultWidth() {
 		return popupWidth + 15;
 	}
 
 	@Override
-	public int getDefaultHeight() {
-		int numValues = setting.getValues().length;
-		return (numValues - 1) * 11;
+	public void handleMouseClick(int mouseX, int mouseY, int mouseButton) {
+		if (mouseButton != 0)
+			return;
+
+		int yi1 = getY() - 11;
+		for (T value : setting.getValues()) {
+			if (value == setting.getSelected()) {
+				continue;
+			}
+
+			yi1 += 11;
+			int yi2 = yi1 + 11;
+
+			if (mouseY < yi1 || mouseY >= yi2) {
+				continue;
+			}
+
+			setting.setSelected(value);
+			close();
+			break;
+		}
+	}
+
+	private boolean isHovering(int mouseX, int mouseY, int x1, int x2, int y1, int y2) {
+		return mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2;
+	}
+
+	@Override
+	public void render(int mouseX, int mouseY) {
+		int x1 = getX();
+		int x2 = x1 + getWidth();
+		int y1 = getY();
+		int y2 = y1 + getHeight();
+
+		boolean hovering = isHovering(mouseX, mouseY, x1, x2, y1, y2);
+
+		if (hovering) {
+			gui.setTooltip("");
+		}
+
+		drawOutline(x1, x2, y1, y2);
+
+		int yi1 = y1 - 11;
+		for (T value : setting.getValues()) {
+			if (value == setting.getSelected()) {
+				continue;
+			}
+
+			yi1 += 11;
+			int yi2 = yi1 + 11;
+
+			boolean hValue = hovering && mouseY >= yi1 && mouseY < yi2;
+			drawValueBackground(x1, x2, yi1, yi2, hValue);
+
+			drawValueName(x1, yi1, value);
+		}
 	}
 }

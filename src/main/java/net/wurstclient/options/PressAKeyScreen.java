@@ -24,22 +24,18 @@ public class PressAKeyScreen extends Screen {
 		this.prevScreen = prevScreen;
 	}
 
-	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
-		if (keyCode != GLFW.GLFW_KEY_ESCAPE)
-			prevScreen.setKey(getKeyName(keyCode, scanCode));
-
-		minecraft.openScreen((Screen) prevScreen);
-		return super.keyPressed(keyCode, scanCode, int_3);
-	}
-
 	private String getKeyName(int keyCode, int scanCode) {
 		return InputUtil.getKeyCode(keyCode, scanCode).getName();
 	}
 
 	@Override
-	public boolean shouldCloseOnEsc() {
-		return false;
+	public boolean keyPressed(int keyCode, int scanCode, int int_3) {
+		if (keyCode != GLFW.GLFW_KEY_ESCAPE) {
+			prevScreen.setKey(getKeyName(keyCode, scanCode));
+		}
+
+		minecraft.openScreen((Screen) prevScreen);
+		return super.keyPressed(keyCode, scanCode, int_3);
 	}
 
 	@Override
@@ -47,5 +43,10 @@ public class PressAKeyScreen extends Screen {
 		renderBackground();
 		drawCenteredString(font, "Press a key", width / 2, height / 4 + 48, 16777215);
 		super.render(mouseX, mouseY, partialTicks);
+	}
+
+	@Override
+	public boolean shouldCloseOnEsc() {
+		return false;
 	}
 }

@@ -41,14 +41,47 @@ import net.wurstclient.util.RenderUtils;
 import net.wurstclient.util.RotationUtils;
 
 public final class NukerHack extends Hack implements UpdateListener, LeftClickListener, RenderListener {
+	private enum Mode {
+		NORMAL("Normal", n -> n.getName(), (n, p) -> true),
+
+		ID("ID", n -> "IDNuker [" + n.id + "]", (n, p) -> BlockUtils.getName(p).equals(n.id)),
+
+		FLAT("Flat", n -> "FlatNuker", (n, p) -> p.getY() >= MC.player.getPos().getY()),
+
+		SMASH("Smash", n -> "SmashNuker", (n, p) -> BlockUtils.getHardness(p) >= 1);
+
+		private final String name;
+		private final Function<NukerHack, String> renderName;
+		private final BiPredicate<NukerHack, BlockPos> validator;
+
+		private Mode(String name, Function<NukerHack, String> renderName, BiPredicate<NukerHack, BlockPos> validator) {
+			this.name = name;
+			this.renderName = renderName;
+			this.validator = validator;
+		}
+
+		public String getRenderName(NukerHack n) {
+			return renderName.apply(n);
+		}
+
+		public Predicate<BlockPos> getValidator(NukerHack n) {
+			return p -> validator.test(n, p);
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final SliderSetting range = new SliderSetting("Range", 5, 1, 6, 0.05, ValueDisplay.DECIMAL);
 
 	private final EnumSetting<Mode> mode = new EnumSetting<>("Mode", TextFormat.BOLD + "Normal" + TextFormat.RESET + " mode simply breaks everything\n" + "around you.\n" + TextFormat.BOLD + "ID" + TextFormat.RESET + " mode only breaks the selected block\n" + "type. Left-click on a block to select it.\n" + TextFormat.BOLD + "Flat" + TextFormat.RESET + " mode flattens the area around you,\n" + "but won't dig down.\n" + TextFormat.BOLD + "Smash" + TextFormat.RESET + " mode only breaks blocks that\n" + "can be destroyed instantly (e.g. tall grass).", Mode.values(), Mode.NORMAL);
-
 	private final ArrayDeque<Set<BlockPos>> prevBlocks = new ArrayDeque<>();
 	private BlockPos currentBlock;
 	private float progress;
 	private float prevProgress;
+
 	private String id;
 
 	public NukerHack() {
@@ -61,15 +94,6 @@ public final class NukerHack extends Hack implements UpdateListener, LeftClickLi
 	@Override
 	public String getRenderName() {
 		return mode.getSelected().getRenderName(this);
-	}
-
-	@Override
-	protected void onEnable() {
-		WURST.getHax().autoMineHack.setEnabled(false);
-
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(LeftClickListener.class, this);
-		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -89,64 +113,12 @@ public final class NukerHack extends Hack implements UpdateListener, LeftClickLi
 	}
 
 	@Override
-	public void onUpdate() {
-		ClientPlayerEntity player = MC.player;
+	protected void onEnable() {
+		WURST.getHax().autoMineHack.setEnabled(false);
 
-		currentBlock = null;
-		Vec3d eyesPos = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
-		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
-		double rangeSq = Math.pow(range.getValue(), 2);
-		int blockRange = (int) Math.ceil(range.getValue());
-
-		Vec3i rangeVec = new Vec3i(blockRange, blockRange, blockRange);
-		BlockPos min = eyesBlock.subtract(rangeVec);
-		BlockPos max = eyesBlock.add(rangeVec);
-
-		ArrayList<BlockPos> blocks = BlockUtils.getAllInBox(min, max);
-		Stream<BlockPos> stream = blocks.parallelStream();
-
-		List<BlockPos> blocks2 = stream.filter(pos -> eyesPos.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.canBeClicked(pos)).filter(mode.getSelected().getValidator(this)).sorted(Comparator.comparingDouble(pos -> eyesPos.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
-
-		if (player.abilities.creativeMode) {
-			Stream<BlockPos> stream2 = blocks2.parallelStream();
-			for (Set<BlockPos> set : prevBlocks)
-				stream2 = stream2.filter(pos -> !set.contains(pos));
-			List<BlockPos> blocks3 = stream2.collect(Collectors.toList());
-
-			prevBlocks.addLast(new HashSet<>(blocks3));
-			while (prevBlocks.size() > 5)
-				prevBlocks.removeFirst();
-
-			if (!blocks3.isEmpty())
-				currentBlock = blocks3.get(0);
-
-			MC.interactionManager.cancelBlockBreaking();
-			progress = 1;
-			prevProgress = 1;
-			BlockBreaker.breakBlocksWithPacketSpam(blocks3);
-			return;
-		}
-
-		for (BlockPos pos : blocks2)
-			if (BlockBreaker.breakOneBlock(pos)) {
-				currentBlock = pos;
-				break;
-			}
-
-		if (currentBlock == null)
-			MC.interactionManager.cancelBlockBreaking();
-
-		if (currentBlock != null && BlockUtils.getHardness(currentBlock) < 1) {
-			prevProgress = progress;
-			progress = IMC.getInteractionManager().getCurrentBreakingProgress();
-
-			if (progress < prevProgress)
-				prevProgress = progress;
-
-		} else {
-			progress = 1;
-			prevProgress = 1;
-		}
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(LeftClickListener.class, this);
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -207,36 +179,69 @@ public final class NukerHack extends Hack implements UpdateListener, LeftClickLi
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
-	private enum Mode {
-		NORMAL("Normal", n -> n.getName(), (n, p) -> true),
+	@Override
+	public void onUpdate() {
+		ClientPlayerEntity player = MC.player;
 
-		ID("ID", n -> "IDNuker [" + n.id + "]", (n, p) -> BlockUtils.getName(p).equals(n.id)),
+		currentBlock = null;
+		Vec3d eyesPos = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
+		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
+		double rangeSq = Math.pow(range.getValue(), 2);
+		int blockRange = (int) Math.ceil(range.getValue());
 
-		FLAT("Flat", n -> "FlatNuker", (n, p) -> p.getY() >= MC.player.getPos().getY()),
+		Vec3i rangeVec = new Vec3i(blockRange, blockRange, blockRange);
+		BlockPos min = eyesBlock.subtract(rangeVec);
+		BlockPos max = eyesBlock.add(rangeVec);
 
-		SMASH("Smash", n -> "SmashNuker", (n, p) -> BlockUtils.getHardness(p) >= 1);
+		ArrayList<BlockPos> blocks = BlockUtils.getAllInBox(min, max);
+		Stream<BlockPos> stream = blocks.parallelStream();
 
-		private final String name;
-		private final Function<NukerHack, String> renderName;
-		private final BiPredicate<NukerHack, BlockPos> validator;
+		List<BlockPos> blocks2 = stream.filter(pos -> eyesPos.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.canBeClicked(pos)).filter(mode.getSelected().getValidator(this)).sorted(Comparator.comparingDouble(pos -> eyesPos.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
 
-		private Mode(String name, Function<NukerHack, String> renderName, BiPredicate<NukerHack, BlockPos> validator) {
-			this.name = name;
-			this.renderName = renderName;
-			this.validator = validator;
+		if (player.abilities.creativeMode) {
+			Stream<BlockPos> stream2 = blocks2.parallelStream();
+			for (Set<BlockPos> set : prevBlocks) {
+				stream2 = stream2.filter(pos -> !set.contains(pos));
+			}
+			List<BlockPos> blocks3 = stream2.collect(Collectors.toList());
+
+			prevBlocks.addLast(new HashSet<>(blocks3));
+			while (prevBlocks.size() > 5) {
+				prevBlocks.removeFirst();
+			}
+
+			if (!blocks3.isEmpty()) {
+				currentBlock = blocks3.get(0);
+			}
+
+			MC.interactionManager.cancelBlockBreaking();
+			progress = 1;
+			prevProgress = 1;
+			BlockBreaker.breakBlocksWithPacketSpam(blocks3);
+			return;
 		}
 
-		@Override
-		public String toString() {
-			return name;
+		for (BlockPos pos : blocks2)
+			if (BlockBreaker.breakOneBlock(pos)) {
+				currentBlock = pos;
+				break;
+			}
+
+		if (currentBlock == null) {
+			MC.interactionManager.cancelBlockBreaking();
 		}
 
-		public String getRenderName(NukerHack n) {
-			return renderName.apply(n);
-		}
+		if (currentBlock != null && BlockUtils.getHardness(currentBlock) < 1) {
+			prevProgress = progress;
+			progress = IMC.getInteractionManager().getCurrentBreakingProgress();
 
-		public Predicate<BlockPos> getValidator(NukerHack n) {
-			return p -> validator.test(n, p);
+			if (progress < prevProgress) {
+				prevProgress = progress;
+			}
+
+		} else {
+			progress = 1;
+			prevProgress = 1;
 		}
 	}
 }

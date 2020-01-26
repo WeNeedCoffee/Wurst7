@@ -33,58 +33,6 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 		setCategory(Category.RENDER);
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(RenderListener.class, this);
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(RenderListener.class, this);
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthMask(false);
-		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		GL11.glLineWidth(2);
-
-		RenderUtils.applyCameraRotationOnly();
-
-		ArrayList<Vec3d> path = getPath(partialTicks);
-		Vec3d camPos = RenderUtils.getCameraPos();
-
-		drawLine(path, camPos);
-
-		if (!path.isEmpty()) {
-			Vec3d end = path.get(path.size() - 1);
-			drawEndOfLine(end, camPos);
-		}
-
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthMask(true);
-		GL11.glDisable(GL11.GL_LINE_SMOOTH);
-		GL11.glPopMatrix();
-	}
-
-	private void drawLine(ArrayList<Vec3d> path, Vec3d camPos) {
-		GL11.glBegin(GL11.GL_LINE_STRIP);
-		GL11.glColor4f(0, 1, 0, 0.75F);
-
-		for (Vec3d point : path)
-			GL11.glVertex3d(point.x - camPos.x, point.y - camPos.y, point.z - camPos.z);
-
-		GL11.glEnd();
-	}
-
 	private void drawEndOfLine(Vec3d end, Vec3d camPos) {
 		double renderX = end.x - camPos.x;
 		double renderY = end.y - camPos.y;
@@ -100,6 +48,17 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 		RenderUtils.drawOutlinedBox();
 
 		GL11.glPopMatrix();
+	}
+
+	private void drawLine(ArrayList<Vec3d> path, Vec3d camPos) {
+		GL11.glBegin(GL11.GL_LINE_STRIP);
+		GL11.glColor4f(0, 1, 0, 0.75F);
+
+		for (Vec3d point : path) {
+			GL11.glVertex3d(point.x - camPos.x, point.y - camPos.y, point.z - camPos.z);
+		}
+
+		GL11.glEnd();
 	}
 
 	private ArrayList<Vec3d> getPath(float partialTicks) {
@@ -143,8 +102,9 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 			float bowPower = (72000 - player.getItemUseTimeLeft()) / 20.0f;
 			bowPower = (bowPower * bowPower + bowPower * 2.0f) / 3.0f;
 
-			if (bowPower > 1 || bowPower <= 0.1F)
+			if (bowPower > 1 || bowPower <= 0.1F) {
 				bowPower = 1;
+			}
 
 			bowPower *= 3F;
 			arrowMotionX *= bowPower;
@@ -180,8 +140,9 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 
 			// check for collision
 			RayTraceContext context = new RayTraceContext(eyesPos, arrowPos, RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player);
-			if (MC.world.rayTrace(context).getType() != HitResult.Type.MISS)
+			if (MC.world.rayTrace(context).getType() != HitResult.Type.MISS) {
 				break;
+			}
 		}
 
 		return path;
@@ -205,5 +166,47 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 
 	private boolean isThrowable(Item item) {
 		return item instanceof BowItem || item instanceof CrossbowItem || item instanceof SnowballItem || item instanceof EggItem || item instanceof EnderPearlItem || item instanceof SplashPotionItem || item instanceof LingeringPotionItem || item instanceof FishingRodItem || item instanceof TridentItem;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(RenderListener.class, this);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(RenderListener.class, this);
+	}
+
+	@Override
+	public void onRender(float partialTicks) {
+		GL11.glPushMatrix();
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthMask(false);
+		GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		GL11.glLineWidth(2);
+
+		RenderUtils.applyCameraRotationOnly();
+
+		ArrayList<Vec3d> path = getPath(partialTicks);
+		Vec3d camPos = RenderUtils.getCameraPos();
+
+		drawLine(path, camPos);
+
+		if (!path.isEmpty()) {
+			Vec3d end = path.get(path.size() - 1);
+			drawEndOfLine(end, camPos);
+		}
+
+		GL11.glColor4f(1, 1, 1, 1);
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthMask(true);
+		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+		GL11.glPopMatrix();
 	}
 }

@@ -26,13 +26,49 @@ import net.wurstclient.util.RotationUtils;
 
 @SearchTags({ "item esp", "ItemTracers", "item tracers" })
 public final class ItemEspHack extends Hack implements UpdateListener, CameraTransformViewBobbingListener, RenderListener {
+	private enum BoxSize {
+		ACCURATE("Accurate", 0), FANCY("Fancy", 0.1);
+
+		private final String name;
+		private final double extraSize;
+
+		private BoxSize(String name, double extraSize) {
+			this.name = name;
+			this.extraSize = extraSize;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
+	private enum Style {
+		BOXES("Boxes only", true, false), LINES("Lines only", false, true), LINES_AND_BOXES("Lines and boxes", true, true);
+
+		private final String name;
+		private final boolean boxes;
+		private final boolean lines;
+
+		private Style(String name, boolean boxes, boolean lines) {
+			this.name = name;
+			this.boxes = boxes;
+			this.lines = lines;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
 	private final CheckboxSetting names = new CheckboxSetting("Show item names", "Sorry, this is currently broken!\n" + "19w39a changed how nameplates work\n" + "and we haven't figured it out yet.", true);
 
 	private final EnumSetting<Style> style = new EnumSetting<>("Style", Style.values(), Style.BOXES);
-
 	private final EnumSetting<BoxSize> boxSize = new EnumSetting<>("Box size", "\u00a7lAccurate\u00a7r mode shows the exact\n" + "hitbox of each item.\n" + "\u00a7lFancy\u00a7r mode shows larger boxes\n" + "that look better.", BoxSize.values(), BoxSize.FANCY);
 
 	private int itemBox;
+
 	private final ArrayList<ItemEntity> items = new ArrayList<>();
 
 	public ItemEspHack() {
@@ -42,6 +78,22 @@ public final class ItemEspHack extends Hack implements UpdateListener, CameraTra
 		addSetting(names);
 		addSetting(style);
 		addSetting(boxSize);
+	}
+
+	@Override
+	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
+		if (style.getSelected().lines) {
+			event.cancel();
+		}
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(CameraTransformViewBobbingListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		GL11.glDeleteLists(itemBox, 1);
 	}
 
 	@Override
@@ -62,29 +114,6 @@ public final class ItemEspHack extends Hack implements UpdateListener, CameraTra
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(CameraTransformViewBobbingListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		GL11.glDeleteLists(itemBox, 1);
-	}
-
-	@Override
-	public void onUpdate() {
-		items.clear();
-		for (Entity entity : MC.world.getEntities())
-			if (entity instanceof ItemEntity)
-				items.add((ItemEntity) entity);
-	}
-
-	@Override
-	public void onCameraTransformViewBobbing(CameraTransformViewBobbingEvent event) {
-		if (style.getSelected().lines)
-			event.cancel();
-	}
-
-	@Override
 	public void onRender(float partialTicks) {
 		// GL settings
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -96,8 +125,9 @@ public final class ItemEspHack extends Hack implements UpdateListener, CameraTra
 
 		renderBoxes(partialTicks);
 
-		if (style.getSelected().lines)
+		if (style.getSelected().lines) {
 			renderTracers(partialTicks);
+		}
 
 		GL11.glPopMatrix();
 
@@ -107,6 +137,15 @@ public final class ItemEspHack extends Hack implements UpdateListener, CameraTra
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+	}
+
+	@Override
+	public void onUpdate() {
+		items.clear();
+		for (Entity entity : MC.world.getEntities())
+			if (entity instanceof ItemEntity) {
+				items.add((ItemEntity) entity);
+			}
 	}
 
 	private void renderBoxes(double partialTicks) {
@@ -154,41 +193,5 @@ public final class ItemEspHack extends Hack implements UpdateListener, CameraTra
 			GL11.glVertex3d(end.x, end.y, end.z);
 		}
 		GL11.glEnd();
-	}
-
-	private enum Style {
-		BOXES("Boxes only", true, false), LINES("Lines only", false, true), LINES_AND_BOXES("Lines and boxes", true, true);
-
-		private final String name;
-		private final boolean boxes;
-		private final boolean lines;
-
-		private Style(String name, boolean boxes, boolean lines) {
-			this.name = name;
-			this.boxes = boxes;
-			this.lines = lines;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
-	private enum BoxSize {
-		ACCURATE("Accurate", 0), FANCY("Fancy", 0.1);
-
-		private final String name;
-		private final double extraSize;
-
-		private BoxSize(String name, double extraSize) {
-			this.name = name;
-			this.extraSize = extraSize;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
 	}
 }

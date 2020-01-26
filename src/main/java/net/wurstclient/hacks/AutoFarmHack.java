@@ -72,6 +72,90 @@ public final class AutoFarmHack extends Hack implements UpdateListener, RenderLi
 		addSetting(range);
 	}
 
+	private boolean canBeReplanted(BlockPos pos) {
+		Item item = plants.get(pos);
+
+		if (item == Items.WHEAT_SEEDS || item == Items.CARROT || item == Items.POTATO || item == Items.BEETROOT_SEEDS || item == Items.PUMPKIN_SEEDS || item == Items.MELON_SEEDS)
+			return BlockUtils.getBlock(pos.down()) instanceof FarmlandBlock;
+
+		if (item == Items.NETHER_WART)
+			return BlockUtils.getBlock(pos.down()) instanceof SoulSandBlock;
+
+		return false;
+	}
+
+	private Stream<BlockPos> getBlockStream(BlockPos center, int range) {
+		BlockPos min = center.add(-range, -range, -range);
+		BlockPos max = center.add(range, range, range);
+
+		return BlockUtils.getAllInBox(min, max).stream();
+	}
+
+	private void harvest(List<BlockPos> blocksToHarvest) {
+		if (MC.player.abilities.creativeMode) {
+			Stream<BlockPos> stream3 = blocksToHarvest.parallelStream();
+			for (Set<BlockPos> set : prevBlocks) {
+				stream3 = stream3.filter(pos -> !set.contains(pos));
+			}
+			List<BlockPos> blocksToHarvest2 = stream3.collect(Collectors.toList());
+
+			prevBlocks.addLast(new HashSet<>(blocksToHarvest2));
+			while (prevBlocks.size() > 5) {
+				prevBlocks.removeFirst();
+			}
+
+			if (!blocksToHarvest2.isEmpty()) {
+				currentBlock = blocksToHarvest2.get(0);
+			}
+
+			MC.interactionManager.cancelBlockBreaking();
+			progress = 1;
+			prevProgress = 1;
+			BlockBreaker.breakBlocksWithPacketSpam(blocksToHarvest2);
+			return;
+		}
+
+		for (BlockPos pos : blocksToHarvest)
+			if (BlockBreaker.breakOneBlock(pos)) {
+				currentBlock = pos;
+				break;
+			}
+
+		if (currentBlock == null) {
+			MC.interactionManager.cancelBlockBreaking();
+		}
+
+		if (currentBlock != null && BlockUtils.getHardness(currentBlock) < 1) {
+			prevProgress = progress;
+			progress = IMC.getInteractionManager().getCurrentBreakingProgress();
+
+			if (progress < prevProgress) {
+				prevProgress = progress;
+			}
+
+		} else {
+			progress = 1;
+			prevProgress = 1;
+		}
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		if (currentBlock != null) {
+			IMC.getInteractionManager().setBreakingBlock(true);
+			MC.interactionManager.cancelBlockBreaking();
+			currentBlock = null;
+		}
+
+		prevBlocks.clear();
+		GL11.glDeleteLists(displayList, 1);
+		GL11.glDeleteLists(box, 1);
+		GL11.glDeleteLists(node, 1);
+	}
+
 	@Override
 	public void onEnable() {
 		plants.clear();
@@ -94,60 +178,6 @@ public final class AutoFarmHack extends Hack implements UpdateListener, RenderLi
 		RenderUtils.drawNode(node);
 		GL11.glEnd();
 		GL11.glEndList();
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		if (currentBlock != null) {
-			IMC.getInteractionManager().setBreakingBlock(true);
-			MC.interactionManager.cancelBlockBreaking();
-			currentBlock = null;
-		}
-
-		prevBlocks.clear();
-		GL11.glDeleteLists(displayList, 1);
-		GL11.glDeleteLists(box, 1);
-		GL11.glDeleteLists(node, 1);
-	}
-
-	@Override
-	public void onUpdate() {
-
-		currentBlock = null;
-		Vec3d eyesVec = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
-		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
-		double rangeSq = Math.pow(range.getValue(), 2);
-		int blockRange = (int) Math.ceil(range.getValue());
-
-		List<BlockPos> blocks = getBlockStream(eyesBlock, blockRange).filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.canBeClicked(pos)).collect(Collectors.toList());
-
-		registerPlants(blocks);
-
-		List<BlockPos> blocksToHarvest = new ArrayList<>();
-		List<BlockPos> blocksToReplant = new ArrayList<>();
-
-		if (!WURST.getHax().freecamHack.isEnabled()) {
-			blocksToHarvest = blocks.parallelStream().filter(this::shouldBeHarvested).sorted(Comparator.comparingDouble(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
-
-			blocksToReplant = getBlockStream(eyesBlock, blockRange).filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.getState(pos).getMaterial().isReplaceable()).filter(pos -> plants.containsKey(pos)).filter(this::canBeReplanted).sorted(Comparator.comparingDouble(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
-		}
-
-		while (!blocksToReplant.isEmpty()) {
-			BlockPos pos = blocksToReplant.get(0);
-			Item neededItem = plants.get(pos);
-			if (tryToReplant(pos, neededItem))
-				break;
-
-			blocksToReplant.removeIf(p -> plants.get(p) == neededItem);
-		}
-
-		if (blocksToReplant.isEmpty())
-			harvest(blocksToHarvest);
-
-		updateDisplayList(blocksToHarvest, blocksToReplant);
 	}
 
 	@Override
@@ -200,92 +230,43 @@ public final class AutoFarmHack extends Hack implements UpdateListener, RenderLi
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
-	private Stream<BlockPos> getBlockStream(BlockPos center, int range) {
-		BlockPos min = center.add(-range, -range, -range);
-		BlockPos max = center.add(range, range, range);
+	@Override
+	public void onUpdate() {
 
-		return BlockUtils.getAllInBox(min, max).stream();
-	}
+		currentBlock = null;
+		Vec3d eyesVec = RotationUtils.getEyesPos().subtract(0.5, 0.5, 0.5);
+		BlockPos eyesBlock = new BlockPos(RotationUtils.getEyesPos());
+		double rangeSq = Math.pow(range.getValue(), 2);
+		int blockRange = (int) Math.ceil(range.getValue());
 
-	private boolean shouldBeHarvested(BlockPos pos) {
-		Block block = BlockUtils.getBlock(pos);
-		BlockState state = BlockUtils.getState(pos);
+		List<BlockPos> blocks = getBlockStream(eyesBlock, blockRange).filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.canBeClicked(pos)).collect(Collectors.toList());
 
-		if (block instanceof CropBlock)
-			return ((CropBlock) block).isMature(state);
-		else if (block instanceof GourdBlock)
-			return true;
-		else if (block instanceof SugarCaneBlock)
-			return BlockUtils.getBlock(pos.down()) instanceof SugarCaneBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof SugarCaneBlock);
-		else if (block instanceof CactusBlock)
-			return BlockUtils.getBlock(pos.down()) instanceof CactusBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof CactusBlock);
-		else if (block instanceof KelpPlantBlock)
-			return BlockUtils.getBlock(pos.down()) instanceof KelpPlantBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof KelpPlantBlock);
-		else if (block instanceof NetherWartBlock)
-			return state.get(NetherWartBlock.AGE) >= 3;
+		registerPlants(blocks);
 
-		return false;
-	}
+		List<BlockPos> blocksToHarvest = new ArrayList<>();
+		List<BlockPos> blocksToReplant = new ArrayList<>();
 
-	private void registerPlants(List<BlockPos> blocks) {
-		HashMap<Block, Item> seeds = new HashMap<>();
-		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
-		seeds.put(Blocks.CARROTS, Items.CARROT);
-		seeds.put(Blocks.POTATOES, Items.POTATO);
-		seeds.put(Blocks.BEETROOTS, Items.BEETROOT_SEEDS);
-		seeds.put(Blocks.PUMPKIN_STEM, Items.PUMPKIN_SEEDS);
-		seeds.put(Blocks.MELON_STEM, Items.MELON_SEEDS);
-		seeds.put(Blocks.NETHER_WART, Items.NETHER_WART);
+		if (!WURST.getHax().freecamHack.isEnabled()) {
+			blocksToHarvest = blocks.parallelStream().filter(this::shouldBeHarvested).sorted(Comparator.comparingDouble(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
 
-		plants.putAll(blocks.parallelStream().filter(pos -> seeds.containsKey(BlockUtils.getBlock(pos))).collect(Collectors.toMap(pos -> pos, pos -> seeds.get(BlockUtils.getBlock(pos)))));
-	}
-
-	private boolean canBeReplanted(BlockPos pos) {
-		Item item = plants.get(pos);
-
-		if (item == Items.WHEAT_SEEDS || item == Items.CARROT || item == Items.POTATO || item == Items.BEETROOT_SEEDS || item == Items.PUMPKIN_SEEDS || item == Items.MELON_SEEDS)
-			return BlockUtils.getBlock(pos.down()) instanceof FarmlandBlock;
-
-		if (item == Items.NETHER_WART)
-			return BlockUtils.getBlock(pos.down()) instanceof SoulSandBlock;
-
-		return false;
-	}
-
-	private boolean tryToReplant(BlockPos pos, Item neededItem) {
-		ClientPlayerEntity player = MC.player;
-		ItemStack heldItem = player.getMainHandStack();
-
-		if (!heldItem.isEmpty() && heldItem.getItem() == neededItem) {
-			placeBlockSimple(pos);
-			return true;
+			blocksToReplant = getBlockStream(eyesBlock, blockRange).filter(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)) <= rangeSq).filter(pos -> BlockUtils.getState(pos).getMaterial().isReplaceable()).filter(pos -> plants.containsKey(pos)).filter(this::canBeReplanted).sorted(Comparator.comparingDouble(pos -> eyesVec.squaredDistanceTo(new Vec3d(pos)))).collect(Collectors.toList());
 		}
 
-		for (int slot = 0; slot < 36; slot++) {
-			if (slot == player.inventory.selectedSlot)
-				continue;
-
-			ItemStack stack = player.inventory.getInvStack(slot);
-			if (stack.isEmpty() || stack.getItem() != neededItem)
-				continue;
-
-			if (slot < 9)
-				player.inventory.selectedSlot = slot;
-			else if (player.inventory.getEmptySlot() < 9)
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
-			else if (player.inventory.getEmptySlot() != -1) {
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(player.inventory.selectedSlot + 36);
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
-			} else {
-				IMC.getInteractionManager().windowClick_PICKUP(player.inventory.selectedSlot + 36);
-				IMC.getInteractionManager().windowClick_PICKUP(slot);
-				IMC.getInteractionManager().windowClick_PICKUP(player.inventory.selectedSlot + 36);
+		while (!blocksToReplant.isEmpty()) {
+			BlockPos pos = blocksToReplant.get(0);
+			Item neededItem = plants.get(pos);
+			if (tryToReplant(pos, neededItem)) {
+				break;
 			}
 
-			return true;
+			blocksToReplant.removeIf(p -> plants.get(p) == neededItem);
 		}
 
-		return false;
+		if (blocksToReplant.isEmpty()) {
+			harvest(blocksToHarvest);
+		}
+
+		updateDisplayList(blocksToHarvest, blocksToReplant);
 	}
 
 	private void placeBlockSimple(BlockPos pos) {
@@ -297,38 +278,44 @@ public final class AutoFarmHack extends Hack implements UpdateListener, RenderLi
 		double distanceSqPosVec = eyesPos.squaredDistanceTo(posVec);
 
 		Vec3d[] hitVecs = new Vec3d[sides.length];
-		for (int i = 0; i < sides.length; i++)
+		for (int i = 0; i < sides.length; i++) {
 			hitVecs[i] = posVec.add(new Vec3d(sides[i].getVector()).multiply(0.5));
+		}
 
 		for (int i = 0; i < sides.length; i++) {
 			// check if neighbor can be right clicked
 			BlockPos neighbor = pos.offset(sides[i]);
-			if (!BlockUtils.canBeClicked(neighbor))
+			if (!BlockUtils.canBeClicked(neighbor)) {
 				continue;
+			}
 
 			// check line of sight
 			BlockState neighborState = BlockUtils.getState(neighbor);
 			VoxelShape neighborShape = neighborState.getOutlineShape(MC.world, neighbor);
-			if (MC.world.rayTraceBlock(eyesPos, hitVecs[i], neighbor, neighborShape, neighborState) != null)
+			if (MC.world.rayTraceBlock(eyesPos, hitVecs[i], neighbor, neighborShape, neighborState) != null) {
 				continue;
+			}
 
 			side = sides[i];
 			break;
 		}
 
-		if (side == null)
+		if (side == null) {
 			for (int i = 0; i < sides.length; i++) {
 				// check if neighbor can be right clicked
-				if (!BlockUtils.canBeClicked(pos.offset(sides[i])))
+				if (!BlockUtils.canBeClicked(pos.offset(sides[i]))) {
 					continue;
+				}
 
 				// check if side is facing away from player
-				if (distanceSqPosVec > eyesPos.squaredDistanceTo(hitVecs[i]))
+				if (distanceSqPosVec > eyesPos.squaredDistanceTo(hitVecs[i])) {
 					continue;
+				}
 
 				side = sides[i];
 				break;
 			}
+		}
 
 		if (side == null)
 			return;
@@ -354,47 +341,75 @@ public final class AutoFarmHack extends Hack implements UpdateListener, RenderLi
 		IMC.setItemUseCooldown(4);
 	}
 
-	private void harvest(List<BlockPos> blocksToHarvest) {
-		if (MC.player.abilities.creativeMode) {
-			Stream<BlockPos> stream3 = blocksToHarvest.parallelStream();
-			for (Set<BlockPos> set : prevBlocks)
-				stream3 = stream3.filter(pos -> !set.contains(pos));
-			List<BlockPos> blocksToHarvest2 = stream3.collect(Collectors.toList());
+	private void registerPlants(List<BlockPos> blocks) {
+		HashMap<Block, Item> seeds = new HashMap<>();
+		seeds.put(Blocks.WHEAT, Items.WHEAT_SEEDS);
+		seeds.put(Blocks.CARROTS, Items.CARROT);
+		seeds.put(Blocks.POTATOES, Items.POTATO);
+		seeds.put(Blocks.BEETROOTS, Items.BEETROOT_SEEDS);
+		seeds.put(Blocks.PUMPKIN_STEM, Items.PUMPKIN_SEEDS);
+		seeds.put(Blocks.MELON_STEM, Items.MELON_SEEDS);
+		seeds.put(Blocks.NETHER_WART, Items.NETHER_WART);
 
-			prevBlocks.addLast(new HashSet<>(blocksToHarvest2));
-			while (prevBlocks.size() > 5)
-				prevBlocks.removeFirst();
+		plants.putAll(blocks.parallelStream().filter(pos -> seeds.containsKey(BlockUtils.getBlock(pos))).collect(Collectors.toMap(pos -> pos, pos -> seeds.get(BlockUtils.getBlock(pos)))));
+	}
 
-			if (!blocksToHarvest2.isEmpty())
-				currentBlock = blocksToHarvest2.get(0);
+	private boolean shouldBeHarvested(BlockPos pos) {
+		Block block = BlockUtils.getBlock(pos);
+		BlockState state = BlockUtils.getState(pos);
 
-			MC.interactionManager.cancelBlockBreaking();
-			progress = 1;
-			prevProgress = 1;
-			BlockBreaker.breakBlocksWithPacketSpam(blocksToHarvest2);
-			return;
+		if (block instanceof CropBlock)
+			return ((CropBlock) block).isMature(state);
+		else if (block instanceof GourdBlock)
+			return true;
+		else if (block instanceof SugarCaneBlock)
+			return BlockUtils.getBlock(pos.down()) instanceof SugarCaneBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof SugarCaneBlock);
+		else if (block instanceof CactusBlock)
+			return BlockUtils.getBlock(pos.down()) instanceof CactusBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof CactusBlock);
+		else if (block instanceof KelpPlantBlock)
+			return BlockUtils.getBlock(pos.down()) instanceof KelpPlantBlock && !(BlockUtils.getBlock(pos.down(2)) instanceof KelpPlantBlock);
+		else if (block instanceof NetherWartBlock)
+			return state.get(NetherWartBlock.AGE) >= 3;
+
+		return false;
+	}
+
+	private boolean tryToReplant(BlockPos pos, Item neededItem) {
+		ClientPlayerEntity player = MC.player;
+		ItemStack heldItem = player.getMainHandStack();
+
+		if (!heldItem.isEmpty() && heldItem.getItem() == neededItem) {
+			placeBlockSimple(pos);
+			return true;
 		}
 
-		for (BlockPos pos : blocksToHarvest)
-			if (BlockBreaker.breakOneBlock(pos)) {
-				currentBlock = pos;
-				break;
+		for (int slot = 0; slot < 36; slot++) {
+			if (slot == player.inventory.selectedSlot) {
+				continue;
 			}
 
-		if (currentBlock == null)
-			MC.interactionManager.cancelBlockBreaking();
+			ItemStack stack = player.inventory.getInvStack(slot);
+			if (stack.isEmpty() || stack.getItem() != neededItem) {
+				continue;
+			}
 
-		if (currentBlock != null && BlockUtils.getHardness(currentBlock) < 1) {
-			prevProgress = progress;
-			progress = IMC.getInteractionManager().getCurrentBreakingProgress();
+			if (slot < 9) {
+				player.inventory.selectedSlot = slot;
+			} else if (player.inventory.getEmptySlot() < 9) {
+				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
+			} else if (player.inventory.getEmptySlot() != -1) {
+				IMC.getInteractionManager().windowClick_QUICK_MOVE(player.inventory.selectedSlot + 36);
+				IMC.getInteractionManager().windowClick_QUICK_MOVE(slot);
+			} else {
+				IMC.getInteractionManager().windowClick_PICKUP(player.inventory.selectedSlot + 36);
+				IMC.getInteractionManager().windowClick_PICKUP(slot);
+				IMC.getInteractionManager().windowClick_PICKUP(player.inventory.selectedSlot + 36);
+			}
 
-			if (progress < prevProgress)
-				prevProgress = progress;
-
-		} else {
-			progress = 1;
-			prevProgress = 1;
+			return true;
 		}
+
+		return false;
 	}
 
 	private void updateDisplayList(List<BlockPos> blocksToHarvest, List<BlockPos> blocksToReplant) {

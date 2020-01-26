@@ -57,6 +57,29 @@ public final class AutoFishHack extends Hack implements UpdateListener, PacketIn
 		addSetting(debugDraw);
 	}
 
+	private int getRodValue(ItemStack stack) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof FishingRodItem))
+			return -1;
+
+		int luckOTSLvl = EnchantmentHelper.getLevel(Enchantments.LUCK_OF_THE_SEA, stack);
+		int lureLvl = EnchantmentHelper.getLevel(Enchantments.LURE, stack);
+		int unbreakingLvl = EnchantmentHelper.getLevel(Enchantments.UNBREAKING, stack);
+		int mendingBonus = EnchantmentHelper.getLevel(Enchantments.MENDING, stack);
+		int noVanishBonus = EnchantmentHelper.hasVanishingCurse(stack) ? 0 : 1;
+
+		return luckOTSLvl * 9 + lureLvl * 9 + unbreakingLvl * 2 + mendingBonus + noVanishBonus;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(PacketInputListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		GL11.glDeleteLists(box, 1);
+		GL11.glDeleteLists(cross, 1);
+	}
+
 	@Override
 	public void onEnable() {
 		bestRodValue = -1;
@@ -85,21 +108,82 @@ public final class AutoFishHack extends Hack implements UpdateListener, PacketIn
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(PacketInputListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
+	public void onReceivedPacket(PacketInputEvent event) {
+		ClientPlayerEntity player = MC.player;
+		if (player == null || player.fishHook == null)
+			return;
 
-		GL11.glDeleteLists(box, 1);
-		GL11.glDeleteLists(cross, 1);
+		if (!(event.getPacket() instanceof PlaySoundS2CPacket))
+			return;
+
+		// check sound type
+		PlaySoundS2CPacket sound = (PlaySoundS2CPacket) event.getPacket();
+		if (!SoundEvents.ENTITY_FISHING_BOBBER_SPLASH.equals(sound.getSound()))
+			return;
+
+		if (debugDraw.isChecked()) {
+			lastSoundPos = new Vec3d(sound.getX(), sound.getY(), sound.getZ());
+		}
+
+		// check position
+		FishingBobberEntity bobber = player.fishHook;
+		if (Math.abs(sound.getX() - bobber.getX()) > validRange.getValue() || Math.abs(sound.getZ() - bobber.getZ()) > validRange.getValue())
+			return;
+
+		// catch fish
+		rightClick();
+		castRodTimer = 15;
+	}
+
+	@Override
+	public void onRender(float partialTicks) {
+		if (!debugDraw.isChecked())
+			return;
+
+		// GL settings
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		GL11.glLineWidth(2);
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+		GL11.glPushMatrix();
+		RenderUtils.applyRenderOffset();
+
+		FishingBobberEntity bobber = MC.player.fishHook;
+		if (bobber != null) {
+			GL11.glPushMatrix();
+			GL11.glTranslated(bobber.getX(), bobber.getY(), bobber.getZ());
+			GL11.glCallList(box);
+			GL11.glPopMatrix();
+		}
+
+		if (lastSoundPos != null) {
+			GL11.glPushMatrix();
+			GL11.glTranslated(lastSoundPos.x, lastSoundPos.y, lastSoundPos.z);
+			GL11.glCallList(cross);
+			GL11.glPopMatrix();
+		}
+
+		GL11.glPopMatrix();
+
+		// GL resets
+		GL11.glColor4f(1, 1, 1, 1);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 
 	@Override
 	public void onUpdate() {
 		updateDebugDraw();
 
-		if (reelInTimer > 0)
+		if (reelInTimer > 0) {
 			reelInTimer--;
+		}
 
 		ClientPlayerEntity player = MC.player;
 		PlayerInventory inventory = player.inventory;
@@ -144,13 +228,38 @@ public final class AutoFishHack extends Hack implements UpdateListener, PacketIn
 		}
 	}
 
-	private void updateDebugDraw() {
-		if (debugDraw.isChecked()) {
-			GL11.glNewList(box, GL11.GL_COMPILE);
-			Box box = new Box(-validRange.getValue(), -1 / 16.0, -validRange.getValue(), validRange.getValue(), 1 / 16.0, validRange.getValue());
-			GL11.glColor4f(1, 0, 0, 0.5F);
-			RenderUtils.drawOutlinedBox(box);
-			GL11.glEndList();
+	private void rightClick() {
+		// check held item
+		ItemStack stack = MC.player.inventory.getMainHandStack();
+		if (stack.isEmpty() || !(stack.getItem() instanceof FishingRodItem))
+			return;
+
+		// right click
+		IMC.rightClick();
+	}
+
+	private void selectBestRod() {
+		PlayerInventory inventory = MC.player.inventory;
+
+		if (bestRodSlot < 9) {
+			inventory.selectedSlot = bestRodSlot;
+			return;
+		}
+
+		int firstEmptySlot = inventory.getEmptySlot();
+
+		if (firstEmptySlot != -1) {
+			if (firstEmptySlot >= 9) {
+				IMC.getInteractionManager().windowClick_QUICK_MOVE(36 + inventory.selectedSlot);
+			}
+
+			IMC.getInteractionManager().windowClick_QUICK_MOVE(bestRodSlot);
+
+		} else {
+			IMC.getInteractionManager().windowClick_PICKUP(bestRodSlot);
+			IMC.getInteractionManager().windowClick_PICKUP(36 + inventory.selectedSlot);
+
+			scheduledWindowClick = -bestRodSlot;
 		}
 	}
 
@@ -175,119 +284,13 @@ public final class AutoFishHack extends Hack implements UpdateListener, PacketIn
 		}
 	}
 
-	private int getRodValue(ItemStack stack) {
-		if (stack.isEmpty() || !(stack.getItem() instanceof FishingRodItem))
-			return -1;
-
-		int luckOTSLvl = EnchantmentHelper.getLevel(Enchantments.LUCK_OF_THE_SEA, stack);
-		int lureLvl = EnchantmentHelper.getLevel(Enchantments.LURE, stack);
-		int unbreakingLvl = EnchantmentHelper.getLevel(Enchantments.UNBREAKING, stack);
-		int mendingBonus = EnchantmentHelper.getLevel(Enchantments.MENDING, stack);
-		int noVanishBonus = EnchantmentHelper.hasVanishingCurse(stack) ? 0 : 1;
-
-		return luckOTSLvl * 9 + lureLvl * 9 + unbreakingLvl * 2 + mendingBonus + noVanishBonus;
-	}
-
-	private void selectBestRod() {
-		PlayerInventory inventory = MC.player.inventory;
-
-		if (bestRodSlot < 9) {
-			inventory.selectedSlot = bestRodSlot;
-			return;
+	private void updateDebugDraw() {
+		if (debugDraw.isChecked()) {
+			GL11.glNewList(box, GL11.GL_COMPILE);
+			Box box = new Box(-validRange.getValue(), -1 / 16.0, -validRange.getValue(), validRange.getValue(), 1 / 16.0, validRange.getValue());
+			GL11.glColor4f(1, 0, 0, 0.5F);
+			RenderUtils.drawOutlinedBox(box);
+			GL11.glEndList();
 		}
-
-		int firstEmptySlot = inventory.getEmptySlot();
-
-		if (firstEmptySlot != -1) {
-			if (firstEmptySlot >= 9)
-				IMC.getInteractionManager().windowClick_QUICK_MOVE(36 + inventory.selectedSlot);
-
-			IMC.getInteractionManager().windowClick_QUICK_MOVE(bestRodSlot);
-
-		} else {
-			IMC.getInteractionManager().windowClick_PICKUP(bestRodSlot);
-			IMC.getInteractionManager().windowClick_PICKUP(36 + inventory.selectedSlot);
-
-			scheduledWindowClick = -bestRodSlot;
-		}
-	}
-
-	@Override
-	public void onReceivedPacket(PacketInputEvent event) {
-		ClientPlayerEntity player = MC.player;
-		if (player == null || player.fishHook == null)
-			return;
-
-		if (!(event.getPacket() instanceof PlaySoundS2CPacket))
-			return;
-
-		// check sound type
-		PlaySoundS2CPacket sound = (PlaySoundS2CPacket) event.getPacket();
-		if (!SoundEvents.ENTITY_FISHING_BOBBER_SPLASH.equals(sound.getSound()))
-			return;
-
-		if (debugDraw.isChecked())
-			lastSoundPos = new Vec3d(sound.getX(), sound.getY(), sound.getZ());
-
-		// check position
-		FishingBobberEntity bobber = player.fishHook;
-		if (Math.abs(sound.getX() - bobber.getX()) > validRange.getValue() || Math.abs(sound.getZ() - bobber.getZ()) > validRange.getValue())
-			return;
-
-		// catch fish
-		rightClick();
-		castRodTimer = 15;
-	}
-
-	private void rightClick() {
-		// check held item
-		ItemStack stack = MC.player.inventory.getMainHandStack();
-		if (stack.isEmpty() || !(stack.getItem() instanceof FishingRodItem))
-			return;
-
-		// right click
-		IMC.rightClick();
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		if (!debugDraw.isChecked())
-			return;
-
-		// GL settings
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		GL11.glLineWidth(2);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-
-		GL11.glPushMatrix();
-		RenderUtils.applyRenderOffset();
-
-		FishingBobberEntity bobber = MC.player.fishHook;
-		if (bobber != null) {
-			GL11.glPushMatrix();
-			GL11.glTranslated(bobber.getX(), bobber.getY(), bobber.getZ());
-			GL11.glCallList(box);
-			GL11.glPopMatrix();
-		}
-
-		if (lastSoundPos != null) {
-			GL11.glPushMatrix();
-			GL11.glTranslated(lastSoundPos.x, lastSoundPos.y, lastSoundPos.z);
-			GL11.glCallList(cross);
-			GL11.glPopMatrix();
-		}
-
-		GL11.glPopMatrix();
-
-		// GL resets
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_LINE_SMOOTH);
 	}
 }

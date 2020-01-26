@@ -29,6 +29,22 @@ public final class AltsFile {
 		encryption = new Encryption(encFolder);
 	}
 
+	private JsonObject createJson(AltManager alts) {
+		JsonObject json = new JsonObject();
+
+		for (Alt alt : alts.getList()) {
+			JsonObject jsonAlt = new JsonObject();
+
+			jsonAlt.addProperty("password", alt.getPassword());
+			jsonAlt.addProperty("name", alt.getName());
+			jsonAlt.addProperty("starred", alt.isStarred());
+
+			json.add(alt.getEmail(), jsonAlt);
+		}
+
+		return json;
+	}
+
 	public void load(AltManager altManager) {
 		try {
 			WsonObject wson = encryption.parseFileToObject(path);
@@ -47,16 +63,12 @@ public final class AltsFile {
 		save(altManager);
 	}
 
-	private void renameCorrupted() {
-		try {
-			Path newPath = path.resolveSibling("!CORRUPTED_" + path.getFileName());
-			Files.move(path, newPath, StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("Renamed to " + newPath.getFileName());
+	private Alt loadAlt(String email, JsonObject jsonAlt) {
+		String password = JsonUtils.getAsString(jsonAlt.get("password"), "");
+		String name = JsonUtils.getAsString(jsonAlt.get("name"), "");
+		boolean starred = JsonUtils.getAsBoolean(jsonAlt.get("starred"), false);
 
-		} catch (IOException e2) {
-			System.out.println("Couldn't rename corrupted file " + path.getFileName());
-			e2.printStackTrace();
-		}
+		return new Alt(email, password, name, starred);
 	}
 
 	private void loadAlts(WsonObject wson, AltManager altManager) {
@@ -78,12 +90,16 @@ public final class AltsFile {
 		}
 	}
 
-	private Alt loadAlt(String email, JsonObject jsonAlt) {
-		String password = JsonUtils.getAsString(jsonAlt.get("password"), "");
-		String name = JsonUtils.getAsString(jsonAlt.get("name"), "");
-		boolean starred = JsonUtils.getAsBoolean(jsonAlt.get("starred"), false);
+	private void renameCorrupted() {
+		try {
+			Path newPath = path.resolveSibling("!CORRUPTED_" + path.getFileName());
+			Files.move(path, newPath, StandardCopyOption.REPLACE_EXISTING);
+			System.out.println("Renamed to " + newPath.getFileName());
 
-		return new Alt(email, password, name, starred);
+		} catch (IOException e2) {
+			System.out.println("Couldn't rename corrupted file " + path.getFileName());
+			e2.printStackTrace();
+		}
 	}
 
 	public void save(AltManager alts) {
@@ -99,21 +115,5 @@ public final class AltsFile {
 			System.out.println("Couldn't save " + path.getFileName());
 			e.printStackTrace();
 		}
-	}
-
-	private JsonObject createJson(AltManager alts) {
-		JsonObject json = new JsonObject();
-
-		for (Alt alt : alts.getList()) {
-			JsonObject jsonAlt = new JsonObject();
-
-			jsonAlt.addProperty("password", alt.getPassword());
-			jsonAlt.addProperty("name", alt.getName());
-			jsonAlt.addProperty("starred", alt.isStarred());
-
-			json.add(alt.getEmail(), jsonAlt);
-		}
-
-		return json;
 	}
 }

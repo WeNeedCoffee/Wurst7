@@ -10,5 +10,5 @@ package net.wurstclient.mixinterface;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerServerListWidget;
 
 public interface IMultiplayerScreen {
-	public MultiplayerServerListWidget getServerListSelector();
+	MultiplayerServerListWidget getServerListSelector();
 }

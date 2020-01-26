@@ -17,51 +17,8 @@ import java.util.Set;
 public final class KeybindList {
 	public static final Set<Keybind> DEFAULT_KEYBINDS = createDefaultKeybinds();
 
-	private final KeybindsFile keybindsFile;
-	private final ArrayList<Keybind> keybinds = new ArrayList<>();
-
-	public KeybindList(Path keybindsFile) {
-		this.keybindsFile = new KeybindsFile(keybindsFile);
-		this.keybindsFile.load(this);
-	}
-
-	public String getCommands(String key) {
-		for (Keybind keybind : keybinds) {
-			if (!key.equals(keybind.getKey()))
-				continue;
-
-			return keybind.getCommands();
-		}
-
-		return null;
-	}
-
-	public List<Keybind> getAllKeybinds() {
-		return Collections.unmodifiableList(keybinds);
-	}
-
-	public void add(String key, String commands) {
-		keybinds.removeIf(keybind -> key.equals(keybind.getKey()));
-		keybinds.add(new Keybind(key, commands));
-		keybinds.sort(null);
-		keybindsFile.save(this);
-	}
-
-	public void setKeybinds(Set<Keybind> keybinds) {
-		this.keybinds.clear();
-		this.keybinds.addAll(keybinds);
-		this.keybinds.sort(null);
-		keybindsFile.save(this);
-	}
-
-	public void remove(String key) {
-		keybinds.removeIf(keybind -> key.equals(keybind.getKey()));
-		keybindsFile.save(this);
-	}
-
-	public void removeAll() {
-		keybinds.clear();
-		keybindsFile.save(this);
+	private static void addKB(Set<Keybind> set, String key, String cmds) {
+		set.add(new Keybind("key.keyboard." + key, cmds));
 	}
 
 	private static Set<Keybind> createDefaultKeybinds() {
@@ -84,7 +41,52 @@ public final class KeybindList {
 		return Collections.unmodifiableSet(set);
 	}
 
-	private static void addKB(Set<Keybind> set, String key, String cmds) {
-		set.add(new Keybind("key.keyboard." + key, cmds));
+	private final KeybindsFile keybindsFile;
+
+	private final ArrayList<Keybind> keybinds = new ArrayList<>();
+
+	public KeybindList(Path keybindsFile) {
+		this.keybindsFile = new KeybindsFile(keybindsFile);
+		this.keybindsFile.load(this);
+	}
+
+	public void add(String key, String commands) {
+		keybinds.removeIf(keybind -> key.equals(keybind.getKey()));
+		keybinds.add(new Keybind(key, commands));
+		keybinds.sort(null);
+		keybindsFile.save(this);
+	}
+
+	public List<Keybind> getAllKeybinds() {
+		return Collections.unmodifiableList(keybinds);
+	}
+
+	public String getCommands(String key) {
+		for (Keybind keybind : keybinds) {
+			if (!key.equals(keybind.getKey())) {
+				continue;
+			}
+
+			return keybind.getCommands();
+		}
+
+		return null;
+	}
+
+	public void remove(String key) {
+		keybinds.removeIf(keybind -> key.equals(keybind.getKey()));
+		keybindsFile.save(this);
+	}
+
+	public void removeAll() {
+		keybinds.clear();
+		keybindsFile.save(this);
+	}
+
+	public void setKeybinds(Set<Keybind> keybinds) {
+		this.keybinds.clear();
+		this.keybinds.addAll(keybinds);
+		this.keybinds.sort(null);
+		keybindsFile.save(this);
 	}
 }

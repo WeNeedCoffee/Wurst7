@@ -12,8 +12,6 @@ import net.wurstclient.event.Event;
 import net.wurstclient.event.Listener;
 
 public interface IsPlayerInWaterListener extends Listener {
-	public void onIsPlayerInWater(IsPlayerInWaterEvent event);
-
 	public static class IsPlayerInWaterEvent extends Event<IsPlayerInWaterListener> {
 		private boolean inWater;
 		private final boolean normallyInWater;
@@ -23,27 +21,30 @@ public interface IsPlayerInWaterListener extends Listener {
 			normallyInWater = inWater;
 		}
 
-		public boolean isInWater() {
-			return inWater;
-		}
-
-		public void setInWater(boolean inWater) {
-			this.inWater = inWater;
-		}
-
-		public boolean isNormallyInWater() {
-			return normallyInWater;
-		}
-
 		@Override
 		public void fire(ArrayList<IsPlayerInWaterListener> listeners) {
-			for (IsPlayerInWaterListener listener : listeners)
+			for (IsPlayerInWaterListener listener : listeners) {
 				listener.onIsPlayerInWater(this);
+			}
 		}
 
 		@Override
 		public Class<IsPlayerInWaterListener> getListenerType() {
 			return IsPlayerInWaterListener.class;
 		}
+
+		public boolean isInWater() {
+			return inWater;
+		}
+
+		public boolean isNormallyInWater() {
+			return normallyInWater;
+		}
+
+		public void setInWater(boolean inWater) {
+			this.inWater = inWater;
+		}
 	}
+
+	void onIsPlayerInWater(IsPlayerInWaterEvent event);
 }

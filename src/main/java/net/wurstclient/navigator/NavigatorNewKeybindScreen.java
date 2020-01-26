@@ -32,40 +32,14 @@ public class NavigatorNewKeybindScreen extends NavigatorScreen {
 	}
 
 	@Override
-	protected void onResize() {
-		// OK button
-		okButton = new ButtonWidget(width / 2 - 151, height - 65, 149, 18, "OK", b -> {
-			if (choosingKey) {
-				String newCommands = selectedCommand.getCommand();
-
-				String oldCommands = WurstClient.INSTANCE.getKeybinds().getCommands(selectedKey);
-				if (oldCommands != null)
-					newCommands = oldCommands + " ; " + newCommands;
-
-				WurstClient.INSTANCE.getKeybinds().add(selectedKey, newCommands);
-
-				WurstClient.INSTANCE.getNavigator().addPreference(parent.getFeature().getName());
-				WurstClient.MC.openScreen(parent);
-			} else {
-				choosingKey = true;
-				okButton.active = false;
-			}
-		});
-		okButton.active = selectedCommand != null;
-		addButton(okButton);
-
-		// cancel button
-		addButton(new ButtonWidget(width / 2 + 2, height - 65, 149, 18, "Cancel", b -> WurstClient.MC.openScreen(parent)));
-	}
-
-	@Override
 	protected void onKeyPress(int keyCode, int scanCode, int int_3) {
 		if (choosingKey) {
 			selectedKey = InputUtil.getKeyCode(keyCode, scanCode).getName();
 			okButton.active = !selectedKey.equals("key.keyboard.unknown");
 
-		} else if (keyCode == 1)
+		} else if (keyCode == 1) {
 			WurstClient.MC.openScreen(parent);
+		}
 	}
 
 	@Override
@@ -78,29 +52,13 @@ public class NavigatorNewKeybindScreen extends NavigatorScreen {
 	}
 
 	@Override
-	protected void onUpdate() {
-		// text
-		if (choosingKey) {
-			text = "Now press the key that should trigger this keybind.";
-			if (!selectedKey.equals("key.keyboard.unknown")) {
-				text += "\n\nKey: " + selectedKey.replace("key.keyboard.", "");
-				String commands = WurstClient.INSTANCE.getKeybinds().getCommands(selectedKey);
-				if (commands != null) {
-					text += "\n\nWARNING: This key is already bound to the following\ncommand(s):";
-					commands = commands.replace(";", "\u00a7").replace("\u00a7\u00a7", ";");
+	protected void onMouseDrag(double mouseX, double mouseY, int button, double double_3, double double_4) {
 
-					for (String cmd : commands.split("\u00a7"))
-						text += "\n- " + cmd;
-				}
-			}
-		} else
-			text = "Select what this keybind should do.";
+	}
 
-		// content height
-		if (choosingKey)
-			setContentHeight(getStringHeight(text));
-		else
-			setContentHeight(possibleKeybinds.size() * 24 - 10);
+	@Override
+	protected void onMouseRelease(double x, double y, int button) {
+
 	}
 
 	@Override
@@ -137,14 +95,16 @@ public class NavigatorNewKeybindScreen extends NavigatorScreen {
 				// color
 				if (mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2 && mouseY <= bgy2 - 24) {
 					hoveredCommand = pkb;
-					if (pkb == selectedCommand)
+					if (pkb == selectedCommand) {
 						GL11.glColor4f(0F, 1F, 0F, 0.375F);
-					else
+					} else {
 						GL11.glColor4f(0.25F, 0.25F, 0.25F, 0.375F);
-				} else if (pkb == selectedCommand)
+					}
+				} else if (pkb == selectedCommand) {
 					GL11.glColor4f(0F, 1F, 0F, 0.25F);
-				else
+				} else {
 					GL11.glColor4f(0.25F, 0.25F, 0.25F, 0.25F);
+				}
 
 				// button
 				drawBox(x1, y1, x2, y2);
@@ -179,12 +139,13 @@ public class NavigatorNewKeybindScreen extends NavigatorScreen {
 			int y2 = y1 + 18;
 
 			// color
-			if (!button.active)
+			if (!button.active) {
 				GL11.glColor4f(0F, 0F, 0F, 0.25F);
-			else if (mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2)
+			} else if (mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2) {
 				GL11.glColor4f(0.375F, 0.375F, 0.375F, 0.25F);
-			else
+			} else {
 				GL11.glColor4f(0.25F, 0.25F, 0.25F, 0.25F);
+			}
 
 			// button
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -198,12 +159,59 @@ public class NavigatorNewKeybindScreen extends NavigatorScreen {
 	}
 
 	@Override
-	protected void onMouseDrag(double mouseX, double mouseY, int button, double double_3, double double_4) {
+	protected void onResize() {
+		// OK button
+		okButton = new ButtonWidget(width / 2 - 151, height - 65, 149, 18, "OK", b -> {
+			if (choosingKey) {
+				String newCommands = selectedCommand.getCommand();
 
+				String oldCommands = WurstClient.INSTANCE.getKeybinds().getCommands(selectedKey);
+				if (oldCommands != null) {
+					newCommands = oldCommands + " ; " + newCommands;
+				}
+
+				WurstClient.INSTANCE.getKeybinds().add(selectedKey, newCommands);
+
+				WurstClient.INSTANCE.getNavigator().addPreference(parent.getFeature().getName());
+				WurstClient.MC.openScreen(parent);
+			} else {
+				choosingKey = true;
+				okButton.active = false;
+			}
+		});
+		okButton.active = selectedCommand != null;
+		addButton(okButton);
+
+		// cancel button
+		addButton(new ButtonWidget(width / 2 + 2, height - 65, 149, 18, "Cancel", b -> WurstClient.MC.openScreen(parent)));
 	}
 
 	@Override
-	protected void onMouseRelease(double x, double y, int button) {
+	protected void onUpdate() {
+		// text
+		if (choosingKey) {
+			text = "Now press the key that should trigger this keybind.";
+			if (!selectedKey.equals("key.keyboard.unknown")) {
+				text += "\n\nKey: " + selectedKey.replace("key.keyboard.", "");
+				String commands = WurstClient.INSTANCE.getKeybinds().getCommands(selectedKey);
+				if (commands != null) {
+					text += "\n\nWARNING: This key is already bound to the following\ncommand(s):";
+					commands = commands.replace(";", "\u00a7").replace("\u00a7\u00a7", ";");
 
+					for (String cmd : commands.split("\u00a7")) {
+						text += "\n- " + cmd;
+					}
+				}
+			}
+		} else {
+			text = "Select what this keybind should do.";
+		}
+
+		// content height
+		if (choosingKey) {
+			setContentHeight(getStringHeight(text));
+		} else {
+			setContentHeight(possibleKeybinds.size() * 24 - 10);
+		}
 	}
 }

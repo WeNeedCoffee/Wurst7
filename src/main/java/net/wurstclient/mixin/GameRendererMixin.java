@@ -28,6 +28,38 @@ import net.wurstclient.mixinterface.IGameRenderer;
 
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin implements AutoCloseable, SynchronousResourceReloadListener, IGameRenderer {
+	@Shadow
+	private void bobView(MatrixStack matrixStack, float partalTicks) {
+
+	}
+
+	@Redirect(at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;fov:D", opcode = Opcodes.GETFIELD, ordinal = 0), method = { "getFov(Lnet/minecraft/client/render/Camera;FZ)D" })
+	private double getFov(GameOptions options) {
+		return WurstClient.INSTANCE.getOtfs().zoomOtf.changeFovBasedOnZoom(options.fov);
+	}
+
+	@Shadow
+	private void loadShader(Identifier identifier) {
+
+	}
+
+	@Override
+	public void loadWurstShader(Identifier identifier) {
+		loadShader(identifier);
+	}
+
+	@Inject(at = { @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getCameraPosVec(F)Lnet/minecraft/util/math/Vec3d;", opcode = Opcodes.INVOKEVIRTUAL, ordinal = 0) }, method = { "updateTargetedEntity(F)V" })
+	private void onHitResultRayTrace(float float_1, CallbackInfo ci) {
+		HitResultRayTraceEvent event = new HitResultRayTraceEvent(float_1);
+		WurstClient.INSTANCE.getEventManager().fire(event);
+	}
+
+	@Inject(at = { @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0) }, method = { "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V" })
+	private void onRenderWorld(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo ci) {
+		RenderEvent event = new RenderEvent(partialTicks);
+		WurstClient.INSTANCE.getEventManager().fire(event);
+	}
+
 	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V", ordinal = 0), method = { "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V" })
 	private void onRenderWorldViewBobbing(GameRenderer gameRenderer, MatrixStack matrixStack, float partalTicks) {
 		CameraTransformViewBobbingEvent event = new CameraTransformViewBobbingEvent();
@@ -39,43 +71,11 @@ public abstract class GameRendererMixin implements AutoCloseable, SynchronousRes
 		bobView(matrixStack, partalTicks);
 	}
 
-	@Inject(at = { @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0) }, method = { "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V" })
-	private void onRenderWorld(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo ci) {
-		RenderEvent event = new RenderEvent(partialTicks);
-		WurstClient.INSTANCE.getEventManager().fire(event);
-	}
-
-	@Redirect(at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;fov:D", opcode = Opcodes.GETFIELD, ordinal = 0), method = { "getFov(Lnet/minecraft/client/render/Camera;FZ)D" })
-	private double getFov(GameOptions options) {
-		return WurstClient.INSTANCE.getOtfs().zoomOtf.changeFovBasedOnZoom(options.fov);
-	}
-
-	@Inject(at = { @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getCameraPosVec(F)Lnet/minecraft/util/math/Vec3d;", opcode = Opcodes.INVOKEVIRTUAL, ordinal = 0) }, method = { "updateTargetedEntity(F)V" })
-	private void onHitResultRayTrace(float float_1, CallbackInfo ci) {
-		HitResultRayTraceEvent event = new HitResultRayTraceEvent(float_1);
-		WurstClient.INSTANCE.getEventManager().fire(event);
-	}
-
 	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F", ordinal = 0), method = { "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V" })
 	private float wurstNauseaLerp(float delta, float first, float second) {
 		if (!WurstClient.INSTANCE.getHax().antiWobbleHack.isEnabled())
 			return MathHelper.lerp(delta, first, second);
 
 		return 0;
-	}
-
-	@Shadow
-	private void bobView(MatrixStack matrixStack, float partalTicks) {
-
-	}
-
-	@Override
-	public void loadWurstShader(Identifier identifier) {
-		loadShader(identifier);
-	}
-
-	@Shadow
-	private void loadShader(Identifier identifier) {
-
 	}
 }
