@@ -16,6 +16,7 @@ import net.minecraft.util.math.Vec3d;
 
 public interface IClientPlayerInteractionManager {
 	float getCurrentBreakingProgress();
+	
 	void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec);
 	
 	void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec, Hand hand);
