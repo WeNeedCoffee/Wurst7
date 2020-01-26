@@ -70,6 +70,7 @@ import net.wurstclient.hacks.JetpackHack;
 import net.wurstclient.hacks.KaboomHack;
 import net.wurstclient.hacks.KillauraHack;
 import net.wurstclient.hacks.KillauraLegitHack;
+import net.wurstclient.hacks.LavaFillHack;
 import net.wurstclient.hacks.LiquidsHack;
 import net.wurstclient.hacks.LsdHack;
 import net.wurstclient.hacks.MileyCyrusHack;
@@ -116,6 +117,7 @@ public final class HackList implements UpdateListener {
 	public final AutoRespawnHack autoRespawnHack = new AutoRespawnHack();
 	public final AutoSignHack autoSignHack = new AutoSignHack();
 	public final AutoTorchHack autoTorchHack = new AutoTorchHack();
+	public final LavaFillHack lavaFillHack = new LavaFillHack();
 	// public final AutoSplashPotHack autoSplashPotHack = new
 	// AutoSplashPotHack();
 	// public final AutoSoupHack autoSoupHack = new AutoSoupHack();
