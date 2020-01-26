@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public
- * License, version 3. If a copy of the GPL was not distributed with this
- * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public License,
+ * version 3. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.hack;
 
@@ -12,16 +12,92 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeMap;
-
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.UpdateListener;
-import net.wurstclient.hacks.*;
+import net.wurstclient.hacks.AntiBlindHack;
+import net.wurstclient.hacks.AntiCactusHack;
+import net.wurstclient.hacks.AntiKnockbackHack;
+import net.wurstclient.hacks.AntiSpamHack;
+import net.wurstclient.hacks.AntiWaterPushHack;
+import net.wurstclient.hacks.AntiWobbleHack;
+import net.wurstclient.hacks.AutoArmorHack;
+import net.wurstclient.hacks.AutoBuildHack;
+import net.wurstclient.hacks.AutoDropHack;
+import net.wurstclient.hacks.AutoEatHack;
+import net.wurstclient.hacks.AutoFarmHack;
+import net.wurstclient.hacks.AutoFishHack;
+import net.wurstclient.hacks.AutoLeaveHack;
+import net.wurstclient.hacks.AutoMineHack;
+import net.wurstclient.hacks.AutoRespawnHack;
+import net.wurstclient.hacks.AutoSignHack;
+import net.wurstclient.hacks.AutoSprintHack;
+import net.wurstclient.hacks.AutoStealHack;
+import net.wurstclient.hacks.AutoSwimHack;
+import net.wurstclient.hacks.AutoSwitchHack;
+import net.wurstclient.hacks.AutoToolHack;
+import net.wurstclient.hacks.AutoTorchHack;
+import net.wurstclient.hacks.AutoWalkHack;
+import net.wurstclient.hacks.BaseFinderHack;
+import net.wurstclient.hacks.BlinkHack;
+import net.wurstclient.hacks.BoatFlyHack;
+import net.wurstclient.hacks.BonemealAuraHack;
+import net.wurstclient.hacks.BuildRandomHack;
+import net.wurstclient.hacks.BunnyHopHack;
+import net.wurstclient.hacks.ChestEspHack;
+import net.wurstclient.hacks.ClickAuraHack;
+import net.wurstclient.hacks.ClickGuiHack;
+import net.wurstclient.hacks.CrashChestHack;
+import net.wurstclient.hacks.DerpHack;
+import net.wurstclient.hacks.DolphinHack;
+import net.wurstclient.hacks.ExtraElytraHack;
+import net.wurstclient.hacks.FancyChatHack;
+import net.wurstclient.hacks.FastBreakHack;
+import net.wurstclient.hacks.FastLadderHack;
+import net.wurstclient.hacks.FastPlaceHack;
+import net.wurstclient.hacks.FishHack;
+import net.wurstclient.hacks.FlightHack;
+import net.wurstclient.hacks.FreecamHack;
+import net.wurstclient.hacks.FullbrightHack;
+import net.wurstclient.hacks.HeadRollHack;
+import net.wurstclient.hacks.HighJumpHack;
+import net.wurstclient.hacks.ItemEspHack;
+import net.wurstclient.hacks.ItemGeneratorHack;
+import net.wurstclient.hacks.JesusHack;
+import net.wurstclient.hacks.JetpackHack;
+import net.wurstclient.hacks.KaboomHack;
+import net.wurstclient.hacks.KillauraHack;
+import net.wurstclient.hacks.KillauraLegitHack;
+import net.wurstclient.hacks.LiquidsHack;
+import net.wurstclient.hacks.LsdHack;
+import net.wurstclient.hacks.MileyCyrusHack;
+import net.wurstclient.hacks.MobEspHack;
+import net.wurstclient.hacks.MobSpawnEspHack;
+import net.wurstclient.hacks.NavigatorHack;
+import net.wurstclient.hacks.NoFallHack;
+import net.wurstclient.hacks.NoWebHack;
+import net.wurstclient.hacks.NukerHack;
+import net.wurstclient.hacks.PanicHack;
+import net.wurstclient.hacks.PlayerEspHack;
+import net.wurstclient.hacks.RainbowUiHack;
+import net.wurstclient.hacks.ReachHack;
+import net.wurstclient.hacks.SafeWalkHack;
+import net.wurstclient.hacks.ScaffoldWalkHack;
+import net.wurstclient.hacks.SearchHack;
+import net.wurstclient.hacks.ServerCrasherHack;
+import net.wurstclient.hacks.SkinDerpHack;
+import net.wurstclient.hacks.SneakHack;
+import net.wurstclient.hacks.SpiderHack;
+import net.wurstclient.hacks.TimerHack;
+import net.wurstclient.hacks.TiredHack;
+import net.wurstclient.hacks.TrajectoriesHack;
+import net.wurstclient.hacks.TriggerBotHack;
+import net.wurstclient.hacks.TrueSightHack;
+import net.wurstclient.hacks.XRayHack;
 
-public final class HackList implements UpdateListener
-{
+public final class HackList implements UpdateListener {
 	// public final AntiAfkHack antiAfkHack = new AntiAfkHack();
 	public final AntiBlindHack antiBlindHack = new AntiBlindHack();
 	public final AntiCactusHack antiCactusHack = new AntiCactusHack();
@@ -150,62 +226,51 @@ public final class HackList implements UpdateListener
 	public final TrueSightHack trueSightHack = new TrueSightHack();
 	// public final TunnellerHack tunnellerHack = new TunnellerHack();
 	public final XRayHack xRayHack = new XRayHack();
-	
-	private final TreeMap<String, Hack> hax =
-		new TreeMap<>((o1, o2) -> o1.compareToIgnoreCase(o2));
+
+	private final TreeMap<String, Hack> hax = new TreeMap<>((o1, o2) -> o1.compareToIgnoreCase(o2));
 	private final EnabledHacksFile enabledHacksFile;
-	private final EventManager eventManager =
-		WurstClient.INSTANCE.getEventManager();
-	
-	public HackList(Path enabledHacksFile)
-	{
+	private final EventManager eventManager = WurstClient.INSTANCE.getEventManager();
+
+	public HackList(Path enabledHacksFile) {
 		this.enabledHacksFile = new EnabledHacksFile(enabledHacksFile);
-		
-		try
-		{
-			for(Field field : HackList.class.getDeclaredFields())
-			{
-				if(!field.getName().endsWith("Hack"))
+
+		try {
+			for (Field field : HackList.class.getDeclaredFields()) {
+				if (!field.getName().endsWith("Hack"))
 					continue;
-				
-				Hack hack = (Hack)field.get(this);
+
+				Hack hack = (Hack) field.get(this);
 				hax.put(hack.getName(), hack);
 			}
-			
-		}catch(Exception e)
-		{
+
+		} catch (Exception e) {
 			String message = "Initializing Wurst hacks";
 			CrashReport report = CrashReport.create(e, message);
 			throw new CrashException(report);
 		}
-		
+
 		eventManager.add(UpdateListener.class, this);
 	}
-	
+
 	@Override
-	public void onUpdate()
-	{
+	public void onUpdate() {
 		enabledHacksFile.load(this);
 		eventManager.remove(UpdateListener.class, this);
 	}
-	
-	public void saveEnabledHax()
-	{
+
+	public void saveEnabledHax() {
 		enabledHacksFile.save(this);
 	}
-	
-	public Hack getHackByName(String name)
-	{
+
+	public Hack getHackByName(String name) {
 		return hax.get(name);
 	}
-	
-	public Collection<Hack> getAllHax()
-	{
+
+	public Collection<Hack> getAllHax() {
 		return Collections.unmodifiableCollection(hax.values());
 	}
-	
-	public int countHax()
-	{
+
+	public int countHax() {
 		return hax.size();
 	}
 }

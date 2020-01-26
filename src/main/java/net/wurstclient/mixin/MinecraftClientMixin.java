@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public
- * License, version 3. If a copy of the GPL was not distributed with this
- * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public License,
+ * version 3. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.mixin;
 
@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.WindowEventHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -34,10 +33,7 @@ import net.wurstclient.mixinterface.IClientPlayerInteractionManager;
 import net.wurstclient.mixinterface.IMinecraftClient;
 
 @Mixin(MinecraftClient.class)
-public abstract class MinecraftClientMixin
-	extends ReentrantThreadExecutor<Runnable> implements SnooperListener,
-	WindowEventHandler, AutoCloseable, IMinecraftClient
-{
+public abstract class MinecraftClientMixin extends ReentrantThreadExecutor<Runnable> implements SnooperListener, WindowEventHandler, AutoCloseable, IMinecraftClient {
 	@Shadow
 	private int itemUseCooldown;
 	@Shadow
@@ -46,116 +42,92 @@ public abstract class MinecraftClientMixin
 	private ClientPlayerEntity player;
 	@Shadow
 	private Session session;
-	
+
 	private Session wurstSession;
-	
-	private MinecraftClientMixin(WurstClient wurst, String string_1)
-	{
+
+	private MinecraftClientMixin(WurstClient wurst, String string_1) {
 		super(string_1);
 	}
-	
-	@Inject(at = {@At(value = "FIELD",
-		target = "Lnet/minecraft/client/MinecraftClient;crosshairTarget:Lnet/minecraft/util/hit/HitResult;",
-		ordinal = 0)}, method = {"doAttack()V"}, cancellable = true)
-	private void onDoAttack(CallbackInfo ci)
-	{
+
+	@Inject(at = { @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;crosshairTarget:Lnet/minecraft/util/hit/HitResult;", ordinal = 0) }, method = { "doAttack()V" }, cancellable = true)
+	private void onDoAttack(CallbackInfo ci) {
 		LeftClickEvent event = new LeftClickEvent();
 		WurstClient.INSTANCE.getEventManager().fire(event);
-		
-		if(event.isCancelled())
+
+		if (event.isCancelled())
 			ci.cancel();
 	}
-	
-	@Inject(at = {@At(value = "FIELD",
-		target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I",
-		ordinal = 0)}, method = {"doItemUse()V"}, cancellable = true)
-	private void onDoItemUse(CallbackInfo ci)
-	{
+
+	@Inject(at = { @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", ordinal = 0) }, method = { "doItemUse()V" }, cancellable = true)
+	private void onDoItemUse(CallbackInfo ci) {
 		RightClickEvent event = new RightClickEvent();
 		WurstClient.INSTANCE.getEventManager().fire(event);
-		
-		if(event.isCancelled())
+
+		if (event.isCancelled())
 			ci.cancel();
 	}
-	
-	@Inject(at = {@At("HEAD")}, method = {"doItemPick()V"})
-	private void onDoItemPick(CallbackInfo ci)
-	{
-		if(!WurstClient.INSTANCE.isEnabled())
+
+	@Inject(at = { @At("HEAD") }, method = { "doItemPick()V" })
+	private void onDoItemPick(CallbackInfo ci) {
+		if (!WurstClient.INSTANCE.isEnabled())
 			return;
-		
+
 		HitResult hitResult = WurstClient.MC.crosshairTarget;
-		if(hitResult == null || hitResult.getType() != HitResult.Type.ENTITY)
+		if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY)
 			return;
-		
-		Entity entity = ((EntityHitResult)hitResult).getEntity();
+
+		Entity entity = ((EntityHitResult) hitResult).getEntity();
 		WurstClient.INSTANCE.getFriends().middleClick(entity);
 	}
-	
-	@Inject(at = {@At("HEAD")},
-		method = {"getSession()Lnet/minecraft/client/util/Session;"},
-		cancellable = true)
-	private void onGetSession(CallbackInfoReturnable<Session> cir)
-	{
-		if(wurstSession == null)
+
+	@Inject(at = { @At("HEAD") }, method = { "getSession()Lnet/minecraft/client/util/Session;" }, cancellable = true)
+	private void onGetSession(CallbackInfoReturnable<Session> cir) {
+		if (wurstSession == null)
 			return;
-		
+
 		cir.setReturnValue(wurstSession);
 	}
-	
-	@Redirect(at = @At(value = "FIELD",
-		target = "Lnet/minecraft/client/MinecraftClient;session:Lnet/minecraft/client/util/Session;",
-		opcode = Opcodes.GETFIELD,
-		ordinal = 0),
-		method = {
-			"getSessionProperties()Lcom/mojang/authlib/properties/PropertyMap;"})
-	private Session getSessionForSessionProperties(MinecraftClient mc)
-	{
-		if(wurstSession != null)
+
+	@Redirect(at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;session:Lnet/minecraft/client/util/Session;", opcode = Opcodes.GETFIELD, ordinal = 0), method = { "getSessionProperties()Lcom/mojang/authlib/properties/PropertyMap;" })
+	private Session getSessionForSessionProperties(MinecraftClient mc) {
+		if (wurstSession != null)
 			return wurstSession;
 		else
 			return session;
 	}
-	
+
 	@Override
-	public void rightClick()
-	{
+	public void rightClick() {
 		doItemUse();
 	}
-	
+
 	@Override
-	public int getItemUseCooldown()
-	{
+	public int getItemUseCooldown() {
 		return itemUseCooldown;
 	}
-	
+
 	@Override
-	public void setItemUseCooldown(int itemUseCooldown)
-	{
+	public void setItemUseCooldown(int itemUseCooldown) {
 		this.itemUseCooldown = itemUseCooldown;
 	}
-	
+
 	@Override
-	public IClientPlayerEntity getPlayer()
-	{
-		return (IClientPlayerEntity)player;
+	public IClientPlayerEntity getPlayer() {
+		return (IClientPlayerEntity) player;
 	}
-	
+
 	@Override
-	public IClientPlayerInteractionManager getInteractionManager()
-	{
-		return (IClientPlayerInteractionManager)interactionManager;
+	public IClientPlayerInteractionManager getInteractionManager() {
+		return (IClientPlayerInteractionManager) interactionManager;
 	}
-	
+
 	@Override
-	public void setSession(Session session)
-	{
+	public void setSession(Session session) {
 		wurstSession = session;
 	}
-	
+
 	@Shadow
-	private void doItemUse()
-	{
-		
+	private void doItemUse() {
+
 	}
 }

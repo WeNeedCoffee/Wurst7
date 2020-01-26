@@ -1,88 +1,74 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public
- * License, version 3. If a copy of the GPL was not distributed with this
- * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public License,
+ * version 3. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.clickgui;
 
-public abstract class Popup
-{
+public abstract class Popup {
 	private final Component owner;
-	
+
 	private int x;
 	private int y;
 	private int width;
 	private int height;
 	private boolean closing;
-	
-	public Popup(Component owner)
-	{
+
+	public Popup(Component owner) {
 		this.owner = owner;
 	}
-	
-	public abstract void handleMouseClick(int mouseX, int mouseY,
-		int mouseButton);
-	
+
+	public abstract void handleMouseClick(int mouseX, int mouseY, int mouseButton);
+
 	public abstract void render(int mouseX, int mouseY);
-	
+
 	public abstract int getDefaultWidth();
-	
+
 	public abstract int getDefaultHeight();
-	
-	public Component getOwner()
-	{
+
+	public Component getOwner() {
 		return owner;
 	}
-	
-	public int getX()
-	{
+
+	public int getX() {
 		return x;
 	}
-	
-	public void setX(int x)
-	{
+
+	public void setX(int x) {
 		this.x = x;
 	}
-	
-	public int getY()
-	{
+
+	public int getY() {
 		return y;
 	}
-	
-	public void setY(int y)
-	{
+
+	public void setY(int y) {
 		this.y = y;
 	}
-	
-	public int getWidth()
-	{
+
+	public int getWidth() {
 		return width;
 	}
-	
-	public void setWidth(int width)
-	{
+
+	public void setWidth(int width) {
 		this.width = width;
 	}
-	
-	public int getHeight()
-	{
+
+	public int getHeight() {
 		return height;
 	}
-	
-	public void setHeight(int height)
-	{
+
+	public void setHeight(int height) {
 		this.height = height;
 	}
-	
-	public boolean isClosing()
-	{
+
+	public boolean isClosing() {
 		return closing;
 	}
-	
-	public void close()
-	{
+
+	public void close() {
 		closing = true;
 	}
 }

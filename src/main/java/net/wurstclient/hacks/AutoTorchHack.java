@@ -2,8 +2,6 @@ package net.wurstclient.hacks;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -15,7 +13,8 @@ import net.wurstclient.hack.Hack;
 import net.wurstclient.mixinterface.IClientPlayerInteractionManager;
 import net.wurstclient.util.BlockUtils;
 import net.wurstclient.util.RotationUtils;
-@SearchTags({"AutoTorch", "Torch", "auto torch", "torch"})
+
+@SearchTags({ "AutoTorch", "Torch", "auto torch", "torch" })
 public final class AutoTorchHack extends Hack implements UpdateListener {
 
 	public AutoTorchHack() {
@@ -35,11 +34,14 @@ public final class AutoTorchHack extends Hack implements UpdateListener {
 
 	@Override
 	public void onUpdate() {
-		if (!d) checkAround((int) Math.round(WurstClient.MC.player.getPos().x), (int) Math.round(WurstClient.MC.player.getPos().y), (int) Math.round(WurstClient.MC.player.getPos().z));
+		if (!d)
+			checkAround((int) Math.round(WurstClient.MC.player.getPos().x), (int) Math.round(WurstClient.MC.player.getPos().y), (int) Math.round(WurstClient.MC.player.getPos().z));
 
 	}
+
 	static boolean d = false;
 	static int radius = 4;
+
 	public static void checkAround(int x, int y, int z) {
 		d = true;
 		for (int xx = -radius; xx <= radius; xx++) {

@@ -1,16 +1,14 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public
- * License, version 3. If a copy of the GPL was not distributed with this
- * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public License,
+ * version 3. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.commands;
 
 import java.util.Arrays;
-
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -22,140 +20,118 @@ import net.wurstclient.command.CmdSyntaxError;
 import net.wurstclient.command.Command;
 import net.wurstclient.util.ChatUtils;
 
-public final class ModifyCmd extends Command
-{
-	public ModifyCmd()
-	{
-		super("modify", "Allows you to modify NBT data of items.",
-			".modify add <nbt_data>", ".modify set <nbt_data>",
-			".modify remove <nbt_path>", "Use $ for colors, use $$ for $.", "",
-			"Example:",
-			".modify add {display:{Name:'{\"text\":\"$cRed Name\"}'}}",
-			"(changes the item's name to \u00a7cRed Name\u00a7r)");
+public final class ModifyCmd extends Command {
+	public ModifyCmd() {
+		super("modify", "Allows you to modify NBT data of items.", ".modify add <nbt_data>", ".modify set <nbt_data>", ".modify remove <nbt_path>", "Use $ for colors, use $$ for $.", "", "Example:", ".modify add {display:{Name:'{\"text\":\"$cRed Name\"}'}}", "(changes the item's name to \u00a7cRed Name\u00a7r)");
 	}
-	
+
 	@Override
-	public void call(String[] args) throws CmdException
-	{
+	public void call(String[] args) throws CmdException {
 		ClientPlayerEntity player = MC.player;
-		
-		if(!player.abilities.creativeMode)
+
+		if (!player.abilities.creativeMode)
 			throw new CmdError("Creative mode only.");
-		
-		if(args.length < 2)
+
+		if (args.length < 2)
 			throw new CmdSyntaxError();
-		
+
 		ItemStack stack = player.inventory.getMainHandStack();
-		
-		if(stack == null)
+
+		if (stack == null)
 			throw new CmdError("You must hold an item in your main hand.");
-		
-		switch(args[0].toLowerCase())
-		{
+
+		switch (args[0].toLowerCase()) {
 			case "add":
-			add(stack, args);
-			break;
-			
+				add(stack, args);
+				break;
+
 			case "set":
-			set(stack, args);
-			break;
-			
+				set(stack, args);
+				break;
+
 			case "remove":
-			remove(stack, args);
-			break;
-			
+				remove(stack, args);
+				break;
+
 			default:
-			throw new CmdSyntaxError();
+				throw new CmdSyntaxError();
 		}
-		
-		MC.player.networkHandler
-			.sendPacket(new CreativeInventoryActionC2SPacket(
-				36 + player.inventory.selectedSlot, stack));
-		
+
+		MC.player.networkHandler.sendPacket(new CreativeInventoryActionC2SPacket(36 + player.inventory.selectedSlot, stack));
+
 		ChatUtils.message("Item modified.");
 	}
-	
-	private void add(ItemStack stack, String[] args) throws CmdError
-	{
+
+	private void add(ItemStack stack, String[] args) throws CmdError {
 		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
-		
-		if(!stack.hasTag())
+
+		if (!stack.hasTag())
 			stack.setTag(new CompoundTag());
-		
-		try
-		{
+
+		try {
 			CompoundTag tag = StringNbtReader.parse(nbt);
 			stack.getTag().copyFrom(tag);
-			
-		}catch(CommandSyntaxException e)
-		{
+
+		} catch (CommandSyntaxException e) {
 			ChatUtils.message(e.getMessage());
 			throw new CmdError("NBT data is invalid.");
 		}
 	}
-	
-	private void set(ItemStack stack, String[] args) throws CmdError
-	{
+
+	private void set(ItemStack stack, String[] args) throws CmdError {
 		String nbt = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 		nbt = nbt.replace("$", "\u00a7").replace("\u00a7\u00a7", "$");
-		
-		try
-		{
+
+		try {
 			CompoundTag tag = StringNbtReader.parse(nbt);
 			stack.setTag(tag);
-			
-		}catch(CommandSyntaxException e)
-		{
+
+		} catch (CommandSyntaxException e) {
 			ChatUtils.message(e.getMessage());
 			throw new CmdError("NBT data is invalid.");
 		}
 	}
-	
-	private void remove(ItemStack stack, String[] args) throws CmdException
-	{
-		if(args.length > 2)
+
+	private void remove(ItemStack stack, String[] args) throws CmdException {
+		if (args.length > 2)
 			throw new CmdSyntaxError();
-		
+
 		NbtPath path = parseNbtPath(stack.getTag(), args[1]);
-		
-		if(path == null)
+
+		if (path == null)
 			throw new CmdError("The path does not exist.");
-		
+
 		path.base.remove(path.key);
 	}
-	
-	private NbtPath parseNbtPath(CompoundTag tag, String path)
-	{
+
+	private NbtPath parseNbtPath(CompoundTag tag, String path) {
 		String[] parts = path.split("\\.");
-		
+
 		CompoundTag base = tag;
-		if(base == null)
+		if (base == null)
 			return null;
-		
-		for(int i = 0; i < parts.length - 1; i++)
-		{
+
+		for (int i = 0; i < parts.length - 1; i++) {
 			String part = parts[i];
-			
-			if(!base.contains(part) || !(base.get(part) instanceof CompoundTag))
+
+			if (!base.contains(part) || !(base.get(part) instanceof CompoundTag))
 				return null;
-			
+
 			base = base.getCompound(part);
 		}
-		
-		if(!base.contains(parts[parts.length - 1]))
+
+		if (!base.contains(parts[parts.length - 1]))
 			return null;
-		
+
 		return new NbtPath(base, parts[parts.length - 1]);
 	}
-	
-	private static class NbtPath
-	{
+
+	private static class NbtPath {
 		public CompoundTag base;
 		public String key;
-		
-		public NbtPath(CompoundTag base, String key)
-		{
+
+		public NbtPath(CompoundTag base, String key) {
 			this.base = base;
 			this.key = key;
 		}
