@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import org.lwjgl.opengl.GL11;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.server.network.packet.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -22,6 +23,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RayTraceContext;
 import net.wurstclient.Category;
+import net.wurstclient.WurstClient;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.RightClickListener;
 import net.wurstclient.events.UpdateListener;
@@ -96,9 +98,12 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 				if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
 					continue;
 				}
-
+				boolean hand = false;
+				if (WurstClient.MC.player.inventory.getMainHandStack().getItem() != null && WurstClient.MC.player.inventory.getMainHandStack().getItem().getGroup() != null && WurstClient.MC.player.inventory.getMainHandStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS)) {
+					hand = true;
+				}
 				// place block
-				im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
+				im.rightClickBlock(neighbor, side.getOpposite(), hitVec, hand ? Hand.MAIN_HAND : Hand.OFF_HAND);
 
 				break;
 			}
@@ -264,7 +269,7 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		HitResult hitResult = MC.crosshairTarget;
 		if (hitResult == null || hitResult.getPos() == null || hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult))
 			return;
-
+		
 		BlockHitResult blockHitResult = (BlockHitResult) hitResult;
 		BlockPos hitResultPos = blockHitResult.getBlockPos();
 		if (!BlockUtils.canBeClicked(hitResultPos))
