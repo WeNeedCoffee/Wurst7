@@ -1,6 +1,7 @@
 package net.wurstclient.hacks;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.container.Slot;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -59,30 +60,9 @@ public class LavaFillHack extends Hack implements UpdateListener {
 	}
 
 	public static void swapSlot(int item, int hotbar) {
-		ItemStack hb = MC.player.inventory.getInvStack(hotbar);
-		ItemStack it = null;
-		if (!hb.isEmpty()) {
-			MC.player.inventory.setCursorStack(MC.player.container.getSlot(hotbar).takeStack(hb.getCount()));
-			MC.player.container.getSlot(hotbar).setStack(ItemStack.EMPTY);
-			MC.player.container.getSlot(hotbar).onTakeItem(MC.player, MC.player.inventory.getCursorStack());
-			MC.player.container.getSlot(hotbar).markDirty();
-			it = MC.player.inventory.getInvStack(item);
-			MC.player.container.getSlot(item).setStack(MC.player.inventory.getCursorStack());
-			MC.player.container.getSlot(item).markDirty();
-			MC.player.inventory.setCursorStack(it);
-			MC.player.container.getSlot(hotbar).setStack(MC.player.inventory.getCursorStack().split(MC.player.inventory.getCursorStack().getCount()));
-			MC.player.container.getSlot(hotbar).markDirty();
-		} else {
-			it = MC.player.inventory.getInvStack(item);
-			MC.player.inventory.setCursorStack(MC.player.container.getSlot(item).takeStack(it.getCount()));
-			MC.player.container.getSlot(item).setStack(ItemStack.EMPTY);
-			MC.player.container.getSlot(item).onTakeItem(MC.player, MC.player.inventory.getCursorStack());
-			MC.player.container.getSlot(item).markDirty();
-			MC.player.container.getSlot(hotbar).setStack(MC.player.inventory.getCursorStack().split(MC.player.inventory.getCursorStack().getCount()));
-			MC.player.container.getSlot(hotbar).markDirty();
-		}
-		
-		
+		IMC.getInteractionManager().windowClick_PICKUP(item);
+		IMC.getInteractionManager().windowClick_PICKUP(hotbar);
+		IMC.getInteractionManager().windowClick_PICKUP(item);
 		
 	}
 	public static int hasBlock() {
@@ -91,7 +71,7 @@ public class LavaFillHack extends Hack implements UpdateListener {
 			return slot;
 		}
 		for (slot = 9; slot < 35; slot++) {
-			if (MC.player.inventory.getInvStack(slot) != null && MC.player.container.getSlot(slot).getStack().getItem() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
+			if (MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
 				return slot;
 		}
 		return -1;
