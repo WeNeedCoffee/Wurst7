@@ -2,6 +2,7 @@ package net.wurstclient.hacks;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -57,9 +58,40 @@ public class LavaFillHack extends Hack implements UpdateListener {
 		EVENTS.add(UpdateListener.class, this);
 	}
 
+	public static void swapSlot(int item, int hotbar) {
+		ItemStack hb = MC.player.inventory.getInvStack(hotbar);
+		ItemStack it = null;
+		if (!hb.isEmpty()) {
+			MC.player.inventory.setCursorStack(MC.player.container.getSlot(hotbar).takeStack(hb.getCount()));
+			MC.player.container.getSlot(hotbar).setStack(ItemStack.EMPTY);
+			MC.player.container.getSlot(hotbar).onTakeItem(MC.player, MC.player.inventory.getCursorStack());
+			MC.player.container.getSlot(hotbar).markDirty();
+			it = MC.player.inventory.getInvStack(item);
+			MC.player.container.getSlot(item).setStack(MC.player.inventory.getCursorStack());
+			MC.player.container.getSlot(item).markDirty();
+			MC.player.inventory.setCursorStack(it);
+			MC.player.container.getSlot(hotbar).setStack(MC.player.inventory.getCursorStack().split(MC.player.inventory.getCursorStack().getCount()));
+			MC.player.container.getSlot(hotbar).markDirty();
+		} else {
+			it = MC.player.inventory.getInvStack(item);
+			MC.player.inventory.setCursorStack(MC.player.container.getSlot(item).takeStack(it.getCount()));
+			MC.player.container.getSlot(item).setStack(ItemStack.EMPTY);
+			MC.player.container.getSlot(item).onTakeItem(MC.player, MC.player.inventory.getCursorStack());
+			MC.player.container.getSlot(item).markDirty();
+			MC.player.container.getSlot(hotbar).setStack(MC.player.inventory.getCursorStack().split(MC.player.inventory.getCursorStack().getCount()));
+			MC.player.container.getSlot(hotbar).markDirty();
+		}
+		
+		
+		
+	}
 	public static int hasBlock() {
-		for (int slot = 0; slot <= 8; slot++) {
-			if (MC.player.inventory.getInvStack(slot) != null && MC.player.inventory.getInvStack(slot).getItem() != null && MC.player.inventory.getInvStack(slot).getItem().getGroup() != null && MC.player.inventory.getInvStack(slot).getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
+		int slot = 44;
+		if (MC.player.container.getSlot(slot) != null && MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS)) {
+			return slot;
+		}
+		for (slot = 9; slot < 35; slot++) {
+			if (MC.player.inventory.getInvStack(slot) != null && MC.player.container.getSlot(slot).getStack().getItem() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
 				return slot;
 		}
 		return -1;
@@ -73,12 +105,14 @@ public class LavaFillHack extends Hack implements UpdateListener {
 			return false;
 		}
 		int g = hasBlock();
-
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-
 		if (g == -1) {
 			return false;
+		}else if (g < 35) {
+			swapSlot(g, 44);
 		}
+		g = 8;
+		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+
 		for (Direction side : Direction.values()) {
 			BlockPos neighbor = pos.offset(side);
 
@@ -95,6 +129,7 @@ public class LavaFillHack extends Hack implements UpdateListener {
 				continue;
 			}
 			int i = MC.player.inventory.selectedSlot;
+			
 			MC.player.inventory.selectedSlot = g;
 			// place block
 			im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
