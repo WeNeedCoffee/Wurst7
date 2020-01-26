@@ -14,6 +14,7 @@ import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.mixinterface.IClientPlayerInteractionManager;
 import net.wurstclient.util.BlockUtils;
+import net.wurstclient.util.CoffeeUtil;
 import net.wurstclient.util.RotationUtils;
 
 @SearchTags({ "AutoTorch", "Torch", "auto torch", "torch" })
@@ -114,7 +115,7 @@ public final class AutoTorchHack extends Hack implements UpdateListener {
 			if (!tocheck.isEmpty()) {
 				for (BlockPos pos : tocheck) {
 					if (MC.world.isChunkLoaded(pos) && Math.round(MC.player.getPos().distanceTo(new Vec3d(pos))) <= 6) {
-						if (BlockUtils.getState(pos).isAir() && MC.player.clientWorld.getLightLevel(net.minecraft.world.LightType.BLOCK, pos) < 8) {
+						if (BlockUtils.getState(pos).isAir() && MC.player.clientWorld.getLightLevel(net.minecraft.world.LightType.BLOCK, pos) < 8 && CoffeeUtil.isClickSafe(BlockUtils.getState(pos).getBlock())) {
 							toplace.add(pos);
 							break;
 						}
