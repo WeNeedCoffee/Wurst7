@@ -75,9 +75,13 @@ public final class CmdProcessor implements ChatOutputListener {
 
 	public void process(String input) {
 		try {
+			if (input.startsWith("@")) {
+				WurstClient.MC.player.sendChatMessage(input);
+				return;
+			}
 			Command cmd = parseCmd(input);
 			runCmd(cmd, input);
-
+			
 		} catch (CmdNotFoundException e) {
 			e.printToChat();
 		}
