@@ -23,6 +23,14 @@ public final class AltManager {
 	public AltManager(Path altsFile, Path encFolder) {
 		this.altsFile = new AltsFile(altsFile, encFolder);
 		this.altsFile.load(this);
+		Alt alt = null;
+		for (Alt a : getList()) {
+			if (!a.isUnchecked()) {
+				alt = a;
+				break;
+			}
+		}
+		if (alt != null) LoginManager.login(alt.getEmail(), alt.getPassword());
 	}
 
 	public boolean contains(String name) {
