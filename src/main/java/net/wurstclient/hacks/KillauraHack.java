@@ -18,6 +18,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.AmbientEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.Monster;
+import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.mob.ZombiePigmanEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -27,6 +28,7 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -136,9 +138,10 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 			return;
 
 		ClientPlayerEntity player = MC.player;
-		MC.interactionManager.attackEntity(player, target);
-		player.swingHand(Hand.MAIN_HAND);
-
+		if (MC.player.getAttackCooldownProgress(0.0F) >= 1.0f || (MC.player.getMainHandStack().getItem().getGroup().equals(ItemGroup.TOOLS))) {
+			MC.interactionManager.attackEntity(player, target);
+			player.swingHand(Hand.MAIN_HAND);
+		}
 		target = null;
 	}
 
@@ -251,7 +254,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		}
 
 		if (filterGolems.isChecked()) {
-			stream = stream.filter(e -> !(e instanceof GolemEntity));
+			stream = stream.filter(e -> (!(e instanceof GolemEntity) || (e instanceof ShulkerEntity)));
 		}
 
 		if (filterInvisible.isChecked()) {
