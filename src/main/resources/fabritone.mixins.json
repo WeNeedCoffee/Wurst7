@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "package": "baritone.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "verbose": false,
+  "injectors": {
+    "maxShiftBy": 2
+  },
+  "client": [
+    "MixinBitArray",
+    "MixinBlockStateContainer",
+    "MixinChatSuggestion",
+    "MixinChunkArray",
+    "MixinClientChunkProvider",
+    "MixinClientPlayerEntity",
+    "MixinClientPlayNetHandler",
+    "MixinEntity",
+    "MixinGameRenderer",
+    "MixinItemStack",
+    "MixinLivingEntity",
+    "MixinLootContext",
+    "MixinMinecraft",
+    "MixinNetworkManager",
+    "MixinPlayerController"
+  ]
+}

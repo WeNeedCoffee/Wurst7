@@ -28,11 +28,11 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.wurstclient.Category;
+import net.wurstclient.WurstClient;
 import net.wurstclient.events.PostMotionListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
@@ -41,6 +41,7 @@ import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.util.CoffeeUtil;
 import net.wurstclient.util.FakePlayerEntity;
 import net.wurstclient.util.RenderUtils;
 import net.wurstclient.util.RotationUtils;
@@ -138,10 +139,14 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 			return;
 
 		ClientPlayerEntity player = MC.player;
-		if (MC.player.getAttackCooldownProgress(0.0F) >= 1.0f || (MC.player.getMainHandStack().getItem().getGroup().equals(ItemGroup.TOOLS))) {
-			MC.interactionManager.attackEntity(player, target);
-			player.swingHand(Hand.MAIN_HAND);
-		}
+		//if (MC.player.getAttackCooldownProgress(0) >= 1 || (MC.player.getMainHandStack().getItem().getGroup().equals(ItemGroup.TOOLS))) {
+		int s = MC.player.inventory.selectedSlot;
+		MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon(target);
+		//MC.interactionManager.pickFromInventory(CoffeeUtil.getBestWeapon(target));
+		System.out.println(CoffeeUtil.getBestWeapon(target));
+		MC.interactionManager.attackEntity(player, target);
+		//player.swingHand(Hand.MAIN_HAND);
+		//}
 		target = null;
 	}
 
@@ -199,7 +204,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		ClientPlayerEntity player = MC.player;
 		ClientWorld world = MC.world;
 
-		if (player.getAttackCooldownProgress(0) < 1)
+		if (player.getAttackCooldownProgress(0) < 0.1f)
 			return;
 
 		double rangeSq = Math.pow(range.getValue(), 2);

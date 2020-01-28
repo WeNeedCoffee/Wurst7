@@ -23,7 +23,8 @@
     ]
   },
   "mixins": [
-    "wurst.mixins.json"
+    "wurst.mixins.json",
+    "fabritone.mixins.json"
   ],
 
   "depends": {
