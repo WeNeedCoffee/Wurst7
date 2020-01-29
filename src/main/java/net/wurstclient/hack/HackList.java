@@ -101,6 +101,7 @@ import net.wurstclient.hacks.SneakHack;
 import net.wurstclient.hacks.SpiderHack;
 import net.wurstclient.hacks.TimerHack;
 import net.wurstclient.hacks.TiredHack;
+import net.wurstclient.hacks.TpAuraHack;
 import net.wurstclient.hacks.TrajectoriesHack;
 import net.wurstclient.hacks.TriggerBotHack;
 import net.wurstclient.hacks.TrueSightHack;
@@ -229,7 +230,7 @@ public final class HackList implements UpdateListener {
 	// public final ThrowHack throwHack = new ThrowHack();
 	public final TimerHack timerHack = new TimerHack();
 	public final TiredHack tiredHack = new TiredHack();
-	// public final TpAuraHack tpAuraHack = new TpAuraHack();
+	public final TpAuraHack tpAuraHack = new TpAuraHack();
 	public final TrajectoriesHack trajectoriesHack = new TrajectoriesHack();
 	public final TriggerBotHack triggerBotHack = new TriggerBotHack();
 	// public final TrollPotionHack trollPotionHack = new TrollPotionHack();

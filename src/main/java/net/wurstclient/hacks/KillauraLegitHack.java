@@ -151,8 +151,11 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 	@Override
 	protected void onEnable() {
 		// disable other killauras
+		WURST.getHax().protectHack.setEnabled(false);
+		WURST.getHax().fightBotHack.setEnabled(false);
 		WURST.getHax().clickAuraHack.setEnabled(false);
 		WURST.getHax().killauraHack.setEnabled(false);
+		WURST.getHax().tpAuraHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
 
 		EVENTS.add(UpdateListener.class, this);

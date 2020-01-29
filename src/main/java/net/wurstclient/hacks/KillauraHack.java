@@ -124,6 +124,9 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 	@Override
 	protected void onEnable() {
 		// disable other killauras
+		WURST.getHax().tpAuraHack.setEnabled(false);
+		WURST.getHax().protectHack.setEnabled(false);
+		WURST.getHax().fightBotHack.setEnabled(false);
 		WURST.getHax().clickAuraHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);

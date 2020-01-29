@@ -196,6 +196,9 @@ public final class ClickAuraHack extends Hack implements UpdateListener, LeftCli
 	@Override
 	public void onEnable() {
 		// disable other killauras
+		WURST.getHax().tpAuraHack.setEnabled(false);
+		WURST.getHax().protectHack.setEnabled(false);
+		WURST.getHax().fightBotHack.setEnabled(false);
 		WURST.getHax().killauraHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);

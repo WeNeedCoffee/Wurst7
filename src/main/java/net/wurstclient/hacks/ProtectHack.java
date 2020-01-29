@@ -117,7 +117,7 @@ public final class ProtectHack extends Hack implements UpdateListener, RenderLis
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().killauraHack.setEnabled(false);
 		// WURST.getHax().multiAuraHack.setEnabled(false);
-		// WURST.getHax().tpAuraHack.setEnabled(false);
+		WURST.getHax().tpAuraHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
 
 		// set friend
