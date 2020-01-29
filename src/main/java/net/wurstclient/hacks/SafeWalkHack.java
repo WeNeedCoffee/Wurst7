@@ -17,4 +17,9 @@ public final class SafeWalkHack extends Hack {
 		super("SafeWalk", "Prevents you from falling off edges.");
 		setCategory(Category.MOVEMENT);
 	}
+
+	@Override
+	protected void onEnable() {
+		WURST.getHax().parkourHack.setEnabled(false);
+	}
 }
