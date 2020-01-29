@@ -82,6 +82,7 @@ import net.wurstclient.hacks.NavigatorHack;
 import net.wurstclient.hacks.NoFallHack;
 import net.wurstclient.hacks.NoWebHack;
 import net.wurstclient.hacks.NukerHack;
+import net.wurstclient.hacks.OverlayHack;
 import net.wurstclient.hacks.PanicHack;
 import net.wurstclient.hacks.ParkourHack;
 import net.wurstclient.hacks.PlayerEspHack;
@@ -200,7 +201,7 @@ public final class HackList implements UpdateListener {
 	public final NoWebHack noWebHack = new NoWebHack();
 	public final NukerHack nukerHack = new NukerHack();
 	// public final NukerLegitHack nukerLegitHack = new NukerLegitHack();
-	// public final OverlayHack overlayHack = new OverlayHack();
+	public final OverlayHack overlayHack = new OverlayHack();
 	public final PanicHack panicHack = new PanicHack();
 	public final ParkourHack parkourHack = new ParkourHack();
 	public final PlayerEspHack playerEspHack = new PlayerEspHack();
