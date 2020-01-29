@@ -87,6 +87,7 @@ import net.wurstclient.hacks.OverlayHack;
 import net.wurstclient.hacks.PanicHack;
 import net.wurstclient.hacks.ParkourHack;
 import net.wurstclient.hacks.PlayerEspHack;
+import net.wurstclient.hacks.ProtectHack;
 import net.wurstclient.hacks.RadarHack;
 import net.wurstclient.hacks.RainbowUiHack;
 import net.wurstclient.hacks.ReachHack;
@@ -209,7 +210,7 @@ public final class HackList implements UpdateListener {
 	// public final PlayerFinderHack playerFinderHack = new PlayerFinderHack();
 	// public final PotionSaverHack potionSaverHack = new PotionSaverHack();
 	// public final ProphuntEspHack prophuntEspHack = new ProphuntEspHack();
-	// public final ProtectHack protectHack = new ProtectHack();
+	public final ProtectHack protectHack = new ProtectHack();
 	public final RadarHack radarHack = new RadarHack();
 	public final RainbowUiHack rainbowUiHack = new RainbowUiHack();
 	public final ReachHack reachHack = new ReachHack();

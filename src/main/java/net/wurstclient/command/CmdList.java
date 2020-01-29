@@ -34,6 +34,7 @@ import net.wurstclient.commands.HelpCmd;
 import net.wurstclient.commands.LeaveCmd;
 import net.wurstclient.commands.ModifyCmd;
 import net.wurstclient.commands.PathCmd;
+import net.wurstclient.commands.ProtectCmd;
 import net.wurstclient.commands.RenameCmd;
 import net.wurstclient.commands.SayCmd;
 import net.wurstclient.commands.SetCheckboxCmd;
@@ -73,7 +74,7 @@ public final class CmdList {
 	public final ModifyCmd modifyCmd = new ModifyCmd();
 	public final PathCmd pathCmd = new PathCmd();
 	// public final PotionCmd potionCmd = new PotionCmd();
-	// public final ProtectCmd protectCmd = new ProtectCmd();
+	public final ProtectCmd protectCmd = new ProtectCmd();
 	public final RenameCmd renameCmd = new RenameCmd();
 	// public final RepairCmd repairCmd = new RepairCmd();
 	// public final RvCmd rvCmd = new RvCmd();
