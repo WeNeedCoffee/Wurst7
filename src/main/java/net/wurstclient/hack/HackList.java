@@ -17,6 +17,7 @@ import net.minecraft.util.crash.CrashReport;
 import net.wurstclient.WurstClient;
 import net.wurstclient.event.EventManager;
 import net.wurstclient.events.UpdateListener;
+import net.wurstclient.hacks.AntiAfkHack;
 import net.wurstclient.hacks.AntiBlindHack;
 import net.wurstclient.hacks.AntiCactusHack;
 import net.wurstclient.hacks.AntiKnockbackHack;
@@ -102,7 +103,7 @@ import net.wurstclient.hacks.TunnellerHack;
 import net.wurstclient.hacks.XRayHack;
 
 public final class HackList implements UpdateListener {
-	// public final AntiAfkHack antiAfkHack = new AntiAfkHack();
+	public final AntiAfkHack antiAfkHack = new AntiAfkHack();
 	public final AntiBlindHack antiBlindHack = new AntiBlindHack();
 	public final AntiCactusHack antiCactusHack = new AntiCactusHack();
 	public final AntiKnockbackHack antiKnockbackHack = new AntiKnockbackHack();
