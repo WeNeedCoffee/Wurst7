@@ -97,6 +97,7 @@ import net.wurstclient.hacks.TiredHack;
 import net.wurstclient.hacks.TrajectoriesHack;
 import net.wurstclient.hacks.TriggerBotHack;
 import net.wurstclient.hacks.TrueSightHack;
+import net.wurstclient.hacks.TunnellerHack;
 import net.wurstclient.hacks.XRayHack;
 
 public final class HackList implements UpdateListener {
@@ -227,7 +228,7 @@ public final class HackList implements UpdateListener {
 	public final TriggerBotHack triggerBotHack = new TriggerBotHack();
 	// public final TrollPotionHack trollPotionHack = new TrollPotionHack();
 	public final TrueSightHack trueSightHack = new TrueSightHack();
-	// public final TunnellerHack tunnellerHack = new TunnellerHack();
+	public final TunnellerHack tunnellerHack = new TunnellerHack();
 	public final XRayHack xRayHack = new XRayHack();
 
 	private final TreeMap<String, Hack> hax = new TreeMap<>((o1, o2) -> o1.compareToIgnoreCase(o2));

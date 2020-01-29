@@ -28,6 +28,13 @@ public final class RotationFaker implements PreMotionListener, PostMotionListene
 		serverPitch = rotations.getPitch();
 	}
 
+	public void faceVectorClientIgnorePitch(Vec3d vec) {
+		RotationUtils.Rotation rotations = RotationUtils.getNeededRotations(vec);
+
+		WurstClient.MC.player.yaw = rotations.getYaw();
+		WurstClient.MC.player.pitch = 0;
+	}
+
 	public float getServerPitch() {
 		return fakeRotation ? serverPitch : WurstClient.MC.player.pitch;
 	}
