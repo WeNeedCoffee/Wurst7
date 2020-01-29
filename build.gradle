@@ -25,7 +25,14 @@ dependencies {
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
 }
-
+sourceSets {
+  main {
+    java {
+    	srcDirs 'src/main/java'
+    	srcDirs '../fabritone/src/main/java'
+    }
+  }
+}
 processResources {
 	inputs.property "version", project.version
 
