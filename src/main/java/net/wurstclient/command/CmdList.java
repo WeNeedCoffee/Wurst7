@@ -23,6 +23,7 @@ import net.wurstclient.commands.DamageCmd;
 import net.wurstclient.commands.DropCmd;
 import net.wurstclient.commands.EnchantCmd;
 import net.wurstclient.commands.FeaturesCmd;
+import net.wurstclient.commands.FollowCmd;
 import net.wurstclient.commands.FriendsCmd;
 import net.wurstclient.commands.GetPosCmd;
 import net.wurstclient.commands.GiveCmd;
@@ -56,7 +57,7 @@ public final class CmdList {
 	public final EnchantCmd enchantCmd = new EnchantCmd();
 	// public final ExcavateCmd excavateCmd = new ExcavateCmd();
 	public final FeaturesCmd featuresCmd = new FeaturesCmd();
-	// public final FollowCmd followCmd = new FollowCmd();
+	public final FollowCmd followCmd = new FollowCmd();
 	public final FriendsCmd friendsCmd = new FriendsCmd();
 	public final GetPosCmd getPosCmd = new GetPosCmd();
 	// public final GhostHandCmd ghostHandCmd = new GhostHandCmd();
