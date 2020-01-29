@@ -54,7 +54,6 @@ import net.wurstclient.hacks.CrashChestHack;
 import net.wurstclient.hacks.DerpHack;
 import net.wurstclient.hacks.DolphinHack;
 import net.wurstclient.hacks.ExtraElytraHack;
-import net.wurstclient.hacks.FancyChatHack;
 import net.wurstclient.hacks.FastBreakHack;
 import net.wurstclient.hacks.FastLadderHack;
 import net.wurstclient.hacks.FastPlaceHack;
@@ -154,7 +153,7 @@ public final class HackList implements UpdateListener {
 	public final DolphinHack dolphinHack = new DolphinHack();
 	// public final ExcavatorHack excavatorHack = new ExcavatorHack();
 	public final ExtraElytraHack extraElytraHack = new ExtraElytraHack();
-	public final FancyChatHack fancyChatHack = new FancyChatHack();
+	//public final FancyChatHack fancyChatHack = new FancyChatHack(); //TODO breaks keybinds and baritone
 	public final FastBreakHack fastBreakHack = new FastBreakHack();
 	public final FastLadderHack fastLadderHack = new FastLadderHack();
 	public final FastPlaceHack fastPlaceHack = new FastPlaceHack();
