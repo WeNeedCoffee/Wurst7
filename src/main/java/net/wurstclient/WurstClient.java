@@ -232,6 +232,7 @@ public enum WurstClient {
 		altManager = new AltManager(altsFile, encFolder);
 
 		zoomKey = FabricKeyBinding.Builder.create(new Identifier("wurst", "zoom"), InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "Zoom").build();
+		KeyBindingRegistry.INSTANCE.addCategory("Zoom");
 		KeyBindingRegistry.INSTANCE.register(zoomKey);
 
 		analytics.trackPageView("/mc" + MC_VERSION + "/v" + VERSION, "Wurst " + VERSION + " MC" + MC_VERSION);
