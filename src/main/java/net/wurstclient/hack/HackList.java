@@ -58,6 +58,7 @@ import net.wurstclient.hacks.ExtraElytraHack;
 import net.wurstclient.hacks.FastBreakHack;
 import net.wurstclient.hacks.FastLadderHack;
 import net.wurstclient.hacks.FastPlaceHack;
+import net.wurstclient.hacks.FightBotHack;
 import net.wurstclient.hacks.FishHack;
 import net.wurstclient.hacks.FlightHack;
 import net.wurstclient.hacks.FollowHack;
@@ -158,7 +159,7 @@ public final class HackList implements UpdateListener {
 	public final FastBreakHack fastBreakHack = new FastBreakHack();
 	public final FastLadderHack fastLadderHack = new FastLadderHack();
 	public final FastPlaceHack fastPlaceHack = new FastPlaceHack();
-	// public final FightBotHack fightBotHack = new FightBotHack();
+	public final FightBotHack fightBotHack = new FightBotHack();
 	public final FishHack fishHack = new FishHack();
 	public final FlightHack flightHack = new FlightHack();
 	public final FollowHack followHack = new FollowHack();
