@@ -23,13 +23,13 @@ public final class OverlayHack extends Hack implements RenderListener {
 	}
 
 	@Override
-	public void onEnable() {
-		EVENTS.add(RenderListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(RenderListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(RenderListener.class, this);
+	public void onEnable() {
+		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override

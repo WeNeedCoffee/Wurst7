@@ -32,32 +32,13 @@ public final class GoToCmd extends Command implements UpdateListener, RenderList
 		super("goto", "Walks or flies you to a specific location.", ".goto <x> <y> <z>", ".goto <entity>", ".goto -path", "Turn off: .goto");
 	}
 
-	@Override
-	public void call(String[] args) throws CmdException {
-		// disable if enabled
-		if (enabled) {
-			disable();
+	private BlockPos argsToEntityPos(String name) throws CmdError {
+		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
 
-			if (args.length == 0)
-				return;
-		}
+		if (entity == null)
+			throw new CmdError("Entity \"" + name + "\" could not be found.");
 
-		// set PathFinder
-		if (args.length == 1 && args[0].equals("-path")) {
-			BlockPos goal = WURST.getCmds().pathCmd.getLastGoal();
-			if (goal != null)
-				pathFinder = new PathFinder(goal);
-			else
-				throw new CmdError("No previous position on .path.");
-		} else {
-			BlockPos goal = argsToPos(args);
-			pathFinder = new PathFinder(goal);
-		}
-
-		// start
-		enabled = true;
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(RenderListener.class, this);
+		return new BlockPos(entity);
 	}
 
 	private BlockPos argsToPos(String... args) throws CmdException {
@@ -73,31 +54,71 @@ public final class GoToCmd extends Command implements UpdateListener, RenderList
 		}
 	}
 
-	private BlockPos argsToEntityPos(String name) throws CmdError {
-		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
-
-		if (entity == null)
-			throw new CmdError("Entity \"" + name + "\" could not be found.");
-
-		return new BlockPos(entity);
-	}
-
 	private BlockPos argsToXyzPos(String... xyz) throws CmdSyntaxError {
 		BlockPos playerPos = new BlockPos(MC.player);
 		int[] player = new int[] { playerPos.getX(), playerPos.getY(), playerPos.getZ() };
 		int[] pos = new int[3];
 
 		for (int i = 0; i < 3; i++)
-			if (MathUtils.isInteger(xyz[i]))
+			if (MathUtils.isInteger(xyz[i])) {
 				pos[i] = Integer.parseInt(xyz[i]);
-			else if (xyz[i].equals("~"))
+			} else if (xyz[i].equals("~")) {
 				pos[i] = player[i];
-			else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1)))
+			} else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1))) {
 				pos[i] = player[i] + Integer.parseInt(xyz[i].substring(1));
-			else
+			} else
 				throw new CmdSyntaxError("Invalid coordinates.");
 
 		return new BlockPos(pos[0], pos[1], pos[2]);
+	}
+
+	@Override
+	public void call(String[] args) throws CmdException {
+		// disable if enabled
+		if (enabled) {
+			disable();
+
+			if (args.length == 0)
+				return;
+		}
+
+		// set PathFinder
+		if (args.length == 1 && args[0].equals("-path")) {
+			BlockPos goal = WURST.getCmds().pathCmd.getLastGoal();
+			if (goal != null) {
+				pathFinder = new PathFinder(goal);
+			} else
+				throw new CmdError("No previous position on .path.");
+		} else {
+			BlockPos goal = argsToPos(args);
+			pathFinder = new PathFinder(goal);
+		}
+
+		// start
+		enabled = true;
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(RenderListener.class, this);
+	}
+
+	private void disable() {
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		pathFinder = null;
+		processor = null;
+		PathProcessor.releaseControls();
+
+		enabled = false;
+	}
+
+	public boolean isActive() {
+		return enabled;
+	}
+
+	@Override
+	public void onRender(float partialTicks) {
+		PathCmd pathCmd = WURST.getCmds().pathCmd;
+		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
 	}
 
 	@Override
@@ -135,28 +156,8 @@ public final class GoToCmd extends Command implements UpdateListener, RenderList
 		// process path
 		processor.process();
 
-		if (processor.isDone())
+		if (processor.isDone()) {
 			disable();
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		PathCmd pathCmd = WURST.getCmds().pathCmd;
-		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
-	}
-
-	private void disable() {
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		pathFinder = null;
-		processor = null;
-		PathProcessor.releaseControls();
-
-		enabled = false;
-	}
-
-	public boolean isActive() {
-		return enabled;
+		}
 	}
 }

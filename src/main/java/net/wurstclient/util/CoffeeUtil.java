@@ -16,15 +16,6 @@ import net.minecraft.item.Items;
 import net.wurstclient.WurstClient;
 
 public class CoffeeUtil {
-	boolean mcmmo = true;
-
-	public static boolean isClickSafe(Block block) {
-		if (block instanceof DoorBlock || block instanceof BlockWithEntity || block instanceof TrapdoorBlock || block instanceof AnvilBlock || block instanceof AbstractButtonBlock || block instanceof ShulkerBoxBlock || block instanceof ChestBlock)
-			return false;
-
-		return true;
-	}
-
 	public static int getBestWeapon(LivingEntity enemy) {
 		float best = -1;
 		boolean axe = false;
@@ -39,7 +30,7 @@ public class CoffeeUtil {
 					continue;
 				} else {
 					float dmg = EnchantmentHelper.getAttackDamage(item, enemy.getGroup());
-					if (dmg >= best || (dmg >= (best - 2) && isAxe(item.getItem()) && !axe)) {
+					if (dmg >= best || dmg >= best - 2 && isAxe(item.getItem()) && !axe) {
 						best = dmg;
 						b = i;
 					}
@@ -54,6 +45,15 @@ public class CoffeeUtil {
 	public static boolean isAxe(Item item) {
 		return item.equals(Items.WOODEN_AXE) || item.equals(Items.STONE_AXE) || item.equals(Items.IRON_AXE) || item.equals(Items.GOLDEN_AXE) || item.equals(Items.DIAMOND_AXE);
 	}
+
+	public static boolean isClickSafe(Block block) {
+		if (block instanceof DoorBlock || block instanceof BlockWithEntity || block instanceof TrapdoorBlock || block instanceof AnvilBlock || block instanceof AbstractButtonBlock || block instanceof ShulkerBoxBlock || block instanceof ChestBlock)
+			return false;
+
+		return true;
+	}
+
+	boolean mcmmo = true;
 
 	public boolean isDiamond(Item item) {
 		return false;

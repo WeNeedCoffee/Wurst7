@@ -84,14 +84,14 @@ public abstract class ClientPlayerInteractionManagerMixin implements IClientPlay
 	}
 
 	@Override
+	public void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec) {
+		rightClickBlock(pos, side, hitVec, Hand.MAIN_HAND);
+	}
+
+	@Override
 	public void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec, Hand hand) {
 		interactBlock(client.player, client.world, hand, new BlockHitResult(hitVec, side, pos, false));
 		interactItem(client.player, client.world, hand);
-	}
-	
-	@Override
-	public void rightClickBlock(BlockPos pos, Direction side, Vec3d hitVec) {
-		rightClickBlock(pos, side, hitVec, Hand.MAIN_HAND);
 	}
 
 	@Override

@@ -51,18 +51,20 @@ public final class TrollPotionHack extends Hack {
 		stack.setCustomName(new LiteralText(name));
 
 		// give potion
-		if (placeStackInHotbar(stack))
+		if (placeStackInHotbar(stack)) {
 			ChatUtils.message("Potion created.");
-		else
+		} else {
 			ChatUtils.error("Please clear a slot in your hotbar.");
+		}
 
 		setEnabled(false);
 	}
 
 	private boolean placeStackInHotbar(ItemStack stack) {
 		for (int i = 0; i < 9; i++) {
-			if (!MC.player.inventory.getInvStack(i).isEmpty())
+			if (!MC.player.inventory.getInvStack(i).isEmpty()) {
 				continue;
+			}
 
 			MC.player.networkHandler.sendPacket(new CreativeInventoryActionC2SPacket(36 + i, stack));
 			return true;

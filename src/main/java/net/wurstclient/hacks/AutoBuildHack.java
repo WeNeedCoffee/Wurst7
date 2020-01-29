@@ -269,7 +269,7 @@ public final class AutoBuildHack extends Hack implements UpdateListener, RightCl
 		HitResult hitResult = MC.crosshairTarget;
 		if (hitResult == null || hitResult.getPos() == null || hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult))
 			return;
-		
+
 		BlockHitResult blockHitResult = (BlockHitResult) hitResult;
 		BlockPos hitResultPos = blockHitResult.getBlockPos();
 		if (!BlockUtils.canBeClicked(hitResultPos))

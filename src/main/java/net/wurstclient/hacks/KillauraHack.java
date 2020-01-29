@@ -28,11 +28,9 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.wurstclient.Category;
-import net.wurstclient.WurstClient;
 import net.wurstclient.events.PostMotionListener;
 import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
@@ -262,7 +260,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		}
 
 		if (filterGolems.isChecked()) {
-			stream = stream.filter(e -> (!(e instanceof GolemEntity) || (e instanceof ShulkerEntity)));
+			stream = stream.filter(e -> (!(e instanceof GolemEntity) || e instanceof ShulkerEntity));
 		}
 
 		if (filterInvisible.isChecked()) {

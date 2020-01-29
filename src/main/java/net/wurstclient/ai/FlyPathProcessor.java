@@ -32,17 +32,19 @@ public class FlyPathProcessor extends PathProcessor {
 		int posIndex = path.indexOf(pos);
 		Box nextBox = new Box(nextPos.getX() + 0.3, nextPos.getY(), nextPos.getZ() + 0.3, nextPos.getX() + 0.7, nextPos.getY() + 0.2, nextPos.getZ() + 0.7);
 
-		if (posIndex == -1)
+		if (posIndex == -1) {
 			ticksOffPath++;
-		else
+		} else {
 			ticksOffPath = 0;
+		}
 
 		// update index
 		if (posIndex > index || posVec.x >= nextBox.x1 && posVec.x <= nextBox.x2 && posVec.y >= nextBox.y1 && posVec.y <= nextBox.y2 && posVec.z >= nextBox.z1 && posVec.z <= nextBox.z2) {
-			if (posIndex > index)
+			if (posIndex > index) {
 				index = posIndex + 1;
-			else
+			} else {
 				index++;
+			}
 
 			// stop when changing directions
 			if (creativeFlying) {
@@ -51,8 +53,9 @@ public class FlyPathProcessor extends PathProcessor {
 				MC.player.setVelocity(v.x / Math.max(Math.abs(v.x) * 50, 1), v.y / Math.max(Math.abs(v.y) * 50, 1), v.z / Math.max(Math.abs(v.z) * 50, 1));
 			}
 
-			if (index >= path.size())
+			if (index >= path.size()) {
 				done = true;
+			}
 
 			return;
 		}
@@ -73,18 +76,22 @@ public class FlyPathProcessor extends PathProcessor {
 
 		// skip mid-air nodes
 		Vec3i offset = nextPos.subtract(pos);
-		while (index < path.size() - 1 && path.get(index).add(offset).equals(path.get(index + 1)))
+		while (index < path.size() - 1 && path.get(index).add(offset).equals(path.get(index + 1))) {
 			index++;
+		}
 
 		if (creativeFlying) {
 			Vec3d v = MC.player.getVelocity();
 
-			if (!x)
+			if (!x) {
 				MC.player.setVelocity(v.x / Math.max(Math.abs(v.x) * 50, 1), v.y, v.z);
-			if (!y)
+			}
+			if (!y) {
 				MC.player.setVelocity(v.x, v.y / Math.max(Math.abs(v.y) * 50, 1), v.z);
-			if (!z)
+			}
+			if (!z) {
 				MC.player.setVelocity(v.x, v.y, v.z / Math.max(Math.abs(v.z) * 50, 1));
+			}
 		}
 
 		Vec3d vecInPos = new Vec3d(nextPos.getX() + 0.5, nextPos.getY() + 0.1, nextPos.getZ() + 0.5);
@@ -99,10 +106,11 @@ public class FlyPathProcessor extends PathProcessor {
 			MC.options.keyForward.setPressed(true);
 
 			if (MC.player.horizontalCollision)
-				if (posVec.y > nextBox.y2)
+				if (posVec.y > nextBox.y2) {
 					MC.options.keySneak.setPressed(true);
-				else if (posVec.y < nextBox.y1)
+				} else if (posVec.y < nextBox.y1) {
 					MC.options.keyJump.setPressed(true);
+				}
 
 			// vertical movement
 		} else if (y) {
@@ -111,10 +119,11 @@ public class FlyPathProcessor extends PathProcessor {
 				return;
 			}
 
-			if (posVec.y < nextBox.y1)
+			if (posVec.y < nextBox.y1) {
 				MC.options.keyJump.setPressed(true);
-			else
+			} else {
 				MC.options.keySneak.setPressed(true);
+			}
 
 			if (MC.player.verticalCollision) {
 				MC.options.keySneak.setPressed(false);

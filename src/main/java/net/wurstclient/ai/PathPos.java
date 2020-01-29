@@ -21,10 +21,6 @@ public class PathPos extends BlockPos {
 		this.jumping = jumping;
 	}
 
-	public boolean isJumping() {
-		return jumping;
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -40,5 +36,9 @@ public class PathPos extends BlockPos {
 	@Override
 	public int hashCode() {
 		return super.hashCode() * 2 + (isJumping() ? 1 : 0);
+	}
+
+	public boolean isJumping() {
+		return jumping;
 	}
 }

@@ -42,11 +42,51 @@ public final class PathCmd extends Command implements UpdateListener, RenderList
 		addSetting(depthTest);
 	}
 
+	private BlockPos argsToEntityPos(String name) throws CmdError {
+		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
+
+		if (entity == null)
+			throw new CmdError("Entity \"" + name + "\" could not be found.");
+
+		return new BlockPos(entity);
+	}
+
+	private BlockPos argsToPos(String... args) throws CmdException {
+		switch (args.length) {
+			default:
+				throw new CmdSyntaxError("Invalid coordinates.");
+
+			case 1:
+				return argsToEntityPos(args[0]);
+
+			case 3:
+				return argsToXyzPos(args);
+		}
+	}
+
+	private BlockPos argsToXyzPos(String... xyz) throws CmdSyntaxError {
+		BlockPos playerPos = new BlockPos(MC.player);
+		int[] player = new int[] { playerPos.getX(), playerPos.getY(), playerPos.getZ() };
+		int[] pos = new int[3];
+
+		for (int i = 0; i < 3; i++)
+			if (MathUtils.isInteger(xyz[i])) {
+				pos[i] = Integer.parseInt(xyz[i]);
+			} else if (xyz[i].equals("~")) {
+				pos[i] = player[i];
+			} else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1))) {
+				pos[i] = player[i] + Integer.parseInt(xyz[i].substring(1));
+			} else
+				throw new CmdSyntaxError("Invalid coordinates.");
+
+		return new BlockPos(pos[0], pos[1], pos[2]);
+	}
+
 	@Override
 	public void call(String[] args) throws CmdException {
 		// process special commands
 		boolean refresh = false;
-		if (args.length > 0 && args[0].startsWith("-"))
+		if (args.length > 0 && args[0].startsWith("-")) {
 			switch (args[0]) {
 				case "-debug":
 					debugMode.setChecked(!debugMode.isChecked());
@@ -64,6 +104,7 @@ public final class PathCmd extends Command implements UpdateListener, RenderList
 					refresh = true;
 					break;
 			}
+		}
 
 		// disable if enabled
 		if (enabled) {
@@ -77,9 +118,9 @@ public final class PathCmd extends Command implements UpdateListener, RenderList
 
 		// set PathFinder
 		final BlockPos goal;
-		if (refresh)
+		if (refresh) {
 			goal = lastGoal;
-		else {
+		} else {
 			goal = argsToPos(args);
 			lastGoal = goal;
 		}
@@ -93,44 +134,21 @@ public final class PathCmd extends Command implements UpdateListener, RenderList
 		startTime = System.nanoTime();
 	}
 
-	private BlockPos argsToPos(String... args) throws CmdException {
-		switch (args.length) {
-			default:
-				throw new CmdSyntaxError("Invalid coordinates.");
-
-			case 1:
-				return argsToEntityPos(args[0]);
-
-			case 3:
-				return argsToXyzPos(args);
-		}
+	public BlockPos getLastGoal() {
+		return lastGoal;
 	}
 
-	private BlockPos argsToEntityPos(String name) throws CmdError {
-		LivingEntity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).map(e -> (LivingEntity) e).filter(e -> !e.removed && e.getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> name.equalsIgnoreCase(e.getDisplayName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
-
-		if (entity == null)
-			throw new CmdError("Entity \"" + name + "\" could not be found.");
-
-		return new BlockPos(entity);
+	public boolean isDebugMode() {
+		return debugMode.isChecked();
 	}
 
-	private BlockPos argsToXyzPos(String... xyz) throws CmdSyntaxError {
-		BlockPos playerPos = new BlockPos(MC.player);
-		int[] player = new int[] { playerPos.getX(), playerPos.getY(), playerPos.getZ() };
-		int[] pos = new int[3];
+	public boolean isDepthTest() {
+		return depthTest.isChecked();
+	}
 
-		for (int i = 0; i < 3; i++)
-			if (MathUtils.isInteger(xyz[i]))
-				pos[i] = Integer.parseInt(xyz[i]);
-			else if (xyz[i].equals("~"))
-				pos[i] = player[i];
-			else if (xyz[i].startsWith("~") && MathUtils.isInteger(xyz[i].substring(1)))
-				pos[i] = player[i] + Integer.parseInt(xyz[i].substring(1));
-			else
-				throw new CmdSyntaxError("Invalid coordinates.");
-
-		return new BlockPos(pos[0], pos[1], pos[2]);
+	@Override
+	public void onRender(float partialTicks) {
+		pathFinder.renderPath(debugMode.isChecked(), depthTest.isChecked());
 	}
 
 	@Override
@@ -142,33 +160,18 @@ public final class PathCmd extends Command implements UpdateListener, RenderList
 		// stop if done or failed
 		if (foundPath || pathFinder.isFailed()) {
 			ArrayList<PathPos> path = new ArrayList<>();
-			if (foundPath)
+			if (foundPath) {
 				path = pathFinder.formatPath();
-			else
+			} else {
 				ChatUtils.error("Could not find a path.");
+			}
 
 			EVENTS.remove(UpdateListener.class, this);
 
 			System.out.println("Done after " + passedTime + "ms");
-			if (debugMode.isChecked())
+			if (debugMode.isChecked()) {
 				System.out.println("Length: " + path.size() + ", processed: " + pathFinder.countProcessedBlocks() + ", queue: " + pathFinder.getQueueSize() + ", cost: " + pathFinder.getCost(pathFinder.getCurrentPos()));
+			}
 		}
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		pathFinder.renderPath(debugMode.isChecked(), depthTest.isChecked());
-	}
-
-	public BlockPos getLastGoal() {
-		return lastGoal;
-	}
-
-	public boolean isDebugMode() {
-		return debugMode.isChecked();
-	}
-
-	public boolean isDepthTest() {
-		return depthTest.isChecked();
 	}
 }

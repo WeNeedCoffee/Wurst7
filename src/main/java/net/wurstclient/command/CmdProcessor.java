@@ -81,7 +81,7 @@ public final class CmdProcessor implements ChatOutputListener {
 			}
 			Command cmd = parseCmd(input);
 			runCmd(cmd, input);
-			
+
 		} catch (CmdNotFoundException e) {
 			e.printToChat();
 		}

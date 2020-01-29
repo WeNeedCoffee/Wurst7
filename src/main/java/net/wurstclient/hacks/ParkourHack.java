@@ -22,14 +22,14 @@ public final class ParkourHack extends Hack implements UpdateListener {
 	}
 
 	@Override
-	public void onEnable() {
-		WURST.getHax().safeWalkHack.setEnabled(false);
-		EVENTS.add(UpdateListener.class, this);
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
 	}
 
 	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
+	public void onEnable() {
+		WURST.getHax().safeWalkHack.setEnabled(false);
+		EVENTS.add(UpdateListener.class, this);
 	}
 
 	@Override

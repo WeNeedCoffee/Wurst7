@@ -64,16 +64,32 @@ public final class RadarHack extends Hack implements UpdateListener {
 		window.add(new RadarComponent(this));
 	}
 
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-		window.setInvisible(false);
+	public Iterable<Entity> getEntities() {
+		return Collections.unmodifiableList(entities);
+	}
+
+	public double getRadius() {
+		return radius.getValue();
+	}
+
+	public Window getWindow() {
+		return window;
+	}
+
+	public boolean isRotateEnabled() {
+		return rotate.isChecked();
 	}
 
 	@Override
 	public void onDisable() {
 		EVENTS.remove(UpdateListener.class, this);
 		window.setInvisible(true);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+		window.setInvisible(false);
 	}
 
 	@Override
@@ -84,37 +100,26 @@ public final class RadarHack extends Hack implements UpdateListener {
 		entities.clear();
 		Stream<Entity> stream = StreamSupport.stream(world.getEntities().spliterator(), true).filter(e -> !e.removed && e != player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> e instanceof LivingEntity).filter(e -> ((LivingEntity) e).getHealth() > 0);
 
-		if (filterPlayers.isChecked())
+		if (filterPlayers.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof PlayerEntity));
+		}
 
-		if (filterSleeping.isChecked())
+		if (filterSleeping.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
+		}
 
-		if (filterMonsters.isChecked())
+		if (filterMonsters.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof Monster));
+		}
 
-		if (filterAnimals.isChecked())
+		if (filterAnimals.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
+		}
 
-		if (filterInvisible.isChecked())
+		if (filterInvisible.isChecked()) {
 			stream = stream.filter(e -> !e.isInvisible());
+		}
 
 		entities.addAll(stream.collect(Collectors.toList()));
-	}
-
-	public Window getWindow() {
-		return window;
-	}
-
-	public Iterable<Entity> getEntities() {
-		return Collections.unmodifiableList(entities);
-	}
-
-	public double getRadius() {
-		return radius.getValue();
-	}
-
-	public boolean isRotateEnabled() {
-		return rotate.isChecked();
 	}
 }

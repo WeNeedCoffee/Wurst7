@@ -47,6 +47,30 @@ import net.wurstclient.util.FakePlayerEntity;
 @SearchTags({ "fight bot" })
 @DontSaveState
 public final class FightBotHack extends Hack implements UpdateListener, RenderListener {
+	private class EntityPathFinder extends PathFinder {
+		private final Entity entity;
+
+		public EntityPathFinder(Entity entity) {
+			super(new BlockPos(entity));
+			this.entity = entity;
+			setThinkTime(1);
+		}
+
+		@Override
+		protected boolean checkDone() {
+			return done = entity.squaredDistanceTo(new Vec3d(current).add(0.5, 0.5, 0.5)) <= Math.pow(distance.getValue(), 2);
+		}
+
+		@Override
+		public ArrayList<PathPos> formatPath() {
+			if (!done) {
+				failed = true;
+			}
+
+			return super.formatPath();
+		}
+	}
+
 	private final SliderSetting range = new SliderSetting("Range", "Attack range (like Killaura)", 4.25, 1, 6, 0.05, ValueDisplay.DECIMAL);
 
 	private final SliderSetting distance = new SliderSetting("Distance", "How closely to follow the target.\n" + "This should be set to a lower value than Range.", 3, 1, 6, 0.05, ValueDisplay.DECIMAL);
@@ -76,9 +100,9 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 	private final CheckboxSetting filterGolems = new CheckboxSetting("Filter golems", "Won't attack iron golems,\n" + "snow golems and shulkers.", false);
 
 	private final CheckboxSetting filterInvisible = new CheckboxSetting("Filter invisible", "Won't attack invisible entities.", false);
-
 	private EntityPathFinder pathFinder;
 	private PathProcessor processor;
+
 	private int ticksProcessing;
 
 	public FightBotHack() {
@@ -104,6 +128,18 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 	}
 
 	@Override
+	public void onDisable() {
+		// remove listener
+		EVENTS.remove(UpdateListener.class, this);
+		EVENTS.remove(RenderListener.class, this);
+
+		pathFinder = null;
+		processor = null;
+		ticksProcessing = 0;
+		PathProcessor.releaseControls();
+	}
+
+	@Override
 	public void onEnable() {
 		// disable other killauras
 		WURST.getHax().clickAuraHack.setEnabled(false);
@@ -121,15 +157,9 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 	}
 
 	@Override
-	public void onDisable() {
-		// remove listener
-		EVENTS.remove(UpdateListener.class, this);
-		EVENTS.remove(RenderListener.class, this);
-
-		pathFinder = null;
-		processor = null;
-		ticksProcessing = 0;
-		PathProcessor.releaseControls();
+	public void onRender(float partialTicks) {
+		PathCmd pathCmd = WURST.getCmds().pathCmd;
+		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
 	}
 
 	@Override
@@ -137,13 +167,15 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 		// set entity
 		Stream<Entity> stream = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).filter(e -> !e.removed && ((LivingEntity) e).getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity));
 
-		if (filterPlayers.isChecked())
+		if (filterPlayers.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof PlayerEntity));
+		}
 
-		if (filterSleeping.isChecked())
+		if (filterSleeping.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
+		}
 
-		if (filterFlying.getValue() > 0)
+		if (filterFlying.getValue() > 0) {
 			stream = stream.filter(e -> {
 
 				if (!(e instanceof PlayerEntity))
@@ -153,33 +185,43 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 				box = box.union(box.offset(0, -filterFlying.getValue(), 0));
 				return MC.world.doesNotCollide(box);
 			});
+		}
 
-		if (filterMonsters.isChecked())
+		if (filterMonsters.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof Monster));
+		}
 
-		if (filterPigmen.isChecked())
+		if (filterPigmen.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof ZombiePigmanEntity));
+		}
 
-		if (filterEndermen.isChecked())
+		if (filterEndermen.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof EndermanEntity));
+		}
 
-		if (filterAnimals.isChecked())
+		if (filterAnimals.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity));
+		}
 
-		if (filterBabies.isChecked())
+		if (filterBabies.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof PassiveEntity && ((PassiveEntity) e).isBaby()));
+		}
 
-		if (filterPets.isChecked())
+		if (filterPets.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof TameableEntity && ((TameableEntity) e).isTamed())).filter(e -> !(e instanceof HorseBaseEntity && ((HorseBaseEntity) e).isTame()));
+		}
 
-		if (filterVillagers.isChecked())
+		if (filterVillagers.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof VillagerEntity));
+		}
 
-		if (filterGolems.isChecked())
+		if (filterGolems.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof GolemEntity));
+		}
 
-		if (filterInvisible.isChecked())
+		if (filterInvisible.isChecked()) {
 			stream = stream.filter(e -> !e.isInvisible());
+		}
 
 		Entity entity = stream.min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
 		if (entity == null)
@@ -209,19 +251,22 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 			}
 		} else {
 			// jump if necessary
-			if (MC.player.horizontalCollision && MC.player.onGround)
+			if (MC.player.horizontalCollision && MC.player.onGround) {
 				MC.player.jump();
+			}
 
 			// swim up if necessary
-			if (MC.player.isTouchingWater() && MC.player.getY() < entity.getY())
+			if (MC.player.isTouchingWater() && MC.player.getY() < entity.getY()) {
 				MC.player.addVelocity(0, 0.04, 0);
+			}
 
 			// control height if flying
 			if (!MC.player.onGround && (MC.player.abilities.flying || WURST.getHax().flightHack.isEnabled()) && MC.player.squaredDistanceTo(entity.getX(), MC.player.getY(), entity.getZ()) <= MC.player.squaredDistanceTo(MC.player.getX(), entity.getY(), MC.player.getZ())) {
-				if (MC.player.getY() > entity.getY() + 1D)
+				if (MC.player.getY() > entity.getY() + 1D) {
 					MC.options.keySneak.setPressed(true);
-				else if (MC.player.getY() < entity.getY() - 1D)
+				} else if (MC.player.getY() < entity.getY() - 1D) {
 					MC.options.keyJump.setPressed(true);
+				}
 			} else {
 				MC.options.keySneak.setPressed(false);
 				MC.options.keyJump.setPressed(false);
@@ -243,34 +288,5 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 		// attack entity
 		MC.interactionManager.attackEntity(MC.player, entity);
 		MC.player.swingHand(Hand.MAIN_HAND);
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		PathCmd pathCmd = WURST.getCmds().pathCmd;
-		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
-	}
-
-	private class EntityPathFinder extends PathFinder {
-		private final Entity entity;
-
-		public EntityPathFinder(Entity entity) {
-			super(new BlockPos(entity));
-			this.entity = entity;
-			setThinkTime(1);
-		}
-
-		@Override
-		protected boolean checkDone() {
-			return done = entity.squaredDistanceTo(new Vec3d(current).add(0.5, 0.5, 0.5)) <= Math.pow(distance.getValue(), 2);
-		}
-
-		@Override
-		public ArrayList<PathPos> formatPath() {
-			if (!done)
-				failed = true;
-
-			return super.formatPath();
-		}
 	}
 }

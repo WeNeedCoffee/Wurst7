@@ -1,9 +1,7 @@
 package net.wurstclient.hacks;
 
 import net.minecraft.block.Blocks;
-import net.minecraft.container.Slot;
 import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -16,12 +14,81 @@ import net.wurstclient.util.RotationUtils;
 
 public class LavaFillHack extends Hack implements UpdateListener {
 
+	public static int hasBlock() {
+		int slot = 44;
+		if (MC.player.container.getSlot(slot) != null && MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
+			return slot;
+		for (slot = 9; slot < 35; slot++) {
+			if (MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
+				return slot;
+		}
+		return -1;
+	}
+
+	public static void swapSlot(int item, int hotbar) {
+		IMC.getInteractionManager().windowClick_PICKUP(item);
+		IMC.getInteractionManager().windowClick_PICKUP(hotbar);
+		IMC.getInteractionManager().windowClick_PICKUP(item);
+
+	}
+
+	int t = 0;
+
 	public LavaFillHack() {
 		super("LavaFill", "Fills lava with blocks");
 		// TODO Auto-generated constructor stub
 	}
 
-	int t = 0;
+	private boolean buildInstantly(BlockPos pos) {
+		Vec3d eyesPos = RotationUtils.getEyesPos();
+		IClientPlayerInteractionManager im = IMC.getInteractionManager();
+		double rangeSq = Math.pow(5, 2);
+		if (!BlockUtils.getState(pos).getMaterial().isReplaceable())
+			return false;
+		int g = hasBlock();
+		if (g == -1)
+			return false;
+		else if (g < 35) {
+			swapSlot(g, 44);
+		}
+		g = 8;
+		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
+
+		for (Direction side : Direction.values()) {
+			BlockPos neighbor = pos.offset(side);
+
+			// check if neighbor can be right-clicked
+			if (!BlockUtils.canBeClicked(neighbor)) {
+				continue;
+			}
+
+			Vec3d sideVec = new Vec3d(side.getVector());
+			Vec3d hitVec = posVec.add(sideVec.multiply(0.5));
+
+			// check if hitVec is within range
+			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
+				continue;
+			}
+			int i = MC.player.inventory.selectedSlot;
+
+			MC.player.inventory.selectedSlot = g;
+			// place block
+			im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
+			MC.player.inventory.selectedSlot = i;
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void onDisable() {
+		EVENTS.remove(UpdateListener.class, this);
+	}
+
+	@Override
+	public void onEnable() {
+		EVENTS.add(UpdateListener.class, this);
+	}
 
 	@Override
 	public void onUpdate() {
@@ -47,76 +114,6 @@ public class LavaFillHack extends Hack implements UpdateListener {
 			}
 			t = 0;
 		}
-	}
-
-	@Override
-	public void onDisable() {
-		EVENTS.remove(UpdateListener.class, this);
-	}
-
-	@Override
-	public void onEnable() {
-		EVENTS.add(UpdateListener.class, this);
-	}
-
-	public static void swapSlot(int item, int hotbar) {
-		IMC.getInteractionManager().windowClick_PICKUP(item);
-		IMC.getInteractionManager().windowClick_PICKUP(hotbar);
-		IMC.getInteractionManager().windowClick_PICKUP(item);
-		
-	}
-	public static int hasBlock() {
-		int slot = 44;
-		if (MC.player.container.getSlot(slot) != null && MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS)) {
-			return slot;
-		}
-		for (slot = 9; slot < 35; slot++) {
-			if (MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
-				return slot;
-		}
-		return -1;
-	}
-
-	private boolean buildInstantly(BlockPos pos) {
-		Vec3d eyesPos = RotationUtils.getEyesPos();
-		IClientPlayerInteractionManager im = IMC.getInteractionManager();
-		double rangeSq = Math.pow(5, 2);
-		if (!BlockUtils.getState(pos).getMaterial().isReplaceable()) {
-			return false;
-		}
-		int g = hasBlock();
-		if (g == -1) {
-			return false;
-		}else if (g < 35) {
-			swapSlot(g, 44);
-		}
-		g = 8;
-		Vec3d posVec = new Vec3d(pos).add(0.5, 0.5, 0.5);
-
-		for (Direction side : Direction.values()) {
-			BlockPos neighbor = pos.offset(side);
-
-			// check if neighbor can be right-clicked
-			if (!BlockUtils.canBeClicked(neighbor)) {
-				continue;
-			}
-
-			Vec3d sideVec = new Vec3d(side.getVector());
-			Vec3d hitVec = posVec.add(sideVec.multiply(0.5));
-
-			// check if hitVec is within range
-			if (eyesPos.squaredDistanceTo(hitVec) > rangeSq) {
-				continue;
-			}
-			int i = MC.player.inventory.selectedSlot;
-			
-			MC.player.inventory.selectedSlot = g;
-			// place block
-			im.rightClickBlock(neighbor, side.getOpposite(), hitVec);
-			MC.player.inventory.selectedSlot = i;
-			return true;
-		}
-		return false;
 	}
 
 }

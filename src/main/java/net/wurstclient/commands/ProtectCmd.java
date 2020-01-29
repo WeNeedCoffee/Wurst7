@@ -30,8 +30,9 @@ public final class ProtectCmd extends Command {
 
 		ProtectHack protectHack = WURST.getHax().protectHack;
 
-		if (protectHack.isEnabled())
+		if (protectHack.isEnabled()) {
 			protectHack.setEnabled(false);
+		}
 
 		Entity entity = StreamSupport.stream(MC.world.getEntities().spliterator(), true).filter(e -> e instanceof LivingEntity).filter(e -> !e.removed && ((LivingEntity) e).getHealth() > 0).filter(e -> e != MC.player).filter(e -> !(e instanceof FakePlayerEntity)).filter(e -> args[0].equalsIgnoreCase(e.getName().asString())).min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
 

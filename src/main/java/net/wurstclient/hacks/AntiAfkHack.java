@@ -27,15 +27,36 @@ import net.wurstclient.settings.CheckboxSetting;
 @SearchTags({ "anti afk", "AFKBot", "afk bot" })
 @DontSaveState
 public final class AntiAfkHack extends Hack implements UpdateListener, RenderListener {
-	private final CheckboxSetting useAi = new CheckboxSetting("Use AI", true);
+	private class RandomPathFinder extends PathFinder {
+		public RandomPathFinder(BlockPos goal) {
+			super(goal.add(random.nextInt(33) - 16, random.nextInt(33) - 16, random.nextInt(33) - 16));
+			setThinkTime(10);
+			setFallingAllowed(false);
+			setDivingAllowed(false);
+		}
 
+		public RandomPathFinder(PathFinder pathFinder) {
+			super(pathFinder);
+			setFallingAllowed(false);
+			setDivingAllowed(false);
+		}
+
+		@Override
+		public ArrayList<PathPos> formatPath() {
+			failed = true;
+			return super.formatPath();
+		}
+	}
+
+	private final CheckboxSetting useAi = new CheckboxSetting("Use AI", true);
 	private int timer;
 	private Random random = new Random();
 	private BlockPos start;
-	private BlockPos nextBlock;
 
+	private BlockPos nextBlock;
 	private RandomPathFinder pathFinder;
 	private PathProcessor processor;
+
 	private boolean creativeFlying;
 
 	public AntiAfkHack() {
@@ -43,17 +64,6 @@ public final class AntiAfkHack extends Hack implements UpdateListener, RenderLis
 
 		setCategory(Category.OTHER);
 		addSetting(useAi);
-	}
-
-	@Override
-	public void onEnable() {
-		start = new BlockPos(MC.player);
-		nextBlock = null;
-		pathFinder = new RandomPathFinder(start);
-		creativeFlying = MC.player.abilities.flying;
-
-		EVENTS.add(UpdateListener.class, this);
-		EVENTS.add(RenderListener.class, this);
 	}
 
 	@Override
@@ -70,6 +80,26 @@ public final class AntiAfkHack extends Hack implements UpdateListener, RenderLis
 	}
 
 	@Override
+	public void onEnable() {
+		start = new BlockPos(MC.player);
+		nextBlock = null;
+		pathFinder = new RandomPathFinder(start);
+		creativeFlying = MC.player.abilities.flying;
+
+		EVENTS.add(UpdateListener.class, this);
+		EVENTS.add(RenderListener.class, this);
+	}
+
+	@Override
+	public void onRender(float partialTicks) {
+		if (!useAi.isChecked())
+			return;
+
+		PathCmd pathCmd = WURST.getCmds().pathCmd;
+		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
+	}
+
+	@Override
 	public void onUpdate() {
 		// check if player died
 		if (MC.player.getHealth() <= 0) {
@@ -83,8 +113,9 @@ public final class AntiAfkHack extends Hack implements UpdateListener, RenderLis
 			// update timer
 			if (timer > 0) {
 				timer--;
-				if (!WURST.getHax().jesusHack.isEnabled())
+				if (!WURST.getHax().jesusHack.isEnabled()) {
 					MC.options.keyJump.setPressed(MC.player.isTouchingWater());
+				}
 				return;
 			}
 
@@ -110,10 +141,11 @@ public final class AntiAfkHack extends Hack implements UpdateListener, RenderLis
 			}
 
 			// process path
-			if (!processor.isDone())
+			if (!processor.isDone()) {
 				processor.process();
-			else
+			} else {
 				pathFinder = new RandomPathFinder(start);
+			}
 
 			// wait 2 - 3 seconds (40 - 60 ticks)
 			if (processor.isDone()) {
@@ -131,47 +163,19 @@ public final class AntiAfkHack extends Hack implements UpdateListener, RenderLis
 			WURST.getRotationFaker().faceVectorClientIgnorePitch(new Vec3d(nextBlock).add(0.5, 0.5, 0.5));
 
 			// walk
-			if (MC.player.squaredDistanceTo(new Vec3d(nextBlock).add(0.5, 0.5, 0.5)) > 0.5)
+			if (MC.player.squaredDistanceTo(new Vec3d(nextBlock).add(0.5, 0.5, 0.5)) > 0.5) {
 				MC.options.keyForward.setPressed(true);
-			else
+			} else {
 				MC.options.keyForward.setPressed(false);
+			}
 
 			// swim up
 			MC.options.keyJump.setPressed(MC.player.isTouchingWater());
 
 			// update timer
-			if (timer > 0)
+			if (timer > 0) {
 				timer--;
-		}
-	}
-
-	@Override
-	public void onRender(float partialTicks) {
-		if (!useAi.isChecked())
-			return;
-
-		PathCmd pathCmd = WURST.getCmds().pathCmd;
-		pathFinder.renderPath(pathCmd.isDebugMode(), pathCmd.isDepthTest());
-	}
-
-	private class RandomPathFinder extends PathFinder {
-		public RandomPathFinder(BlockPos goal) {
-			super(goal.add(random.nextInt(33) - 16, random.nextInt(33) - 16, random.nextInt(33) - 16));
-			setThinkTime(10);
-			setFallingAllowed(false);
-			setDivingAllowed(false);
-		}
-
-		public RandomPathFinder(PathFinder pathFinder) {
-			super(pathFinder);
-			setFallingAllowed(false);
-			setDivingAllowed(false);
-		}
-
-		@Override
-		public ArrayList<PathPos> formatPath() {
-			failed = true;
-			return super.formatPath();
+			}
 		}
 	}
 }

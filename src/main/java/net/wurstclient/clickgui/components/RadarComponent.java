@@ -30,6 +30,16 @@ public final class RadarComponent extends Component {
 	}
 
 	@Override
+	public int getDefaultHeight() {
+		return 96;
+	}
+
+	@Override
+	public int getDefaultWidth() {
+		return 96;
+	}
+
+	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
 		ClickGui gui = WurstClient.INSTANCE.getGui();
 		float[] bgColor = gui.getBgColor();
@@ -45,8 +55,9 @@ public final class RadarComponent extends Component {
 		boolean hovering = mouseX >= x1 && mouseY >= y1 && mouseX < x2 && mouseY < y2 && mouseY >= -scroll && mouseY < getParent().getHeight() - 13 - scroll;
 
 		// tooltip
-		if (hovering)
+		if (hovering) {
 			gui.setTooltip("");
+		}
 
 		// background
 		GL11.glColor4f(bgColor[0], bgColor[1], bgColor[2], opacity);
@@ -63,8 +74,9 @@ public final class RadarComponent extends Component {
 		GL11.glPushMatrix();
 		GL11.glTranslated(middleX, middleY, 0);
 		ClientPlayerEntity player = WurstClient.MC.player;
-		if (!hack.isRotateEnabled())
+		if (!hack.isRotateEnabled()) {
 			GL11.glRotated(180 + player.yaw, 0, 0, 1);
+		}
 
 		double xa1 = 0;
 		double xa2 = 2;
@@ -103,39 +115,32 @@ public final class RadarComponent extends Component {
 			double distance = Math.sqrt(diffX * diffX + diffZ * diffZ) * (getWidth() * 0.5 / hack.getRadius());
 			double neededRotation = Math.toDegrees(Math.atan2(diffZ, diffX));
 			double angle;
-			if (hack.isRotateEnabled())
+			if (hack.isRotateEnabled()) {
 				angle = Math.toRadians(player.yaw - neededRotation - 90);
-			else
+			} else {
 				angle = Math.toRadians(180 - neededRotation - 90);
+			}
 			double renderX = Math.sin(angle) * distance;
 			double renderY = Math.cos(angle) * distance;
 
-			if (Math.abs(renderX) > getWidth() / 2.0 || Math.abs(renderY) > getHeight() / 2.0)
+			if (Math.abs(renderX) > getWidth() / 2.0 || Math.abs(renderY) > getHeight() / 2.0) {
 				continue;
+			}
 
 			int color;
-			if (e instanceof PlayerEntity)
+			if (e instanceof PlayerEntity) {
 				color = 0xFF0000;
-			else if (e instanceof Monster)
+			} else if (e instanceof Monster) {
 				color = 0xFF8000;
-			else if (e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity)
+			} else if (e instanceof AnimalEntity || e instanceof AmbientEntity || e instanceof WaterCreatureEntity) {
 				color = 0x00FF00;
-			else
+			} else {
 				color = 0x808080;
+			}
 
 			GL11.glColor4f((color >> 16 & 255) / 255F, (color >> 8 & 255) / 255F, (color & 255) / 255F, 1);
 			GL11.glVertex2d(middleX + renderX, middleY + renderY);
 		}
 		GL11.glEnd();
-	}
-
-	@Override
-	public int getDefaultWidth() {
-		return 96;
-	}
-
-	@Override
-	public int getDefaultHeight() {
-		return 96;
 	}
 }

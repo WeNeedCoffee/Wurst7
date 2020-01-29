@@ -80,6 +80,11 @@ public enum RotationUtils {
 		return new Vec3d(player.getX(), player.getY() + player.getEyeHeight(player.getPose()), player.getZ());
 	}
 
+	public static float getHorizontalAngleToLookVec(Vec3d vec) {
+		Rotation needed = getNeededRotations(vec);
+		return MathHelper.wrapDegrees(WurstClient.MC.player.yaw) - needed.yaw;
+	}
+
 	public static Rotation getNeededRotations(Vec3d vec) {
 		Vec3d eyesPos = getEyesPos();
 
@@ -93,11 +98,6 @@ public enum RotationUtils {
 		float pitch = (float) -Math.toDegrees(Math.atan2(diffY, diffXZ));
 
 		return new Rotation(yaw, pitch);
-	}
-
-	public static float getHorizontalAngleToLookVec(Vec3d vec) {
-		Rotation needed = getNeededRotations(vec);
-		return MathHelper.wrapDegrees(WurstClient.MC.player.yaw) - needed.yaw;
 	}
 
 	public static Vec3d getServerLookVec() {

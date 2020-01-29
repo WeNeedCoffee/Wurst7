@@ -27,32 +27,36 @@ public class WalkPathProcessor extends PathProcessor {
 	public void process() {
 		// get positions
 		BlockPos pos;
-		if (WurstClient.MC.player.onGround)
+		if (WurstClient.MC.player.onGround) {
 			pos = new BlockPos(WurstClient.MC.player.getX(), WurstClient.MC.player.getY() + 0.5, WurstClient.MC.player.getZ());
-		else
+		} else {
 			pos = new BlockPos(WurstClient.MC.player);
+		}
 		PathPos nextPos = path.get(index);
 		int posIndex = path.indexOf(pos);
 
-		if (posIndex == -1)
+		if (posIndex == -1) {
 			ticksOffPath++;
-		else
+		} else {
 			ticksOffPath = 0;
+		}
 
 		// update index
 		if (pos.equals(nextPos)) {
 			index++;
 
 			// disable when done
-			if (index >= path.size())
+			if (index >= path.size()) {
 				done = true;
+			}
 			return;
 		} else if (posIndex > index) {
 			index = posIndex + 1;
 
 			// disable when done
-			if (index >= path.size())
+			if (index >= path.size()) {
 				done = true;
+			}
 			return;
 		}
 
@@ -70,16 +74,18 @@ public class WalkPathProcessor extends PathProcessor {
 				return;
 
 			// manually swim down if using Jesus
-			if (WurstClient.MC.player.getY() - nextPos.getY() > 0.5 && (WurstClient.MC.player.isTouchingWater() || WurstClient.MC.player.isInLava() || WURST.getHax().jesusHack.isOverLiquid()))
+			if (WurstClient.MC.player.getY() - nextPos.getY() > 0.5 && (WurstClient.MC.player.isTouchingWater() || WurstClient.MC.player.isInLava() || WURST.getHax().jesusHack.isOverLiquid())) {
 				MC.options.keySneak.setPressed(true);
+			}
 		}
 
 		// horizontal movement
 		if (pos.getX() != nextPos.getX() || pos.getZ() != nextPos.getZ()) {
 			MC.options.keyForward.setPressed(true);
 
-			if (index > 0 && path.get(index - 1).isJumping() || pos.getY() < nextPos.getY())
+			if (index > 0 && path.get(index - 1).isJumping() || pos.getY() < nextPos.getY()) {
 				MC.options.keyJump.setPressed(true);
+			}
 
 			// vertical movement
 		} else if (pos.getY() != nextPos.getY())
@@ -95,8 +101,9 @@ public class WalkPathProcessor extends PathProcessor {
 
 				} else {
 					// directional jump
-					if (index < path.size() - 1 && !nextPos.up().equals(path.get(index + 1)))
+					if (index < path.size() - 1 && !nextPos.up().equals(path.get(index + 1))) {
 						index++;
+					}
 
 					// jump up
 					MC.options.keyJump.setPressed(true);
@@ -105,12 +112,14 @@ public class WalkPathProcessor extends PathProcessor {
 				// go down
 			} else {
 				// skip mid-air nodes and go straight to the bottom
-				while (index < path.size() - 1 && path.get(index).down().equals(path.get(index + 1)))
+				while (index < path.size() - 1 && path.get(index).down().equals(path.get(index + 1))) {
 					index++;
+				}
 
 				// walk off the edge
-				if (WurstClient.MC.player.onGround)
+				if (WurstClient.MC.player.onGround) {
 					MC.options.keyForward.setPressed(true);
+				}
 			}
 	}
 }
