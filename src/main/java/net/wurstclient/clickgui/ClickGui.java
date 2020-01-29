@@ -341,8 +341,7 @@ public final class ClickGui {
 			window.setMinimized(true);
 		}
 
-		// TODO: Radar
-		// windows.add(WurstClient.INSTANCE.getHax().radarHack.getWindow());
+		windows.add(WurstClient.INSTANCE.getHax().radarHack.getWindow());
 
 		int x = 5;
 		int y = 5;
