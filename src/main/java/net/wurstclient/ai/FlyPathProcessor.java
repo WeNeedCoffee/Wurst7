@@ -87,11 +87,11 @@ public class FlyPathProcessor extends PathProcessor {
 				MC.player.setVelocity(v.x, v.y, v.z / Math.max(Math.abs(v.z) * 50, 1));
 		}
 
-		Vec3d vecInPos = new Vec3d(pos.getX() + 0.5, nextPos.getY() + 0.1, pos.getZ() + 0.5);
+		Vec3d vecInPos = new Vec3d(nextPos.getX() + 0.5, nextPos.getY() + 0.1, nextPos.getZ() + 0.5);
 
 		// horizontal movement
 		if (horizontal) {
-			if (!creativeFlying && MC.player.getPos().distanceTo(vecInPos) <= WURST.getHax().flightHack.speed.getValueF()) {
+			if (!creativeFlying && MC.player.getPos().distanceTo(vecInPos) <= WURST.getHax().flightHack.speed.getValue()) {
 				MC.player.updatePosition(vecInPos.x, vecInPos.y, vecInPos.z);
 				return;
 			}
@@ -106,7 +106,7 @@ public class FlyPathProcessor extends PathProcessor {
 
 			// vertical movement
 		} else if (y) {
-			if (!creativeFlying && MC.player.getPos().distanceTo(vecInPos) <= WURST.getHax().flightHack.speed.getValueF()) {
+			if (!creativeFlying && MC.player.getPos().distanceTo(vecInPos) <= WURST.getHax().flightHack.speed.getValue()) {
 				MC.player.updatePosition(vecInPos.x, vecInPos.y, vecInPos.z);
 				return;
 			}
