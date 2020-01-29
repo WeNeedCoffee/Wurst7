@@ -95,6 +95,11 @@ public enum RotationUtils {
 		return new Rotation(yaw, pitch);
 	}
 
+	public static float getHorizontalAngleToLookVec(Vec3d vec) {
+		Rotation needed = getNeededRotations(vec);
+		return MathHelper.wrapDegrees(WurstClient.MC.player.yaw) - needed.yaw;
+	}
+
 	public static Vec3d getServerLookVec() {
 		RotationFaker rotationFaker = WurstClient.INSTANCE.getRotationFaker();
 		float serverYaw = rotationFaker.getServerYaw();
