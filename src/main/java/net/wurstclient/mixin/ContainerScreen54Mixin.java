@@ -21,6 +21,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
 import net.wurstclient.hacks.AutoStealHack;
+import net.wurstclient.hacks.AutoStoreHack;
 
 @Mixin(GenericContainerScreen.class)
 public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericContainer> implements ContainerProvider<GenericContainer> {
@@ -29,6 +30,7 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 	private int rows;
 
 	private final AutoStealHack autoSteal = WurstClient.INSTANCE.getHax().autoStealHack;
+	private final AutoStoreHack autoStore= WurstClient.INSTANCE.getHax().autoStoreHack;
 	private int mode;
 
 	public ContainerScreen54Mixin(WurstClient wurst, GenericContainer container, PlayerInventory playerInventory, Text name) {
@@ -50,6 +52,10 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 
 		if (autoSteal.isEnabled()) {
 			steal();
+		}
+		
+		if (autoStore.isEnabled()) {
+			store();
 		}
 	}
 

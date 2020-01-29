@@ -33,4 +33,8 @@ public final class AutoStealHack extends Hack {
 	public long getDelay() {
 		return delay.getValueI();
 	}
+	@Override
+	public void onEnable() {
+		WURST.getHax().autoStoreHack.setEnabled(false);
+	}
 }
