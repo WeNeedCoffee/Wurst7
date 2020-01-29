@@ -27,6 +27,7 @@ import net.wurstclient.commands.FriendsCmd;
 import net.wurstclient.commands.GetPosCmd;
 import net.wurstclient.commands.GiveCmd;
 import net.wurstclient.commands.GmCmd;
+import net.wurstclient.commands.GoToCmd;
 import net.wurstclient.commands.HelpCmd;
 import net.wurstclient.commands.LeaveCmd;
 import net.wurstclient.commands.ModifyCmd;
@@ -61,7 +62,7 @@ public final class CmdList {
 	// public final GhostHandCmd ghostHandCmd = new GhostHandCmd();
 	public final GiveCmd giveCmd = new GiveCmd();
 	public final GmCmd gmCmd = new GmCmd();
-	// public final GoToCmd goToCmd = new GoToCmd();
+	public final GoToCmd goToCmd = new GoToCmd();
 	public final HelpCmd helpCmd = new HelpCmd();
 	// public final InvseeCmd invseeCmd = new InvseeCmd();
 	// public final IpCmd ipCmd = new IpCmd();
