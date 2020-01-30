@@ -39,6 +39,7 @@ import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.SliderSetting;
 import net.wurstclient.settings.SliderSetting.ValueDisplay;
+import net.wurstclient.util.CoffeeUtil;
 import net.wurstclient.util.FakePlayerEntity;
 import net.wurstclient.util.RotationUtils;
 
@@ -176,7 +177,10 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 			return;
 
 		// attack entities
+		int s = MC.player.inventory.selectedSlot;
+		
 		for (Entity entity : entities) {
+			if (entity instanceof LivingEntity) MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon((LivingEntity) entity);
 			RotationUtils.Rotation rotations = RotationUtils.getNeededRotations(entity.getBoundingBox().getCenter());
 
 			WurstClient.MC.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookOnly(rotations.getYaw(), rotations.getPitch(), MC.player.onGround));
