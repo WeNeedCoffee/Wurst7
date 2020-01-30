@@ -15,7 +15,7 @@ import net.wurstclient.settings.SliderSetting;
 
 @SearchTags({ "auto steal", "ChestStealer", "chest stealer", "steal store buttons", "Steal/Store buttons" })
 public final class AutoStealHack extends Hack {
-	private final SliderSetting delay = new SliderSetting("Delay", "Delay between moving stacks of items.\n" + "Should be at least 70ms for NoCheat+ servers.", 100, 0, 500, 10, v -> (int) v + "ms");
+	private final SliderSetting delay = new SliderSetting("Delay", "Delay between moving stacks of items.\n" + "Should be at least 70ms for NoCheat+ servers.", 100, 0, 2000, 10, v -> (int) v + "ms");
 
 	private final CheckboxSetting buttons = new CheckboxSetting("Steal/Store buttons", true);
 

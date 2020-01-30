@@ -30,8 +30,9 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 	private int rows;
 
 	private final AutoStealHack autoSteal = WurstClient.INSTANCE.getHax().autoStealHack;
-	private final AutoStoreHack autoStore= WurstClient.INSTANCE.getHax().autoStoreHack;
+	private final AutoStoreHack autoStore = WurstClient.INSTANCE.getHax().autoStoreHack;
 	private int mode;
+	private boolean working = false;
 
 	public ContainerScreen54Mixin(WurstClient wurst, GenericContainer container, PlayerInventory playerInventory, Text name) {
 		super(container, playerInventory, name);
@@ -50,11 +51,11 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 			addButton(new ButtonWidget(x + containerWidth - 56, y + 4, 50, 12, "Store", b -> store()));
 		}
 
-		if (autoSteal.isEnabled()) {
+		if (!working && autoSteal.isEnabled()) {
 			steal();
 		}
 		
-		if (autoStore.isEnabled()) {
+		if (!working && autoStore.isEnabled()) {
 			store();
 		}
 	}
@@ -72,7 +73,7 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 
 	private void shiftClickSlots(int from, int to, int mode) {
 		this.mode = mode;
-
+		working = true;
 		for (int i = from; i < to; i++) {
 			Slot slot = container.slots.get(i);
 			if (slot.getStack().isEmpty()) {
@@ -86,6 +87,11 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 
 			onMouseClick(slot, slot.id, 0, SlotActionType.QUICK_MOVE);
 		}
+		if (autoStore.forced) {
+			autoStore.forced = false;
+			autoStore.setEnabled(false);
+		}
+		working = false;
 	}
 
 	private void steal() {
@@ -93,12 +99,14 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 	}
 
 	private void store() {
-		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 44, 2));
+		runInThread(() -> shiftClickSlots(rows * 9, rows * 9 + 27, 2));
 	}
 
 	private void waitForDelay() {
 		try {
-			Thread.sleep(autoSteal.getDelay());
+			long delay = autoSteal.isEnabled() ? autoSteal.getDelay() : autoStore.getDelay();
+			System.out.println(delay);
+			Thread.sleep(delay);
 
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
