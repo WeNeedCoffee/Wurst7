@@ -67,6 +67,7 @@ import net.wurstclient.hacks.FreecamHack;
 import net.wurstclient.hacks.FullbrightHack;
 import net.wurstclient.hacks.GlideHack;
 import net.wurstclient.hacks.HeadRollHack;
+import net.wurstclient.hacks.HealthTagsHack;
 import net.wurstclient.hacks.HighJumpHack;
 import net.wurstclient.hacks.ItemEspHack;
 import net.wurstclient.hacks.ItemGeneratorHack;
@@ -176,7 +177,7 @@ public final class HackList implements UpdateListener {
 	// public final GhostHandHack ghostHandHack = new GhostHandHack();
 	public final GlideHack glideHack = new GlideHack();
 	public final HeadRollHack headRollHack = new HeadRollHack();
-	// public final HealthTagsHack healthTagsHack = new HealthTagsHack();
+	public final HealthTagsHack healthTagsHack = new HealthTagsHack();
 	public final HighJumpHack highJumpHack = new HighJumpHack();
 	// public final InstantBunkerHack instantBunkerHack = new
 	// InstantBunkerHack();
