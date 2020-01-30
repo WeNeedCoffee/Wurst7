@@ -37,6 +37,7 @@
     "PlayerInventoryMixin",
     "RenderTickCounterMixin",
     "ServerListMixin",
+    "ShulkerBoxScreenMixin",
     "SignEditScreenMixin",
     "TerrainRenderContextMixin",
     "TitleScreenMixin"
