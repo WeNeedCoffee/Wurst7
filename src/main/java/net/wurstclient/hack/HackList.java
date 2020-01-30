@@ -83,6 +83,7 @@ import net.wurstclient.hacks.LsdHack;
 import net.wurstclient.hacks.MileyCyrusHack;
 import net.wurstclient.hacks.MobEspHack;
 import net.wurstclient.hacks.MobSpawnEspHack;
+import net.wurstclient.hacks.MultiAuraHack;
 import net.wurstclient.hacks.NavigatorHack;
 import net.wurstclient.hacks.NoFallHack;
 import net.wurstclient.hacks.NoWebHack;
@@ -197,7 +198,7 @@ public final class HackList implements UpdateListener {
 	public final MileyCyrusHack mileyCyrusHack = new MileyCyrusHack();
 	public final MobEspHack mobEspHack = new MobEspHack();
 	public final MobSpawnEspHack mobSpawnEspHack = new MobSpawnEspHack();
-	// public final MultiAuraHack multiAuraHack = new MultiAuraHack();
+	public final MultiAuraHack multiAuraHack = new MultiAuraHack();
 	// public final NameProtectHack nameProtectHack = new NameProtectHack();
 	// public final NameTagsHack nameTagsHack = new NameTagsHack();
 	public final NavigatorHack navigatorHack = new NavigatorHack();
