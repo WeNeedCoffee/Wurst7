@@ -30,7 +30,9 @@ import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.packet.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.RayTraceContext;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.WurstClient;
@@ -67,6 +69,7 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 	private final CheckboxSetting filterGolems = new CheckboxSetting("Filter golems", "Won't attack iron golems,\n" + "snow golems and shulkers.", false);
 
 	private final CheckboxSetting filterInvisible = new CheckboxSetting("Filter invisible", "Won't attack invisible entities.", false);
+	private final CheckboxSetting cLOS = new CheckboxSetting("Check LOS", "Checks line of sight", true);
 
 	private int timer;
 
@@ -90,6 +93,7 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 		addSetting(filterVillagers);
 		addSetting(filterGolems);
 		addSetting(filterInvisible);
+		addSetting(cLOS);
 	}
 
 	@Override
@@ -171,7 +175,8 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 
 		if (filterInvisible.isChecked())
 			stream = stream.filter(e -> !e.isInvisible());
-
+		if (cLOS.isChecked())
+			stream = stream.filter(e -> MC.world.rayTrace(new RayTraceContext(RotationUtils.getEyesPos(), e.getBoundingBox().getCenter(), RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.ENTITY);
 		ArrayList<Entity> entities = stream.collect(Collectors.toCollection(() -> new ArrayList<>()));
 		if (entities.isEmpty())
 			return;
@@ -186,10 +191,9 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 			WurstClient.MC.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookOnly(rotations.getYaw(), rotations.getPitch(), MC.player.onGround));
 
 			MC.interactionManager.attackEntity(player, entity);
-		}
-
-		player.swingHand(Hand.MAIN_HAND);
-
+		}		
+		
+		MC.player.inventory.selectedSlot = s;
 		// reset timer
 		timer = 0;
 	}
