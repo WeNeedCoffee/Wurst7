@@ -1,6 +1,7 @@
 package net.wurstclient.hacks;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.container.PlayerContainer;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -15,6 +16,9 @@ import net.wurstclient.util.RotationUtils;
 public class LavaFillHack extends Hack implements UpdateListener {
 
 	public static int hasBlock() {
+		if (!(MC.player.container instanceof PlayerContainer)) {
+			return -1;
+		}
 		int slot = 44;
 		if (MC.player.container.getSlot(slot) != null && MC.player.container.getSlot(slot).getStack() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup() != null && MC.player.container.getSlot(slot).getStack().getItem().getGroup().equals(ItemGroup.BUILDING_BLOCKS))
 			return slot;
