@@ -29,7 +29,6 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.packet.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.RayTraceContext;
@@ -176,7 +175,7 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 		if (filterInvisible.isChecked())
 			stream = stream.filter(e -> !e.isInvisible());
 		if (cLOS.isChecked())
-			stream = stream.filter(e -> MC.world.rayTrace(new RayTraceContext(RotationUtils.getEyesPos(), e.getBoundingBox().getCenter(), RayTraceContext.ShapeType.COLLIDER, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.ENTITY);
+			stream = stream.filter(e -> MC.world.rayTrace(new RayTraceContext(RotationUtils.getEyesPos(), e.getBoundingBox().getCenter(), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.BLOCK);
 		ArrayList<Entity> entities = stream.collect(Collectors.toCollection(() -> new ArrayList<>()));
 		if (entities.isEmpty())
 			return;
