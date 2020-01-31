@@ -67,7 +67,7 @@ public abstract class ShulkerBoxScreenMixin extends ContainerScreen<ShulkerBoxCo
 				continue;
 			}
 			boolean can = false;
-			for (int e = (mode == 1 ? 27 : 0); e < (mode == 1 ? 27 + 43 : 27); e++) {
+			for (int e = (mode == 1 ? 27 : 0); e < (mode == 1 ? 27 + 36 : 27); e++) {
 				if (Container.canInsertItemIntoSlot(container.slots.get(e), slot.getStack(), true)) { 
 					can = true;
 					break;

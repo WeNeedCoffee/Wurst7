@@ -81,14 +81,11 @@ public abstract class ContainerScreen54Mixin extends ContainerScreen<GenericCont
 				continue;
 			}
 			boolean can = false;
-			for (int e = (mode == 1 ? rows * 9 : 0); e < (mode == 1 ? rows * 9 + 43 : rows * 9); e++) {
-				System.out.println(container.slots.get(e).getStack().toHoverableText().toString() + " " + slot.getStack().toHoverableText().toString());
+			for (int e = (mode == 1 ? rows * 9 : 0); e < (mode == 1 ? rows * 9 + 36 : rows * 9); e++) {
 				if (Container.canInsertItemIntoSlot(container.slots.get(e), slot.getStack(), true)) { 
 					can = true;
-					System.out.println(can);
 					break;
 				}
-				System.out.println(can);
 			}
 			if (!can) {
 				continue;
