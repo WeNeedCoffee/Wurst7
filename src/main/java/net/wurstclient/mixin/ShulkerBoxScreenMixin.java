@@ -1,11 +1,10 @@
 package net.wurstclient.mixin;
 
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.client.gui.screen.ingame.ContainerScreen;
 import net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.container.Container;
 import net.minecraft.container.ShulkerBoxContainer;
 import net.minecraft.container.Slot;
 import net.minecraft.container.SlotActionType;
@@ -67,7 +66,16 @@ public abstract class ShulkerBoxScreenMixin extends ContainerScreen<ShulkerBoxCo
 			if (slot.getStack().isEmpty()) {
 				continue;
 			}
-
+			boolean can = false;
+			for (int e = (mode == 1 ? 27 : 0); e < (mode == 1 ? 27 + 43 : 27); e++) {
+				if (Container.canInsertItemIntoSlot(container.slots.get(e), slot.getStack(), true)) { 
+					can = true;
+					break;
+				}
+			}
+			if (!can) {
+				continue;
+			}
 			waitForDelay();
 			if (this.mode != mode || minecraft.currentScreen == null) {
 				break;
@@ -83,11 +91,11 @@ public abstract class ShulkerBoxScreenMixin extends ContainerScreen<ShulkerBoxCo
 	}
 
 	private void steal() {
-		runInThread(() -> shiftClickSlots(0, 3 * 9, 1));
+		runInThread(() -> shiftClickSlots(0, 27, 1));
 	}
 
 	private void store() {
-		runInThread(() -> shiftClickSlots(3 * 9, 3 * 9 + 27, 2));
+		runInThread(() -> shiftClickSlots(27, 27 + 27, 2));
 	}
 
 	private void waitForDelay() {
