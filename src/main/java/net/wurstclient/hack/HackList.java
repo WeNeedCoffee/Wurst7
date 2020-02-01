@@ -50,6 +50,7 @@ import net.wurstclient.hacks.BoatFlyHack;
 import net.wurstclient.hacks.BonemealAuraHack;
 import net.wurstclient.hacks.BuildRandomHack;
 import net.wurstclient.hacks.BunnyHopHack;
+import net.wurstclient.hacks.CameraNoClipHack;
 import net.wurstclient.hacks.ChestEspHack;
 import net.wurstclient.hacks.ClickAuraHack;
 import net.wurstclient.hacks.ClickGuiHack;
@@ -152,7 +153,7 @@ public final class HackList implements UpdateListener {
 	// public final BowAimbotHack bowAimbotHack = new BowAimbotHack();
 	public final BuildRandomHack buildRandomHack = new BuildRandomHack();
 	public final BunnyHopHack bunnyHopHack = new BunnyHopHack();
-	// public final CameraNoClipHack cameraNoClipHack = new CameraNoClipHack();
+	public final CameraNoClipHack cameraNoClipHack = new CameraNoClipHack();
 	// public final CaveFinderHack caveFinderHack = new CaveFinderHack();
 	public final ChestEspHack chestEspHack = new ChestEspHack();
 	public final ClickAuraHack clickAuraHack = new ClickAuraHack();
