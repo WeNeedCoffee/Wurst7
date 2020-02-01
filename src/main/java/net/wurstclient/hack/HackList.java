@@ -34,7 +34,7 @@ import net.wurstclient.hacks.AutoLeaveHack;
 import net.wurstclient.hacks.AutoMineHack;
 import net.wurstclient.hacks.AutoRespawnHack;
 import net.wurstclient.hacks.AutoSignHack;
-import net.wurstclient.hacks.AutoSplashPotHack;
+import net.wurstclient.hacks.AutoPotionHack;
 import net.wurstclient.hacks.AutoSprintHack;
 import net.wurstclient.hacks.AutoStealHack;
 import net.wurstclient.hacks.AutoStoreHack;
@@ -134,7 +134,7 @@ public final class HackList implements UpdateListener {
 	public final AutoSignHack autoSignHack = new AutoSignHack();
 	public final AutoTorchHack autoTorchHack = new AutoTorchHack();
 	public final LavaFillHack lavaFillHack = new LavaFillHack();
-	public final AutoSplashPotHack autoSplashPotHack = new AutoSplashPotHack();
+	public final AutoPotionHack autoPotionHack = new AutoPotionHack();
 	// public final AutoSoupHack autoSoupHack = new AutoSoupHack();
 	public final AutoSprintHack autoSprintHack = new AutoSprintHack();
 	public final AutoStealHack autoStealHack = new AutoStealHack();
