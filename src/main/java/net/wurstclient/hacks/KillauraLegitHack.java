@@ -30,6 +30,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
@@ -74,6 +75,7 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 	private final CheckboxSetting filterSleeping = new CheckboxSetting("Filter sleeping", "Won't attack sleeping players.", true);
 
 	private final SliderSetting filterFlying = new SliderSetting("Filter flying", "Won't attack players that\n" + "are at least the given\n" + "distance above ground.", 0.5, 0, 2, 0.05, v -> v == 0 ? "off" : ValueDisplay.DECIMAL.getValueString(v));
+	private final CheckboxSetting filterFalling = new CheckboxSetting("Filter falling", "", true);
 	private final CheckboxSetting filterMonsters = new CheckboxSetting("Filter monsters", "Won't attack zombies, creepers, etc.", false);
 	private final CheckboxSetting filterPigmen = new CheckboxSetting("Filter pigmen", "Won't attack zombie pigmen.", false);
 
@@ -100,6 +102,7 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		addSetting(filterFlying);
 		addSetting(filterMonsters);
 		addSetting(filterPigmen);
+		addSetting(filterFalling);
 		addSetting(filterEndermen);
 		addSetting(filterAnimals);
 		addSetting(filterBabies);
@@ -157,7 +160,7 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		WURST.getHax().killauraHack.setEnabled(false);
 		WURST.getHax().tpAuraHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
-
+		WURST.getHax().multiAuraHack.setEnabled(false);
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(RenderListener.class, this);
 	}
@@ -232,7 +235,6 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 
 		if (filterFlying.getValue() > 0) {
 			stream = stream.filter(e -> {
-
 				if (!(e instanceof PlayerEntity))
 					return true;
 
@@ -242,6 +244,10 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 			});
 		}
 
+		if (filterFalling.isChecked()) {
+			stream = stream.filter(e -> e.onGround);
+		}
+		
 		if (filterMonsters.isChecked()) {
 			stream = stream.filter(e -> !(e instanceof Monster));
 		}

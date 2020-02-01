@@ -64,6 +64,7 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 	private final CheckboxSetting filterBabies = new CheckboxSetting("Filter babies", "Won't attack baby pigs,\n" + "baby villagers, etc.", false);
 	private final CheckboxSetting filterPets = new CheckboxSetting("Filter pets", "Won't attack tamed wolves,\n" + "tamed horses, etc.", false);
 
+	private final CheckboxSetting filterFalling = new CheckboxSetting("Filter falling", "", true);
 	private final CheckboxSetting filterVillagers = new CheckboxSetting("Filter villagers", "Won't attack villagers.", false);
 	private final CheckboxSetting filterGolems = new CheckboxSetting("Filter golems", "Won't attack iron golems,\n" + "snow golems and shulkers.", false);
 
@@ -79,8 +80,8 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 		addSetting(useCooldown);
 		addSetting(speed);
 		addSetting(range);
-
 		addSetting(filterPlayers);
+		addSetting(filterFalling);
 		addSetting(filterSleeping);
 		addSetting(filterFlying);
 		addSetting(filterMonsters);
@@ -136,7 +137,9 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 
 		if (filterSleeping.isChecked())
 			stream = stream.filter(e -> !(e instanceof PlayerEntity && ((PlayerEntity) e).isSleeping()));
-
+		if (filterFalling.isChecked()) {
+			stream = stream.filter(e -> e.onGround);
+		}
 		if (filterFlying.getValue() > 0)
 			stream = stream.filter(e -> {
 
