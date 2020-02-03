@@ -21,6 +21,7 @@ public final class HandNoClipHack extends Hack {
 	public HandNoClipHack() {
 		super("HandNoClip", "Allows you to reach specific blocks through walls.");
 		setCategory(Category.BLOCKS);
+		addSetting(blocks);
 	}
 
 	public boolean isBlockInList(BlockPos pos) {
