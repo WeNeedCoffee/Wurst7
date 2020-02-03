@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import org.lwjgl.opengl.GL11;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.packet.BlockUpdateS2CPacket;
@@ -252,31 +253,32 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 	@Override
 	public void onRender(float partialTicks) {
 		// GL settings
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GlStateManager.disableLighting();
+		GlStateManager.enableBlend();
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		GL11.glLineWidth(2);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_CULL_FACE);
+		GlStateManager.lineWidth(2);
+		GlStateManager.disableTexture();
+		GlStateManager.enableCull();
 
-		GL11.glPushMatrix();
+		GlStateManager.pushMatrix();
 		RenderUtils.applyRenderOffset();
 
 		for (ChunkScanner scanner : new ArrayList<>(scanners.values())) {
 			if (scanner.displayList == 0) {
 				continue;
 			}
-
 			GL11.glCallList(scanner.displayList);
 		}
 
-		GL11.glPopMatrix();
-
+		
+		GlStateManager.popMatrix();
 		// GL resets
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_BLEND);
+		//GL11.glColor4f(1, 1, 1, 1);
+		GlStateManager.enableTexture();
+		GlStateManager.disableBlend();
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+		GlStateManager.enableLighting();
 	}
 
 	@Override

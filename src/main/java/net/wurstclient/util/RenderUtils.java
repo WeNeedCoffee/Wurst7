@@ -8,6 +8,7 @@
 package net.wurstclient.util;
 
 import org.lwjgl.opengl.GL11;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.util.math.Box;
@@ -22,14 +23,14 @@ public enum RenderUtils {
 
 	public static void applyCameraRotationOnly() {
 		Camera camera = BlockEntityRenderDispatcher.INSTANCE.camera;
-		GL11.glRotated(MathHelper.wrapDegrees(camera.getPitch()), 1, 0, 0);
-		GL11.glRotated(MathHelper.wrapDegrees(camera.getYaw() + 180.0), 0, 1, 0);
+		GlStateManager.rotatef(MathHelper.wrapDegrees(camera.getPitch()), 1, 0, 0);
+		GlStateManager.rotatef((float) MathHelper.wrapDegrees(camera.getYaw() + 180.0), 0, 1, 0);
 	}
 
 	public static void applyRenderOffset() {
 		applyCameraRotationOnly();
 		Vec3d camPos = getCameraPos();
-		GL11.glTranslated(-camPos.x, -camPos.y, -camPos.z);
+		GlStateManager.translated(-camPos.x, -camPos.y, -camPos.z);
 	}
 
 	public static void drawArrow(Vec3d from, Vec3d to) {

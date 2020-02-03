@@ -2,6 +2,7 @@ package net.wurstclient.hacks;
 
 import java.util.ArrayList;
 import org.lwjgl.opengl.GL11;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.CrossbowItem;
@@ -38,16 +39,18 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 		double renderY = end.y - camPos.y;
 		double renderZ = end.z - camPos.z;
 
-		GL11.glPushMatrix();
-		GL11.glTranslated(renderX - 0.5, renderY - 0.5, renderZ - 0.5);
 
-		GL11.glColor4f(0, 1, 0, 0.25F);
+		GlStateManager.pushMatrix();
+
+		GlStateManager.translated(renderX - 0.5, renderY - 0.5, renderZ - 0.5);
+
+		GlStateManager.color4f(0, 1, 0, 0.25F);
 		RenderUtils.drawSolidBox();
 
-		GL11.glColor4f(0, 1, 0, 0.75F);
+		GlStateManager.color4f(0, 1, 0, 0.75F);
 		RenderUtils.drawOutlinedBox();
 
-		GL11.glPopMatrix();
+		GlStateManager.popMatrix();
 	}
 
 	private void drawLine(ArrayList<Vec3d> path, Vec3d camPos) {
@@ -180,15 +183,16 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 
 	@Override
 	public void onRender(float partialTicks) {
-		GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthMask(false);
+		GlStateManager.pushMatrix();
+		GlStateManager.disableLighting();
+		GlStateManager.disableTexture();
+		GlStateManager.enableBlend();
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GlStateManager.disableDepthTest();
+		GlStateManager.depthMask(false);
 		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		GL11.glLineWidth(2);
-
+		GlStateManager.lineWidth(2);
+		
 		RenderUtils.applyCameraRotationOnly();
 
 		ArrayList<Vec3d> path = getPath(partialTicks);
@@ -201,12 +205,13 @@ public class TrajectoriesHack extends Hack implements RenderListener {
 			drawEndOfLine(end, camPos);
 		}
 
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthMask(true);
+		//GL11.glColor4f(1, 1, 1, 1);
+		GlStateManager.disableBlend();
+		GlStateManager.enableTexture();
+		GlStateManager.enableDepthTest();
+		GlStateManager.depthMask(true);
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
-		GL11.glPopMatrix();
+		GlStateManager.enableLighting();
+		GlStateManager.popMatrix();
 	}
 }
