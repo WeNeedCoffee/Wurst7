@@ -32,7 +32,9 @@ import net.minecraft.item.BowItem;
 import net.minecraft.item.CrossbowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.RayTraceContext;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.GUIRenderListener;
@@ -67,7 +69,7 @@ public final class BowAimbotHack extends Hack implements UpdateListener, RenderL
 	private final CheckboxSetting filterGolems = new CheckboxSetting("Filter golems", "Won't attack iron golems,\n" + "snow golems and shulkers.", false);
 
 	private final CheckboxSetting filterInvisible = new CheckboxSetting("Filter invisible", "Won't attack invisible entities.", false);
-
+	private final CheckboxSetting cLOS = new CheckboxSetting("Check LOS", "Checks line of sight", true);
 	private static final Box TARGET_BOX = new Box(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5);
 
 	private Entity target;
@@ -91,6 +93,7 @@ public final class BowAimbotHack extends Hack implements UpdateListener, RenderL
 		addSetting(filterVillagers);
 		addSetting(filterGolems);
 		addSetting(filterInvisible);
+		addSetting(cLOS);
 	}
 
 	@Override
@@ -177,7 +180,8 @@ public final class BowAimbotHack extends Hack implements UpdateListener, RenderL
 
 		if (filterInvisible.isChecked())
 			stream = stream.filter(e -> !e.isInvisible());
-
+		if (cLOS.isChecked())
+			stream = stream.filter(e -> MC.world.rayTrace(new RayTraceContext(RotationUtils.getEyesPos(), e.getBoundingBox().getCenter(), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, MC.player)).getType() != HitResult.Type.BLOCK);
 		target = stream.min(priority.getSelected().comparator).orElse(null);
 		if (target == null)
 			return;
