@@ -53,7 +53,7 @@ public final class HackList implements UpdateListener {
 	public final BlinkHack blinkHack = new BlinkHack();
 	public final BoatFlyHack boatFlyHack = new BoatFlyHack();
 	public final BonemealAuraHack bonemealAuraHack = new BonemealAuraHack();
-	// public final BowAimbotHack bowAimbotHack = new BowAimbotHack();
+	public final BowAimbotHack bowAimbotHack = new BowAimbotHack();
 	public final BuildRandomHack buildRandomHack = new BuildRandomHack();
 	public final BunnyHopHack bunnyHopHack = new BunnyHopHack();
 	public final CameraNoClipHack cameraNoClipHack = new CameraNoClipHack();
@@ -62,7 +62,7 @@ public final class HackList implements UpdateListener {
 	public final ClickAuraHack clickAuraHack = new ClickAuraHack();
 	public final ClickGuiHack clickGuiHack = new ClickGuiHack();
 	public final CrashChestHack crashChestHack = new CrashChestHack();
-	// public final CriticalsHack criticalsHack = new CriticalsHack();
+	public final CriticalsHack criticalsHack = new CriticalsHack();
 	public final DerpHack derpHack = new DerpHack();
 	public final DolphinHack dolphinHack = new DolphinHack();
 	public final ExcavatorHack excavatorHack = new ExcavatorHack();
@@ -144,8 +144,9 @@ public final class HackList implements UpdateListener {
 	public final TrollPotionHack trollPotionHack = new TrollPotionHack();
 	public final TrueSightHack trueSightHack = new TrueSightHack();
 	public final TunnellerHack tunnellerHack = new TunnellerHack();
+	public final NoHurtcamHack noHurtcamHack = new NoHurtcamHack();
 	public final XRayHack xRayHack = new XRayHack();
-
+	public final AutoTranslateChatHack autoTranslateChatHack = new AutoTranslateChatHack();
 	private final TreeMap<String, Hack> hax = new TreeMap<>((o1, o2) -> o1.compareToIgnoreCase(o2));
 	private final EnabledHacksFile enabledHacksFile;
 	private final EventManager eventManager = WurstClient.INSTANCE.getEventManager();

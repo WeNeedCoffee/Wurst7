@@ -21,6 +21,7 @@ import net.minecraft.resource.SynchronousResourceReloadListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.wurstclient.WurstClient;
+import net.wurstclient.events.CameraShakeEventListener.CameraShakeEvent;
 import net.wurstclient.events.CameraTransformViewBobbingListener.CameraTransformViewBobbingEvent;
 import net.wurstclient.events.HitResultRayTraceListener.HitResultRayTraceEvent;
 import net.wurstclient.events.RenderListener.RenderEvent;
@@ -41,6 +42,21 @@ public abstract class GameRendererMixin implements AutoCloseable, SynchronousRes
 	@Shadow
 	private void loadShader(Identifier identifier) {
 
+	}
+
+	/**
+	 * An event is fired here which, if canceled, will stop camera shake.
+	 * @param partialTicks
+	 * @param ci
+	 */
+	@Inject(at = @At("HEAD"), method = "bobViewWhenHurt", cancellable = true)
+	private void onBobViewWhenHurt(float partialTicks, CallbackInfo ci) {
+		CameraShakeEvent event = new CameraShakeEvent();
+		WurstClient.INSTANCE.getEventManager().fire(event);
+
+		if (event.isCancelled()) {
+			ci.cancel();
+		}
 	}
 
 	@Override
