@@ -44,19 +44,10 @@ public abstract class GameRendererMixin implements AutoCloseable, SynchronousRes
 
 	}
 
-	/**
-	 * An event is fired here which, if canceled, will stop camera shake.
-	 * @param partialTicks
-	 * @param ci
-	 */
-	@Inject(at = @At("HEAD"), method = "bobViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V", cancellable = true)
-	private void onBobViewWhenHurt(MatrixStack stack, float partialTicks, CallbackInfo ci) {
-		CameraShakeEvent event = new CameraShakeEvent();
-		WurstClient.INSTANCE.getEventManager().fire(event);
-
-		if (event.isCancelled()) {
+	@Inject(at = { @At("HEAD") }, method = { "bobViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V" }, cancellable = true)
+	private void onBobViewWhenHurt(MatrixStack matrixStack, float f, CallbackInfo ci) {
+		if (WurstClient.INSTANCE.getHax().noHurtcamHack.isEnabled())
 			ci.cancel();
-		}
 	}
 
 	@Override

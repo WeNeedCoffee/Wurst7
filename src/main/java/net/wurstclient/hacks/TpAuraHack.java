@@ -122,7 +122,7 @@ public final class TpAuraHack extends Hack implements UpdateListener {
 		WURST.getHax().fightBotHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().killauraHack.setEnabled(false);
-		// WURST.getHax().multiAuraHack.setEnabled(false);
+		WURST.getHax().multiAuraHack.setEnabled(false);
 		WURST.getHax().protectHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
 
@@ -196,7 +196,7 @@ public final class TpAuraHack extends Hack implements UpdateListener {
 		Entity entity = stream.min(priority.getSelected().comparator).orElse(null);
 		if (entity == null)
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		// teleport
 		player.updatePosition(entity.getX() + random.nextInt(3) * 2 - 2, entity.getY(), entity.getZ() + random.nextInt(3) * 2 - 2);
 

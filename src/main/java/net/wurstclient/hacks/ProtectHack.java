@@ -311,6 +311,7 @@ public final class ProtectHack extends Hack implements UpdateListener, RenderLis
 		}
 
 		if (target == enemy) {
+			WURST.getHax().autoSwordHack.setSlot();
 			// check cooldown
 			if (MC.player.getAttackCooldownProgress(0) < 1)
 				return;

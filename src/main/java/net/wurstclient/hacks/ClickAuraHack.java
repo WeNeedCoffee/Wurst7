@@ -176,7 +176,7 @@ public final class ClickAuraHack extends Hack implements UpdateListener, LeftCli
 		LivingEntity target = stream.min(priority.getSelected().comparator).orElse(null);
 		if (target == null)
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		// face entity
 		Rotation rotation = RotationUtils.getNeededRotations(target.getBoundingBox().getCenter());
 		PlayerMoveC2SPacket.LookOnly packet = new PlayerMoveC2SPacket.LookOnly(rotation.getYaw(), rotation.getPitch(), MC.player.onGround);
@@ -202,7 +202,7 @@ public final class ClickAuraHack extends Hack implements UpdateListener, LeftCli
 		WURST.getHax().killauraHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
-
+		WURST.getHax().multiAuraHack.setEnabled(false);
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(LeftClickListener.class, this);
 	}

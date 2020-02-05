@@ -287,7 +287,7 @@ public final class KillauraLegitHack extends Hack implements UpdateListener, Ren
 		target = stream.min(priority.getSelected().comparator).orElse(null);
 		if (target == null)
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		// face entity
 		if (!faceEntityClient(target))
 			return;

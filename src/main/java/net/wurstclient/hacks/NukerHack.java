@@ -73,6 +73,14 @@ public final class NukerHack extends Hack implements UpdateListener, LeftClickLi
 		}
 	}
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	private final SliderSetting range = new SliderSetting("Range", 5, 1, 6, 0.05, ValueDisplay.DECIMAL);
 
 	private final EnumSetting<Mode> mode = new EnumSetting<>("Mode", "\u00a7lNormal\u00a7r mode simply breaks everything\n" + "around you.\n" + "\u00a7lID\u00a7r mode only breaks the selected block\n" + "type. Left-click on a block to select it.\n" + "\u00a7lFlat\u00a7r mode flattens the area around you,\n" + "but won't dig down.\n" + "\u00a7lSmash\u00a7r mode only breaks blocks that\n" + "can be destroyed instantly (e.g. tall grass).", Mode.values(), Mode.NORMAL);
@@ -115,7 +123,10 @@ public final class NukerHack extends Hack implements UpdateListener, LeftClickLi
 	@Override
 	protected void onEnable() {
 		WURST.getHax().autoMineHack.setEnabled(false);
-
+		WURST.getHax().excavatorHack.setEnabled(false);
+		WURST.getHax().nukerLegitHack.setEnabled(false);
+		WURST.getHax().speedNukerHack.setEnabled(false);
+		WURST.getHax().tunnellerHack.setEnabled(false);
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(LeftClickListener.class, this);
 		EVENTS.add(RenderListener.class, this);

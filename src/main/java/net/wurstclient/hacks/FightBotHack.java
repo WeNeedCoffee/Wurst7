@@ -145,7 +145,7 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 		WURST.getHax().clickAuraHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().killauraHack.setEnabled(false);
-		// WURST.getHax().multiAuraHack.setEnabled(false);
+		WURST.getHax().multiAuraHack.setEnabled(false);
 		WURST.getHax().protectHack.setEnabled(false);
 		WURST.getHax().tpAuraHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
@@ -226,7 +226,7 @@ public final class FightBotHack extends Hack implements UpdateListener, RenderLi
 		Entity entity = stream.min(Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e))).orElse(null);
 		if (entity == null)
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		if (useAi.isChecked()) {
 			// reset pathfinder
 			if ((processor == null || processor.isDone() || ticksProcessing >= 10 || !pathFinder.isPathStillValid(processor.getIndex())) && (pathFinder.isDone() || pathFinder.isFailed())) {

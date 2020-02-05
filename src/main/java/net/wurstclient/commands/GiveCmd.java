@@ -1,14 +1,16 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public License,
- * version 3. If a copy of the GPL was not distributed with this file, You can
- * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public
+ * License, version 3. If a copy of the GPL was not distributed with this
+ * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.commands;
 
 import java.util.Arrays;
+
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -16,6 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.server.network.packet.CreativeInventoryActionC2SPacket;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.registry.Registry;
 import net.wurstclient.command.CmdError;
 import net.wurstclient.command.CmdException;
@@ -39,11 +42,10 @@ public final class GiveCmd extends Command {
 			throw new CmdError("Creative mode only.");
 
 		// id/name
-		Item item = Registry.ITEM.get(new Identifier(args[0]));
+		Item item = getItem(args[0]);
 
-		if (item == Items.AIR && MathUtils.isInteger(args[0])) {
+		if (item == Items.AIR && MathUtils.isInteger(args[0]))
 			item = Item.byRawId(Integer.parseInt(args[0]));
-		}
 
 		if (item == Items.AIR)
 			throw new CmdError("Item \"" + args[0] + "\" could not be found.");
@@ -65,13 +67,12 @@ public final class GiveCmd extends Command {
 
 		// nbt data
 		String nbt = null;
-		if (args.length >= 3) {
+		if (args.length >= 3)
 			nbt = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-		}
 
 		// generate item
 		ItemStack stack = new ItemStack(item, amount);
-		if (nbt != null) {
+		if (nbt != null)
 			try {
 				CompoundTag tag = StringNbtReader.parse(nbt);
 				stack.setTag(tag);
@@ -80,20 +81,27 @@ public final class GiveCmd extends Command {
 				ChatUtils.message(e.getMessage());
 				throw new CmdSyntaxError("NBT data is invalid.");
 			}
-		}
 
 		// give item
-		if (placeStackInHotbar(stack)) {
+		if (placeStackInHotbar(stack))
 			ChatUtils.message("Item" + (amount > 1 ? "s" : "") + " created.");
-		} else
+		else
 			throw new CmdError("Please clear a slot in your hotbar.");
+	}
+
+	private Item getItem(String id) throws CmdSyntaxError {
+		try {
+			return Registry.ITEM.get(new Identifier(id));
+
+		} catch (InvalidIdentifierException e) {
+			throw new CmdSyntaxError("Invalid item: " + id);
+		}
 	}
 
 	private boolean placeStackInHotbar(ItemStack stack) {
 		for (int i = 0; i < 9; i++) {
-			if (!MC.player.inventory.getInvStack(i).isEmpty()) {
+			if (!MC.player.inventory.getInvStack(i).isEmpty())
 				continue;
-			}
 
 			MC.player.networkHandler.sendPacket(new CreativeInventoryActionC2SPacket(36 + i, stack));
 			return true;

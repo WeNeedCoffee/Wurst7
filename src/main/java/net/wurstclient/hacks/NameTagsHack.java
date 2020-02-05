@@ -11,10 +11,11 @@ import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.hack.Hack;
 
-@SearchTags({ "no hurtcam", "no hurt cam" })
-public final class NoHurtcamHack extends Hack {
-	public NoHurtcamHack() {
-		super("NoHurtcam", "Disables the shaking effect when you get hurt.");
+@SearchTags({ "name tags" })
+public final class NameTagsHack extends Hack {
+	public NameTagsHack() {
+		super("NameTags", "Changes the scale of the nametags so you can\n" + "always read them.\n" + "Also allows you to see the nametags of\n" + "sneaking players.");
+
 		setCategory(Category.RENDER);
 	}
 }

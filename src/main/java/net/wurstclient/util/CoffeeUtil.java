@@ -30,7 +30,7 @@ public class CoffeeUtil {
 					continue;
 				} else {
 					float dmg = EnchantmentHelper.getAttackDamage(item, enemy.getGroup());
-					if (dmg >= best || dmg >= best - 2 && isAxe(item.getItem()) && !axe) {
+					if (dmg > best) {
 						best = dmg;
 						b = i;
 					}

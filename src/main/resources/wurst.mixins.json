@@ -33,6 +33,7 @@
     "KeyboardMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
+    "MiningToolItemMixin",
     "MouseMixin",
     "MultiplayerScreenMixin",
     "PlayerInventoryMixin",
@@ -40,8 +41,11 @@
     "ServerListMixin",
     "ShulkerBoxScreenMixin",
     "SignEditScreenMixin",
+    "SwordItemMixin",
     "TerrainRenderContextMixin",
-    "TitleScreenMixin"
+    "TextRendererMixin",
+    "TitleScreenMixin",
+    "WorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1

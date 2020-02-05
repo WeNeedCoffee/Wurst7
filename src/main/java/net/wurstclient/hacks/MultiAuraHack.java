@@ -182,12 +182,12 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 		ArrayList<Entity> entities = stream.collect(Collectors.toCollection(() -> new ArrayList<>()));
 		if (entities.isEmpty())
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		// attack entities
-		int s = MC.player.inventory.selectedSlot;
+		//int s = MC.player.inventory.selectedSlot;
 		
 		for (Entity entity : entities) {
-			if (entity instanceof LivingEntity) MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon((LivingEntity) entity);
+		//	if (entity instanceof LivingEntity) MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon((LivingEntity) entity);
 			RotationUtils.Rotation rotations = RotationUtils.getNeededRotations(entity.getBoundingBox().getCenter());
 
 			WurstClient.MC.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookOnly(rotations.getYaw(), rotations.getPitch(), MC.player.onGround));
@@ -195,7 +195,7 @@ public final class MultiAuraHack extends Hack implements UpdateListener {
 			MC.interactionManager.attackEntity(player, entity);
 		}		
 		
-		MC.player.inventory.selectedSlot = s;
+	//	MC.player.inventory.selectedSlot = s;
 		// reset timer
 		timer = 0;
 	}

@@ -128,7 +128,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		WURST.getHax().clickAuraHack.setEnabled(false);
 		WURST.getHax().killauraLegitHack.setEnabled(false);
 		WURST.getHax().triggerBotHack.setEnabled(false);
-
+		WURST.getHax().multiAuraHack.setEnabled(false);
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(PostMotionListener.class, this);
 		EVENTS.add(RenderListener.class, this);
@@ -141,10 +141,11 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 
 		ClientPlayerEntity player = MC.player;
 		//if (MC.player.getAttackCooldownProgress(0) >= 1 || (MC.player.getMainHandStack().getItem().getGroup().equals(ItemGroup.TOOLS))) {
-		int s = MC.player.inventory.selectedSlot;
-		MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon(target);
+		//int s = MC.player.inventory.selectedSlot;
+		//MC.player.inventory.selectedSlot = CoffeeUtil.getBestWeapon(target);
 		//MC.interactionManager.pickFromInventory(CoffeeUtil.getBestWeapon(target));
-		System.out.println(CoffeeUtil.getBestWeapon(target));
+		//System.out.println(CoffeeUtil.getBestWeapon(target));
+		
 		MC.interactionManager.attackEntity(player, target);
 		//player.swingHand(Hand.MAIN_HAND);
 		//}
@@ -271,7 +272,7 @@ public final class KillauraHack extends Hack implements UpdateListener, PostMoti
 		renderTarget = target;
 		if (target == null)
 			return;
-
+		WURST.getHax().autoSwordHack.setSlot();
 		WURST.getRotationFaker().faceVectorPacket(target.getBoundingBox().getCenter());
 	}
 }
