@@ -7,7 +7,12 @@
  */
 package net.wurstclient.command;
 
+import static baritone.api.command.IBaritoneChatControl.FORCE_COMMAND_PREFIX;
 import java.util.Arrays;
+import baritone.api.BaritoneAPI;
+import baritone.api.command.exception.CommandNotFoundException;
+import baritone.command.BaritoneChatControl;
+import baritone.command.manager.CommandManager;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -76,12 +81,22 @@ public final class CmdProcessor implements ChatOutputListener {
 	public void process(String input) {
 		try {
 			if (input.startsWith("@")) {
-				WurstClient.MC.player.sendChatMessage(input);
-				return;
+				String prefix = BaritoneAPI.getSettings().prefix.value;
+				boolean forceRun = input.startsWith(FORCE_COMMAND_PREFIX);
+				if (BaritoneAPI.getSettings().prefixControl.value && input.startsWith(prefix) || forceRun) {
+					String commandStr = input.substring(forceRun ? FORCE_COMMAND_PREFIX.length() : prefix.length());
+					if (!BaritoneChatControl.INSTANCE.runCommand(commandStr) && !commandStr.trim().isEmpty()) {
+						new CommandNotFoundException(CommandManager.expand(commandStr).getLeft()).handle(null, null);
+					}
+					return;
+				} else if ((BaritoneAPI.getSettings().chatControl.value || BaritoneAPI.getSettings().chatControlAnyway.value) && BaritoneChatControl.INSTANCE.runCommand(input)) {
+					return;
+				}
+				
+			} else {
+				Command cmd = parseCmd(input);
+				runCmd(cmd, input);
 			}
-			Command cmd = parseCmd(input);
-			runCmd(cmd, input);
-
 		} catch (CmdNotFoundException e) {
 			e.printToChat();
 		}

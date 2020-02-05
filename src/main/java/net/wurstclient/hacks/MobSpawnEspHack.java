@@ -71,7 +71,7 @@ public final class MobSpawnEspHack extends Hack implements UpdateListener, Packe
 				});
 
 				GL11.glColor4f(1, 1, 0, 0.5F);
-				new ArrayList<>(yellow).forEach(pos -> {
+				new ArrayList<>(yellow).forEach(pos -> { //FIXME this is concurrent.
 					GL11.glVertex3d(pos.getX(), pos.getY() + 0.01, pos.getZ());
 					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ() + 1);
 					GL11.glVertex3d(pos.getX() + 1, pos.getY() + 0.01, pos.getZ());

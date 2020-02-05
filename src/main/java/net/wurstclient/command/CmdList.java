@@ -23,6 +23,7 @@ import net.wurstclient.commands.DamageCmd;
 import net.wurstclient.commands.DropCmd;
 import net.wurstclient.commands.EnchantCmd;
 import net.wurstclient.commands.ExcavateCmd;
+import net.wurstclient.commands.ExecuteCmd;
 import net.wurstclient.commands.FeaturesCmd;
 import net.wurstclient.commands.FollowCmd;
 import net.wurstclient.commands.FriendsCmd;
@@ -69,6 +70,7 @@ public final class CmdList {
 	public final GoToCmd goToCmd = new GoToCmd();
 	public final HelpCmd helpCmd = new HelpCmd();
 	public final InvseeCmd invseeCmd = new InvseeCmd();
+	public final ExecuteCmd executeCmd = new ExecuteCmd();
 	// public final IpCmd ipCmd = new IpCmd();
 	public final JumpCmd jumpCmd = new JumpCmd();
 	public final LeaveCmd leaveCmd = new LeaveCmd();

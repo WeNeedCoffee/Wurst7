@@ -18,14 +18,14 @@ import net.wurstclient.hack.Hack;
 import net.wurstclient.hack.HackList;
 
 public final class KeybindProcessor implements KeyPressListener {
-	private final HackList hax;
+	private static HackList hax;
 	private final KeybindList keybinds;
-	private final CmdProcessor cmdProcessor;
+	private static CmdProcessor cmdProcessor;
 
 	public KeybindProcessor(HackList hax, KeybindList keybinds, CmdProcessor cmdProcessor) {
-		this.hax = hax;
+		KeybindProcessor.hax = hax;
 		this.keybinds = keybinds;
-		this.cmdProcessor = cmdProcessor;
+		KeybindProcessor.cmdProcessor = cmdProcessor;
 	}
 
 	private String getKeyName(KeyPressEvent event) {
@@ -48,7 +48,7 @@ public final class KeybindProcessor implements KeyPressListener {
 		processCmds(cmds);
 	}
 
-	private void processCmd(String cmd) {
+	public static void processCmd(String cmd) {
 		if (cmd.startsWith(".")) {
 			cmdProcessor.process(cmd.substring(1));
 		} else if (cmd.contains(" ")) {
