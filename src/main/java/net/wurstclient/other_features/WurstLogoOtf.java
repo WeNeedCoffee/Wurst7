@@ -17,7 +17,9 @@ public final class WurstLogoOtf extends OtherFeature {
 	public enum Visibility {
 		ALWAYS("Always", () -> true),
 
-		ONLY_OUTDATED("Only when outdated", () -> WURST.getUpdater().isOutdated());
+		ONLY_OUTDATED("Only when outdated", () -> WURST.getUpdater().isOutdated()),
+		
+		NEVER("never", () -> false);
 
 		private final String name;
 		private final BooleanSupplier visible;

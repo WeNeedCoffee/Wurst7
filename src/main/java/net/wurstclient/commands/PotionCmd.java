@@ -72,7 +72,8 @@ public final class PotionCmd extends Command {
 
 			effect.putInt("Id", parseEffectId(args[1 + i * 3]));
 			effect.putInt("Amplifier", parseInt(args[2 + i * 3]) - 1);
-			effect.putInt("Duration", parseInt(args[3 + i * 3]) * 20);
+			effect.putInt("Duration", args[3 + i * 3].equalsIgnoreCase("*") ? Integer.MAX_VALUE : parseInt(args[3 + i * 3]) * 20);
+			effect.putBoolean("ShowParticles", false);
 
 			effects.add(effect);
 		}
@@ -94,7 +95,7 @@ public final class PotionCmd extends Command {
 			tag.putInt("Id", id);
 			tag.putInt("Amplifier", effect.getAmplifier());
 			tag.putInt("Duration", effect.getDuration());
-
+			tag.putBoolean("ShowParticles", false);
 			nbt.add(tag);
 		}
 
@@ -120,6 +121,7 @@ public final class PotionCmd extends Command {
 			effect.putInt("Id", oldId);
 			effect.putInt("Amplifier", oldEffect.getAmplifier());
 			effect.putInt("Duration", oldEffect.getDuration());
+			effect.putBoolean("ShowParticles", false);
 			newEffects.add(effect);
 		}
 

@@ -26,8 +26,8 @@ public final class WurstUpdater implements UpdateListener {
 	public void checkForUpdates() {
 		Version currentVersion = new Version(WurstClient.VERSION);
 		Version latestVersion = null;
-
-		try {
+		return;
+		/*try {
 			WsonArray wson = JsonUtils.parseURLToArray("https://api.github.com/repos/Wurst-Imperium/Wurst-MCX2/releases");
 
 			for (WsonObject release : wson.getAllObjects()) {
@@ -68,7 +68,7 @@ public final class WurstUpdater implements UpdateListener {
 
 		String text = "Wurst " + latestVersion + " is now available." + " Click \u00a7nhere\u00a7r to download the update.";
 		String url = "https://www.wurstclient.net/download/";
-		showLink(text, url);
+		showLink(text, url);*/
 	}
 
 	private boolean containsCompatibleAsset(WsonArray wsonArray) throws JsonException {

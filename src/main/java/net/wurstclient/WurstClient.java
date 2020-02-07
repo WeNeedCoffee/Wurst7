@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
 import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.wurstclient.altmanager.AltManager;
@@ -72,6 +73,9 @@ public enum WurstClient {
 
 	private FabricKeyBinding zoomKey;
 
+	public static ServerWorld getServerWorld() {
+		return WurstClient.MC.world.getServer().getWorld(WurstClient.MC.player.dimension);
+	}
 	private Path createEncryptionFolder() {
 		Path encFolder = Paths.get(System.getProperty("user.home"), ".Wurst encryption").normalize();
 

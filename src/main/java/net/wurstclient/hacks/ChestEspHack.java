@@ -9,6 +9,7 @@ package net.wurstclient.hacks;
 
 import java.util.ArrayList;
 import org.lwjgl.opengl.GL11;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BarrelBlockEntity;
@@ -153,15 +154,16 @@ public class ChestEspHack extends Hack implements UpdateListener, CameraTransfor
 	@Override
 	public void onRender(float partialTicks) {
 		// GL settings
-		GL11.glEnable(GL11.GL_BLEND);
+		GlStateManager.disableLighting();
+		GlStateManager.enableBlend();
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		GL11.glLineWidth(2);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GlStateManager.lineWidth(2);
+		GlStateManager.disableTexture();
+		GlStateManager.enableCull();
+		GlStateManager.disableDepthTest();
 
-		GL11.glPushMatrix();
+		GlStateManager.pushMatrix();
 		RenderUtils.applyRenderOffset();
 
 		ArrayList<Box> minecartBoxes = calculateMinecartBoxes(partialTicks);
@@ -192,14 +194,16 @@ public class ChestEspHack extends Hack implements UpdateListener, CameraTransfor
 			GL11.glEnd();
 		}
 
-		GL11.glPopMatrix();
+		GlStateManager.popMatrix();
 
 		// GL resets
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_BLEND);
+		//GL11.glColor4f(1, 1, 1, 1);
+		GlStateManager.enableDepthTest();
+		GlStateManager.enableTexture();
+		GlStateManager.disableBlend();
 		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+		GlStateManager.enableLighting();
+
 	}
 
 	@Override

