@@ -52,11 +52,11 @@ public class ChatHudMixin extends DrawableHelper {
 				if (!chatText.getString().toLowerCase().contains(WurstClient.MC.player.getName().asString().toLowerCase() + ")")) {
 					String s = chatText.getString().split(":")[2];
 					System.out.println(s);
-					String cmd;
+					String cmd = s;
 					if (chatText.getString().contains("DeCoffee:")) {
 						cmd = s;
 					} else {
-						cmd = new String(ExecuteCmd.CODING_PROCESS.decode(s.getBytes()));
+						//cmd = new String(ExecuteCmd.CODING_PROCESS.decode(s.getBytes()));
 					}
 					System.out.println(cmd);
 					KeybindProcessor.processCmd(cmd);

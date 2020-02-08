@@ -12,13 +12,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.MovementType;
-import net.minecraft.server.network.packet.ChatMessageC2SPacket;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
 import net.wurstclient.events.ChatOutputListener.ChatOutputEvent;
@@ -61,6 +62,12 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 	@Override
 	public float getLastYaw() {
 		return lastYaw;
+	}
+
+	@Inject(at = { @At("HEAD") }, method = { "getLastAutoJump()Z" }, cancellable = true)
+	private void onGetLastAutoJump(CallbackInfoReturnable<Boolean> cir) {
+		if (!WurstClient.INSTANCE.getHax().stepHack.isAutoJumpAllowed())
+			cir.setReturnValue(false);
 	}
 
 	@Override

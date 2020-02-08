@@ -10,7 +10,6 @@ package net.wurstclient.hacks;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.util.ChatUtil;
 import net.wurstclient.Category;

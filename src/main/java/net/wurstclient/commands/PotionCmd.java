@@ -8,7 +8,6 @@
 package net.wurstclient.commands;
 
 import java.util.List;
-
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;

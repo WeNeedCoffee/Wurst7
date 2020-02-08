@@ -6,13 +6,14 @@
  * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.command;
-
+/*
 import static baritone.api.command.IBaritoneChatControl.FORCE_COMMAND_PREFIX;
-import java.util.Arrays;
+
 import baritone.api.BaritoneAPI;
 import baritone.api.command.exception.CommandNotFoundException;
-import baritone.command.BaritoneChatControl;
-import baritone.command.manager.CommandManager;
+import baritone.command.BaritoneChatControl;*/
+import java.util.Arrays;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -80,7 +81,7 @@ public final class CmdProcessor implements ChatOutputListener {
 
 	public void process(String input) {
 		try {
-			if (input.startsWith("@")) {
+			/*if (input.startsWith("@")) {
 				String prefix = BaritoneAPI.getSettings().prefix.value;
 				boolean forceRun = input.startsWith(FORCE_COMMAND_PREFIX);
 				if (BaritoneAPI.getSettings().prefixControl.value && input.startsWith(prefix) || forceRun) {
@@ -93,10 +94,10 @@ public final class CmdProcessor implements ChatOutputListener {
 					return;
 				}
 				
-			} else {
+			} else {*/
 				Command cmd = parseCmd(input);
 				runCmd(cmd, input);
-			}
+			//}
 		} catch (CmdNotFoundException e) {
 			e.printToChat();
 		}

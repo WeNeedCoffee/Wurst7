@@ -15,10 +15,10 @@ import net.wurstclient.SearchTags;
 import net.wurstclient.events.ChatInputListener;
 import net.wurstclient.events.ChatOutputListener;
 import net.wurstclient.hack.Hack;
-import net.wurstclient.settings.CheckboxSetting;
-import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.services.GoogleService;
 import net.wurstclient.services.GoogleService.Language;
+import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.settings.EnumSetting;
 import net.wurstclient.util.ChatUtils;
 
 @SearchTags({ "AutoTranslate", "Translate" })

@@ -19,8 +19,8 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.container.SlotActionType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.packet.PlayerActionC2SPacket;
-import net.minecraft.server.network.packet.PlayerActionC2SPacket.Action;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -100,7 +100,7 @@ public abstract class ClientPlayerInteractionManagerMixin implements IClientPlay
 	}
 
 	@Shadow
-	private void sendPlayerAction(PlayerActionC2SPacket.Action playerActionC2SPacket$Action_1, BlockPos blockPos_1, Direction direction_1) {
+	private void sendPlayerAction(Action playerActionC2SPacket$Action_1, BlockPos blockPos_1, Direction direction_1) {
 
 	}
 

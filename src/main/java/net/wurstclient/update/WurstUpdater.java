@@ -14,7 +14,6 @@ import net.wurstclient.WurstClient;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.util.ChatUtils;
 import net.wurstclient.util.json.JsonException;
-import net.wurstclient.util.json.JsonUtils;
 import net.wurstclient.util.json.WsonArray;
 import net.wurstclient.util.json.WsonObject;
 

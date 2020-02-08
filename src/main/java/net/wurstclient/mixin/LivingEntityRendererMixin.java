@@ -17,11 +17,11 @@ import net.wurstclient.WurstClient;
 
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin {
-	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;canSeePlayer(Lnet/minecraft/entity/player/PlayerEntity;)Z", ordinal = 0), method = { "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V" })
+	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisibleTo(Lnet/minecraft/entity/player/PlayerEntity;)Z", ordinal = 0), method = { "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V" })
 	private boolean canWurstSeePlayer(LivingEntity e, PlayerEntity player) {
 		if (WurstClient.INSTANCE.getHax().trueSightHack.isEnabled())
 			return false;
 
-		return e.canSeePlayer(player);
+		return e.isInvisibleTo(player);
 	}
 }

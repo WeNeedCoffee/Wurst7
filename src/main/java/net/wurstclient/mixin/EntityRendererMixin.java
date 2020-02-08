@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -39,6 +39,13 @@ public abstract class EntityRendererMixin<T extends Entity> {
 
 		wurstRenderLabelIfPresent(entity, string, matrixStack, vertexConsumerProvider, i);
 		ci.cancel();
+	}
+
+	@Inject(at = { @At("HEAD") }, method = { "hasLabel(Lnet/minecraft/entity/Entity;)Z" }, cancellable = true)
+	protected void hasLabel(T entity, CallbackInfoReturnable<Boolean> cir) {
+		if (WurstClient.INSTANCE.getHax().healthTagsHack.isEnabled() || WurstClient.INSTANCE.getHax().nameTagsHack.isEnabled()) {
+			cir.setReturnValue(WurstClient.MC.player.canSee(entity));
+		}
 	}
 
 	/**

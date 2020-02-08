@@ -122,7 +122,7 @@ public final class HackList implements UpdateListener {
 	public final RadarHack radarHack = new RadarHack();
 	public final RainbowUiHack rainbowUiHack = new RainbowUiHack();
 	public final ReachHack reachHack = new ReachHack();
-	// public final RemoteViewHack remoteViewHack = new RemoteViewHack();
+	public final RemoteViewHack remoteViewHack = new RemoteViewHack();
 	public final SafeWalkHack safeWalkHack = new SafeWalkHack();
 	public final ScaffoldWalkHack scaffoldWalkHack = new ScaffoldWalkHack();
 	public final SearchHack searchHack = new SearchHack();
@@ -132,7 +132,7 @@ public final class HackList implements UpdateListener {
 	// public final SpeedHackHack speedHackHack = new SpeedHackHack();
 	public final SpeedNukerHack speedNukerHack = new SpeedNukerHack();
 	public final SpiderHack spiderHack = new SpiderHack();
-	// public final StepHack stepHack = new StepHack();
+	public final StepHack stepHack = new StepHack();
 	public final ThrowHack throwHack = new ThrowHack();
 	public final TimerHack timerHack = new TimerHack();
 	public final TiredHack tiredHack = new TiredHack();
