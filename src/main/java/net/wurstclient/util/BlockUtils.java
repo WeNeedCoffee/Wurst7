@@ -7,11 +7,23 @@
  */
 package net.wurstclient.util;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import org.json.JSONException;
+import org.json.JSONObject;
+import coffee.weneed.utils.NetUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemConvertible;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.math.BlockPos;
@@ -49,12 +61,103 @@ public enum BlockUtils {
 		return getState(pos).getBlock();
 	}
 
+	static File f = new File("./ids.json");
+	static Map<String, String> blocks = new HashMap<>();
+	static Map<String, String> items = new HashMap<>();
+
+	static {
+		JSONObject json;
+		try {
+			json = new JSONObject(new String(NetUtil.downloadUrl(f.toURI().toURL()), StandardCharsets.UTF_8));
+			System.out.println(json);
+			for (String e : json.getJSONObject("items").keySet()) {
+				items.put(e, json.optJSONObject("items").getString(e));
+			}
+			for (String e : json.getJSONObject("blocks").keySet()) {
+				blocks.put(e, json.optJSONObject("blocks").getString(e));
+			}
+		} catch (JSONException | IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+	}
+
+	public static void call() throws JSONException, IOException {
+		Map<Integer, String> bids = new HashMap<>();
+		int i = 0;
+		for (Block b : Registry.BLOCK) {
+			bids.put(i, b.getName().asString());
+			i++;
+		}
+
+		Map<Integer, String> iids = new HashMap<>();
+		i = 0;
+		for (Item it : Registry.ITEM) {
+			iids.put(i, it.getName().asString());
+			i++;
+		}
+		f.delete();
+		FileOutputStream fos = new FileOutputStream(f);
+		JSONObject json = new JSONObject().put("blocks", bids);
+		fos.write(json.put("items", iids).toString().getBytes());
+		fos.flush();
+		fos.close();
+		f.setLastModified(System.currentTimeMillis());
+
+	}
+
+	public static ItemConvertible getItemOrBlock(String name) {
+		if (name.matches("\\d*i")) {
+			return getItemFromName(items.get(name.replace("i", "")).replace(" ", "_").toLowerCase());
+		} else if (name.matches("\\d*b")) {
+			return getBlockFromName(blocks.get(name.replace("b", "")).replace(" ", "_").toLowerCase());
+		}
+		Item i = getItemFromName(name);
+		if (!i.equals(Items.AIR))
+			return i;
+		Block b = getBlockFromName(name);
+		return b;
+	}
+
 	public static Block getBlockFromName(String name) {
 		try {
 			return Registry.BLOCK.get(new Identifier(name));
 
 		} catch (InvalidIdentifierException e) {
 			return Blocks.AIR;
+		}
+	}
+
+	public static String getID(Item item) {
+		String name = item.getName().asString();
+		for (String i : items.keySet()) {
+			if (items.get(i.replace(" ", "_")).equalsIgnoreCase(name.replace(" ", "_"))) {
+				return i + "i";
+			}
+		}
+
+		for (String i : blocks.keySet()) {
+			if (blocks.get(i).equalsIgnoreCase(name)) {
+				return i + "b";
+			}
+		}
+
+		return "0i";
+	}
+
+	public static String getID(String name) {
+
+		return getID(getItemOrBlock(name).asItem());
+
+	}
+
+	public static Item getItemFromName(String name) {
+		try {
+			return Registry.ITEM.get(new Identifier(name));
+
+		} catch (InvalidIdentifierException e) {
+			return Items.AIR;
 		}
 	}
 

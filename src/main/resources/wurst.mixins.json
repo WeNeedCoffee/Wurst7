@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "AnvilScreenMixin",
     "ArmorItemMixin",
     "BackgroundRendererMixin",
   	"BlockEntityRenderDispatcherMixin",
@@ -29,6 +30,8 @@
     "GameMenuScreenMixin",
     "GameRendererMixin",
     "IngameHudMixin",
+    "ItemRendererMixin",
+    "ItemStackMixin",
     "KeyBindingMixin",
     "KeyboardMixin",
     "LivingEntityRendererMixin",

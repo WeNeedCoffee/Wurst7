@@ -11,27 +11,27 @@ import java.nio.file.Path;
 import net.wurstclient.analytics.dmurph.AnalyticsRequestData;
 
 public final class WurstAnalytics {
-	private final String hostname;
-	private final WurstAnalyticsTracker tracker;
-	private final AnalyticsConfigFile configFile;
+	private String hostname;
+	private WurstAnalyticsTracker tracker;
+	private AnalyticsConfigFile configFile;
 
 	public WurstAnalytics(String trackingID, String hostname, Path configFile) {
-		tracker = new WurstAnalyticsTracker(trackingID);
+		/*tracker = new WurstAnalyticsTracker(trackingID);
 		this.hostname = hostname;
 		this.configFile = new AnalyticsConfigFile(configFile);
-		this.configFile.load(tracker);
+		this.configFile.load(tracker);*/
 	}
 
 	public boolean isEnabled() {
-		return tracker.isEnabled();
+		return false;//return tracker.isEnabled();
 	}
 
 	public void makeCustomRequest(AnalyticsRequestData data) {
-		tracker.makeCustomRequest(data);
+		//tracker.makeCustomRequest(data);
 	}
 
 	public void setEnabled(boolean enabled) {
-		if (!enabled) {
+		/*if (!enabled) {
 			trackEvent("options", "analytics", "disable");
 		}
 
@@ -40,30 +40,30 @@ public final class WurstAnalytics {
 
 		if (enabled) {
 			trackEvent("options", "analytics", "enable");
-		}
+		}*/
 	}
 
 	public void trackEvent(String category, String action) {
-		tracker.trackEvent(category, action);
+		//tracker.trackEvent(category, action);
 	}
 
 	public void trackEvent(String category, String action, String label) {
-		tracker.trackEvent(category, action, label);
+		//tracker.trackEvent(category, action, label);
 	}
 
 	public void trackEvent(String category, String action, String label, Integer value) {
-		tracker.trackEvent(category, action, label, value);
+		//tracker.trackEvent(category, action, label, value);
 	}
 
 	public void trackPageView(String url, String title) {
-		tracker.trackPageView(url, title, hostname);
+		//tracker.trackPageView(url, title, hostname);
 	}
 
 	public void trackPageViewFromReferrer(String url, String title, String referrerSite, String referrerPage) {
-		tracker.trackPageViewFromReferrer(url, title, hostname, referrerSite, referrerPage);
+		//tracker.trackPageViewFromReferrer(url, title, hostname, referrerSite, referrerPage);
 	}
 
 	public void trackPageViewFromSearch(String url, String title, String searchSource, String keywords) {
-		tracker.trackPageViewFromSearch(url, title, hostname, searchSource, keywords);
+		//tracker.trackPageViewFromSearch(url, title, hostname, searchSource, keywords);
 	}
 }
