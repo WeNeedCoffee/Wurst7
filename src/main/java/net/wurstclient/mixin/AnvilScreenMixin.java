@@ -19,7 +19,7 @@ import net.wurstclient.WurstClient;
 import net.wurstclient.util.BlockUtils;
 
 @Mixin(AnvilScreen.class)
-public abstract class AnvilScreenMixin  extends ContainerScreen<AnvilContainer>{
+public abstract class AnvilScreenMixin extends ContainerScreen<AnvilContainer> {
 
 	public AnvilScreenMixin(AnvilContainer container, PlayerInventory playerInventory, Text name) {
 		super(container, playerInventory, name);
@@ -28,13 +28,12 @@ public abstract class AnvilScreenMixin  extends ContainerScreen<AnvilContainer>{
 	@Shadow
 	private TextFieldWidget nameField;
 
-	
 	@Inject(at = { @At("HEAD") }, method = { "onRenamed(Ljava/lang/String;)V" }, cancellable = true)
 	private void onRenamed(String name, CallbackInfo ci) {
 		if (!name.isEmpty()) {
 			String string = name;
 			Slot slot = ((AnvilContainer) this.getContainer()).getSlot(0);
-			if (slot.hasStack() && slot.getStack().getItem().equals(Items.SHULKER_BOX)) {
+			if (slot.hasStack() && slot.getStack().getItem().equals(Items.SHULKER_BOX) && string.contains(":")) {
 				if (slot != null && slot.hasStack() && !slot.getStack().hasCustomName() && name.equals(slot.getStack().getName().getString())) {
 					string = "";
 				}
@@ -44,11 +43,11 @@ public abstract class AnvilScreenMixin  extends ContainerScreen<AnvilContainer>{
 					String e = BlockUtils.getID(t);
 					if (!e.equalsIgnoreCase("0i")) {
 						int l = string.split(":")[0].length();
-						String f = string.substring(l);
+						String f = string.substring(l + (l > 1 ? 1 : 0));
 						string = e + (f.isEmpty() ? "" : ":" + f);
-						 this.nameField.setChangedListener(null);
+						this.nameField.setChangedListener(null);
 						nameField.setText(string);
-						 this.nameField.setChangedListener(this::onRenamed);
+						this.nameField.setChangedListener(this::onRenamed);
 					}
 				}
 				((AnvilContainer) this.getContainer()).setNewItemName(string);
@@ -57,9 +56,9 @@ public abstract class AnvilScreenMixin  extends ContainerScreen<AnvilContainer>{
 		}
 		ci.cancel();
 	}
-	
+
 	@Shadow
 	private void onRenamed(String s) {
-		
+
 	}
 }
