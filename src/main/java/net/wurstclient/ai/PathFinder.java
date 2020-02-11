@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public License,
- * version 3. If a copy of the GPL was not distributed with this file, You can
- * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public
+ * License, version 3. If a copy of the GPL was not distributed with this
+ * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.ai;
 
@@ -11,21 +11,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
+
 import org.lwjgl.opengl.GL11;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CobwebBlock;
-import net.minecraft.block.FenceBlock;
-import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.Material;
-import net.minecraft.block.PressurePlateBlock;
-import net.minecraft.block.SignBlock;
-import net.minecraft.block.SlimeBlock;
-import net.minecraft.block.SoulSandBlock;
-import net.minecraft.block.TripwireBlock;
-import net.minecraft.block.VineBlock;
-import net.minecraft.block.WallBlock;
+
+import net.minecraft.block.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.wurstclient.WurstClient;
@@ -63,11 +52,10 @@ public class PathFinder {
 	private final ArrayList<PathPos> path = new ArrayList<>();
 
 	public PathFinder(BlockPos goal) {
-		if (WurstClient.MC.player.onGround) {
+		if (WurstClient.MC.player.onGround)
 			start = new PathPos(new BlockPos(WurstClient.MC.player.getX(), WurstClient.MC.player.getY() + 0.5, WurstClient.MC.player.getZ()));
-		} else {
+		else
 			start = new PathPos(new BlockPos(WurstClient.MC.player));
-		}
 		this.goal = goal;
 
 		costMap.put(start, 0F);
@@ -80,21 +68,184 @@ public class PathFinder {
 		thinkTime = pathFinder.thinkTime;
 	}
 
+	public void think() {
+		if (done)
+			throw new IllegalStateException("Path was already found!");
+
+		int i = 0;
+		for (; i < thinkSpeed && !checkFailed(); i++) {
+			// get next position from queue
+			current = queue.poll();
+
+			// check if path is found
+			if (checkDone())
+				return;
+
+			// add neighbors to queue
+			for (PathPos next : getNeighbors(current)) {
+				// check cost
+				float newCost = costMap.get(current) + getCost(current, next);
+				if (costMap.containsKey(next) && costMap.get(next) <= newCost)
+					continue;
+
+				// add to queue
+				costMap.put(next, newCost);
+				prevPosMap.put(next, current);
+				queue.add(next, newCost + getHeuristic(next));
+			}
+		}
+		iterations += i;
+	}
+
+	protected boolean checkDone() {
+		return done = goal.equals(current);
+	}
+
+	private boolean checkFailed() {
+		return failed = queue.isEmpty() || iterations >= thinkSpeed * thinkTime;
+	}
+
+	private ArrayList<PathPos> getNeighbors(PathPos pos) {
+		ArrayList<PathPos> neighbors = new ArrayList<>();
+
+		// abort if too far away
+		if (Math.abs(start.getX() - pos.getX()) > 256 || Math.abs(start.getZ() - pos.getZ()) > 256)
+			return neighbors;
+
+		// get all neighbors
+		BlockPos north = pos.north();
+		BlockPos east = pos.east();
+		BlockPos south = pos.south();
+		BlockPos west = pos.west();
+
+		BlockPos northEast = north.east();
+		BlockPos southEast = south.east();
+		BlockPos southWest = south.west();
+		BlockPos northWest = north.west();
+
+		BlockPos up = pos.up();
+		BlockPos down = pos.down();
+
+		// flying
+		boolean flying = canFlyAt(pos);
+		// walking
+		boolean onGround = canBeSolid(down);
+
+		// player can move sideways if flying, standing on the ground, jumping,
+		// or inside of a block that allows sideways movement (ladders, webs,
+		// etc.)
+		if (flying || onGround || pos.isJumping() || canMoveSidewaysInMidairAt(pos) || canClimbUpAt(pos.down())) {
+			// north
+			if (checkHorizontalMovement(pos, north))
+				neighbors.add(new PathPos(north));
+
+			// east
+			if (checkHorizontalMovement(pos, east))
+				neighbors.add(new PathPos(east));
+
+			// south
+			if (checkHorizontalMovement(pos, south))
+				neighbors.add(new PathPos(south));
+
+			// west
+			if (checkHorizontalMovement(pos, west))
+				neighbors.add(new PathPos(west));
+
+			// north-east
+			if (checkDiagonalMovement(pos, Direction.NORTH, Direction.EAST))
+				neighbors.add(new PathPos(northEast));
+
+			// south-east
+			if (checkDiagonalMovement(pos, Direction.SOUTH, Direction.EAST))
+				neighbors.add(new PathPos(southEast));
+
+			// south-west
+			if (checkDiagonalMovement(pos, Direction.SOUTH, Direction.WEST))
+				neighbors.add(new PathPos(southWest));
+
+			// north-west
+			if (checkDiagonalMovement(pos, Direction.NORTH, Direction.WEST))
+				neighbors.add(new PathPos(northWest));
+		}
+
+		// up
+		if (pos.getY() < 256 && canGoThrough(up.up()) && (flying || onGround || canClimbUpAt(pos)) && (flying || canClimbUpAt(pos) || goal.equals(up) || canSafelyStandOn(north) || canSafelyStandOn(east) || canSafelyStandOn(south) || canSafelyStandOn(west)) && (divingAllowed || BlockUtils.getState(up.up()).getMaterial() != Material.WATER))
+			neighbors.add(new PathPos(up, onGround));
+
+		// down
+		if (pos.getY() > 0 && canGoThrough(down) && canGoAbove(down.down()) && (flying || canFallBelow(pos)) && (divingAllowed || BlockUtils.getState(pos).getMaterial() != Material.WATER))
+			neighbors.add(new PathPos(down));
+
+		return neighbors;
+	}
+
+	private boolean checkHorizontalMovement(BlockPos current, BlockPos next) {
+		if (isPassable(next) && (canFlyAt(current) || canGoThrough(next.down()) || canSafelyStandOn(next.down())))
+			return true;
+
+		return false;
+	}
+
+	private boolean checkDiagonalMovement(BlockPos current, Direction direction1, Direction direction2) {
+		BlockPos horizontal1 = current.offset(direction1);
+		BlockPos horizontal2 = current.offset(direction2);
+		BlockPos next = horizontal1.offset(direction2);
+
+		if (isPassable(horizontal1) && isPassable(horizontal2) && checkHorizontalMovement(current, next))
+			return true;
+
+		return false;
+	}
+
+	protected boolean isPassable(BlockPos pos) {
+		return canGoThrough(pos) && canGoThrough(pos.up()) && canGoAbove(pos.down()) && (divingAllowed || BlockUtils.getState(pos.up()).getMaterial() != Material.WATER);
+	}
+
 	protected boolean canBeSolid(BlockPos pos) {
 		Material material = BlockUtils.getState(pos).getMaterial();
 		Block block = BlockUtils.getBlock(pos);
 		return material.blocksMovement() && !(block instanceof SignBlock) || block instanceof LadderBlock || jesus && (material == Material.WATER || material == Material.LAVA);
 	}
 
-	private boolean canClimbUpAt(BlockPos pos) {
-		// check if this block works for climbing
-		Block block = BlockUtils.getBlock(pos);
-		if (!spider && !(block instanceof LadderBlock) && !(block instanceof VineBlock))
+	private boolean canGoThrough(BlockPos pos) {
+		// check if loaded
+		if (!WurstClient.MC.world.isChunkLoaded(pos))
 			return false;
 
-		// check if any adjacent block is solid
-		BlockPos up = pos.up();
-		if (!canBeSolid(pos.north()) && !canBeSolid(pos.east()) && !canBeSolid(pos.south()) && !canBeSolid(pos.west()) && !canBeSolid(up.north()) && !canBeSolid(up.east()) && !canBeSolid(up.south()) && !canBeSolid(up.west()))
+		// check if solid
+		Material material = BlockUtils.getState(pos).getMaterial();
+		Block block = BlockUtils.getBlock(pos);
+		if (material.blocksMovement() && !(block instanceof SignBlock))
+			return false;
+
+		// check if trapped
+		if (block instanceof TripwireBlock || block instanceof PressurePlateBlock)
+			return false;
+
+		// check if safe
+		if (!invulnerable && (material == Material.LAVA || material == Material.FIRE))
+			return false;
+
+		return true;
+	}
+
+	private boolean canGoAbove(BlockPos pos) {
+		// check for fences, etc.
+		Block block = BlockUtils.getBlock(pos);
+		if (block instanceof FenceBlock || block instanceof WallBlock || block instanceof FenceGateBlock)
+			return false;
+
+		return true;
+	}
+
+	private boolean canSafelyStandOn(BlockPos pos) {
+		// check if solid
+		Material material = BlockUtils.getState(pos).getMaterial();
+		if (!canBeSolid(pos))
+			return false;
+
+		// check if safe
+		if (!invulnerable && (material == Material.CACTUS || material == Material.LAVA))
 			return false;
 
 		return true;
@@ -148,32 +299,15 @@ public class PathFinder {
 		return flying || !noWaterSlowdown && BlockUtils.getState(pos).getMaterial() == Material.WATER;
 	}
 
-	private boolean canGoAbove(BlockPos pos) {
-		// check for fences, etc.
+	private boolean canClimbUpAt(BlockPos pos) {
+		// check if this block works for climbing
 		Block block = BlockUtils.getBlock(pos);
-		if (block instanceof FenceBlock || block instanceof WallBlock || block instanceof FenceGateBlock)
+		if (!spider && !(block instanceof LadderBlock) && !(block instanceof VineBlock))
 			return false;
 
-		return true;
-	}
-
-	private boolean canGoThrough(BlockPos pos) {
-		// check if loaded
-		if (!WurstClient.MC.world.isChunkLoaded(pos))
-			return false;
-
-		// check if solid
-		Material material = BlockUtils.getState(pos).getMaterial();
-		Block block = BlockUtils.getBlock(pos);
-		if (material.blocksMovement() && !(block instanceof SignBlock))
-			return false;
-
-		// check if trapped
-		if (block instanceof TripwireBlock || block instanceof PressurePlateBlock)
-			return false;
-
-		// check if safe
-		if (!invulnerable && (material == Material.LAVA || material == Material.FIRE))
+		// check if any adjacent block is solid
+		BlockPos up = pos.up();
+		if (!canBeSolid(pos.north()) && !canBeSolid(pos.east()) && !canBeSolid(pos.south()) && !canBeSolid(pos.west()) && !canBeSolid(up.north()) && !canBeSolid(up.east()) && !canBeSolid(up.south()) && !canBeSolid(up.west()))
 			return false;
 
 		return true;
@@ -193,65 +327,83 @@ public class PathFinder {
 		return false;
 	}
 
-	private boolean canSafelyStandOn(BlockPos pos) {
-		// check if solid
-		Material material = BlockUtils.getState(pos).getMaterial();
-		if (!canBeSolid(pos))
-			return false;
+	private float getCost(BlockPos current, BlockPos next) {
+		float[] costs = { 0.5F, 0.5F };
+		BlockPos[] positions = new BlockPos[] { current, next };
 
-		// check if safe
-		if (!invulnerable && (material == Material.CACTUS || material == Material.LAVA))
-			return false;
+		for (int i = 0; i < positions.length; i++) {
+			Material material = BlockUtils.getState(positions[i]).getMaterial();
 
-		return true;
+			// liquids
+			if (material == Material.WATER && !noWaterSlowdown)
+				costs[i] *= 1.3164437838225804F;
+			else if (material == Material.LAVA)
+				costs[i] *= 4.539515393656079F;
+
+			// soul sand
+			if (!canFlyAt(positions[i]) && BlockUtils.getBlock(positions[i].down()) instanceof SoulSandBlock)
+				costs[i] *= 2.5F;
+		}
+
+		float cost = costs[0] + costs[1];
+
+		// diagonal movement
+		if (current.getX() != next.getX() && current.getZ() != next.getZ())
+			cost *= 1.4142135623730951F;
+
+		return cost;
 	}
 
-	private boolean checkDiagonalMovement(BlockPos current, Direction direction1, Direction direction2) {
-		BlockPos horizontal1 = current.offset(direction1);
-		BlockPos horizontal2 = current.offset(direction2);
-		BlockPos next = horizontal1.offset(direction2);
-
-		if (isPassable(horizontal1) && isPassable(horizontal2) && checkHorizontalMovement(current, next))
-			return true;
-
-		return false;
+	private float getHeuristic(BlockPos pos) {
+		float dx = Math.abs(pos.getX() - goal.getX());
+		float dy = Math.abs(pos.getY() - goal.getY());
+		float dz = Math.abs(pos.getZ() - goal.getZ());
+		return 1.001F * (dx + dy + dz - 0.5857864376269049F * Math.min(dx, dz));
 	}
 
-	protected boolean checkDone() {
-		return done = goal.equals(current);
+	public PathPos getCurrentPos() {
+		return current;
 	}
 
-	private boolean checkFailed() {
-		return failed = queue.isEmpty() || iterations >= thinkSpeed * thinkTime;
-	}
-
-	private boolean checkHorizontalMovement(BlockPos current, BlockPos next) {
-		if (isPassable(next) && (canFlyAt(current) || canGoThrough(next.down()) || canSafelyStandOn(next.down())))
-			return true;
-
-		return false;
+	public BlockPos getGoal() {
+		return goal;
 	}
 
 	public int countProcessedBlocks() {
 		return prevPosMap.keySet().size();
 	}
 
+	public int getQueueSize() {
+		return queue.size();
+	}
+
+	public float getCost(BlockPos pos) {
+		return costMap.get(pos);
+	}
+
+	public boolean isDone() {
+		return done;
+	}
+
+	public boolean isFailed() {
+		return failed;
+	}
+
 	public ArrayList<PathPos> formatPath() {
-		if (!done && !failed)
-			throw new IllegalStateException("No path found!");
-		if (!path.isEmpty())
-			throw new IllegalStateException("Path was already formatted!");
+		//if(!done && !failed)
+		//	throw new IllegalStateException("No path found!");
+		//if(!path.isEmpty())
+		//	throw new IllegalStateException("Path was already formatted!");
 
 		// get last position
 		PathPos pos;
-		if (!failed) {
+		if (!failed)
 			pos = current;
-		} else {
+		else {
 			pos = start;
 			for (PathPos next : prevPosMap.keySet())
-				if (getHeuristic(next) < getHeuristic(pos) && (canFlyAt(next) || canBeSolid(next.down()))) {
+				if (getHeuristic(next) < getHeuristic(pos) && (canFlyAt(next) || canBeSolid(next.down())))
 					pos = next;
-				}
 		}
 
 		// get positions
@@ -266,160 +418,70 @@ public class PathFinder {
 		return path;
 	}
 
-	public float getCost(BlockPos pos) {
-		return costMap.get(pos);
-	}
+	public void renderPath(boolean debugMode, boolean depthTest) {
+		// GL settings
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glDisable(GL11.GL_CULL_FACE);
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		if (!depthTest)
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthMask(false);
 
-	private float getCost(BlockPos current, BlockPos next) {
-		float[] costs = { 0.5F, 0.5F };
-		BlockPos[] positions = new BlockPos[] { current, next };
+		GL11.glPushMatrix();
+		RenderUtils.applyRenderOffset();
+		GL11.glTranslated(0.5, 0.5, 0.5);
 
-		for (int i = 0; i < positions.length; i++) {
-			Material material = BlockUtils.getState(positions[i]).getMaterial();
+		if (debugMode) {
+			int renderedThings = 0;
 
-			// liquids
-			if (material == Material.WATER && !noWaterSlowdown) {
-				costs[i] *= 1.3164437838225804F;
-			} else if (material == Material.LAVA) {
-				costs[i] *= 4.539515393656079F;
+			// queue (yellow)
+			GL11.glLineWidth(2);
+			GL11.glColor4f(1, 1, 0, 0.75F);
+			for (PathPos element : queue.toArray()) {
+				if (renderedThings >= 5000)
+					break;
+
+				PathRenderer.renderNode(element);
+				renderedThings++;
 			}
 
-			// soul sand
-			if (!canFlyAt(positions[i]) && BlockUtils.getBlock(positions[i].down()) instanceof SoulSandBlock) {
-				costs[i] *= 2.5F;
-			}
-		}
+			// processed (red)
+			GL11.glLineWidth(2);
+			for (Entry<PathPos, PathPos> entry : prevPosMap.entrySet()) {
+				if (renderedThings >= 5000)
+					break;
 
-		float cost = costs[0] + costs[1];
+				if (entry.getKey().isJumping())
+					GL11.glColor4f(1, 0, 1, 0.75F);
+				else
+					GL11.glColor4f(1, 0, 0, 0.75F);
 
-		// diagonal movement
-		if (current.getX() != next.getX() && current.getZ() != next.getZ()) {
-			cost *= 1.4142135623730951F;
-		}
-
-		return cost;
-	}
-
-	public PathPos getCurrentPos() {
-		return current;
-	}
-
-	public BlockPos getGoal() {
-		return goal;
-	}
-
-	private float getHeuristic(BlockPos pos) {
-		float dx = Math.abs(pos.getX() - goal.getX());
-		float dy = Math.abs(pos.getY() - goal.getY());
-		float dz = Math.abs(pos.getZ() - goal.getZ());
-		return 1.001F * (dx + dy + dz - 0.5857864376269049F * Math.min(dx, dz));
-	}
-
-	private ArrayList<PathPos> getNeighbors(PathPos pos) {
-		ArrayList<PathPos> neighbors = new ArrayList<>();
-
-		// abort if too far away
-		if (Math.abs(start.getX() - pos.getX()) > 256 || Math.abs(start.getZ() - pos.getZ()) > 256)
-			return neighbors;
-
-		// get all neighbors
-		BlockPos north = pos.north();
-		BlockPos east = pos.east();
-		BlockPos south = pos.south();
-		BlockPos west = pos.west();
-
-		BlockPos northEast = north.east();
-		BlockPos southEast = south.east();
-		BlockPos southWest = south.west();
-		BlockPos northWest = north.west();
-
-		BlockPos up = pos.up();
-		BlockPos down = pos.down();
-
-		// flying
-		boolean flying = canFlyAt(pos);
-		// walking
-		boolean onGround = canBeSolid(down);
-
-		// player can move sideways if flying, standing on the ground, jumping,
-		// or inside of a block that allows sideways movement (ladders, webs,
-		// etc.)
-		if (flying || onGround || pos.isJumping() || canMoveSidewaysInMidairAt(pos) || canClimbUpAt(pos.down())) {
-			// north
-			if (checkHorizontalMovement(pos, north)) {
-				neighbors.add(new PathPos(north));
-			}
-
-			// east
-			if (checkHorizontalMovement(pos, east)) {
-				neighbors.add(new PathPos(east));
-			}
-
-			// south
-			if (checkHorizontalMovement(pos, south)) {
-				neighbors.add(new PathPos(south));
-			}
-
-			// west
-			if (checkHorizontalMovement(pos, west)) {
-				neighbors.add(new PathPos(west));
-			}
-
-			// north-east
-			if (checkDiagonalMovement(pos, Direction.NORTH, Direction.EAST)) {
-				neighbors.add(new PathPos(northEast));
-			}
-
-			// south-east
-			if (checkDiagonalMovement(pos, Direction.SOUTH, Direction.EAST)) {
-				neighbors.add(new PathPos(southEast));
-			}
-
-			// south-west
-			if (checkDiagonalMovement(pos, Direction.SOUTH, Direction.WEST)) {
-				neighbors.add(new PathPos(southWest));
-			}
-
-			// north-west
-			if (checkDiagonalMovement(pos, Direction.NORTH, Direction.WEST)) {
-				neighbors.add(new PathPos(northWest));
+				PathRenderer.renderArrow(entry.getValue(), entry.getKey());
+				renderedThings++;
 			}
 		}
 
-		// up
-		if (pos.getY() < 256 && canGoThrough(up.up()) && (flying || onGround || canClimbUpAt(pos)) && (flying || canClimbUpAt(pos) || goal.equals(up) || canSafelyStandOn(north) || canSafelyStandOn(east) || canSafelyStandOn(south) || canSafelyStandOn(west)) && (divingAllowed || BlockUtils.getState(up.up()).getMaterial() != Material.WATER)) {
-			neighbors.add(new PathPos(up, onGround));
+		// path (blue)
+		if (debugMode) {
+			GL11.glLineWidth(4);
+			GL11.glColor4f(0, 0, 1, 0.75F);
+		} else {
+			GL11.glLineWidth(2);
+			GL11.glColor4f(0, 1, 0, 0.75F);
 		}
+		for (int i = 0; i < path.size() - 1; i++)
+			PathRenderer.renderArrow(path.get(i), path.get(i + 1));
 
-		// down
-		if (pos.getY() > 0 && canGoThrough(down) && canGoAbove(down.down()) && (flying || canFallBelow(pos)) && (divingAllowed || BlockUtils.getState(pos).getMaterial() != Material.WATER)) {
-			neighbors.add(new PathPos(down));
-		}
+		GL11.glPopMatrix();
 
-		return neighbors;
-	}
-
-	public PathProcessor getProcessor() {
-		if (flying)
-			return new FlyPathProcessor(path, creativeFlying);
-
-		return new WalkPathProcessor(path);
-	}
-
-	public int getQueueSize() {
-		return queue.size();
-	}
-
-	public boolean isDone() {
-		return done;
-	}
-
-	public boolean isFailed() {
-		return failed;
-	}
-
-	protected boolean isPassable(BlockPos pos) {
-		return canGoThrough(pos) && canGoThrough(pos.up()) && canGoAbove(pos.down()) && (divingAllowed || BlockUtils.getState(pos.up()).getMaterial() != Material.WATER);
+		// GL resets
+		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glDisable(GL11.GL_LINE_SMOOTH);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthMask(true);
 	}
 
 	public boolean isPathStillValid(int index) {
@@ -449,83 +511,11 @@ public class PathFinder {
 		return true;
 	}
 
-	public void renderPath(boolean debugMode, boolean depthTest) {
-		// GL settings
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glDisable(GL11.GL_CULL_FACE);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_LINE_SMOOTH);
-		if (!depthTest) {
-			GL11.glDisable(GL11.GL_DEPTH_TEST);
-		}
-		GL11.glDepthMask(false);
+	public PathProcessor getProcessor() {
+		if (flying)
+			return new FlyPathProcessor(path, creativeFlying);
 
-		GL11.glPushMatrix();
-		RenderUtils.applyRenderOffset();
-		GL11.glTranslated(0.5, 0.5, 0.5);
-
-		if (debugMode) {
-			int renderedThings = 0;
-
-			// queue (yellow)
-			GL11.glLineWidth(2);
-			GL11.glColor4f(1, 1, 0, 0.75F);
-			for (PathPos element : queue.toArray()) {
-				if (renderedThings >= 5000) {
-					break;
-				}
-
-				PathRenderer.renderNode(element);
-				renderedThings++;
-			}
-
-			// processed (red)
-			GL11.glLineWidth(2);
-			for (Entry<PathPos, PathPos> entry : prevPosMap.entrySet()) {
-				if (renderedThings >= 5000) {
-					break;
-				}
-
-				if (entry.getKey().isJumping()) {
-					GL11.glColor4f(1, 0, 1, 0.75F);
-				} else {
-					GL11.glColor4f(1, 0, 0, 0.75F);
-				}
-
-				PathRenderer.renderArrow(entry.getValue(), entry.getKey());
-				renderedThings++;
-			}
-		}
-
-		// path (blue)
-		if (debugMode) {
-			GL11.glLineWidth(4);
-			GL11.glColor4f(0, 0, 1, 0.75F);
-		} else {
-			GL11.glLineWidth(2);
-			GL11.glColor4f(0, 1, 0, 0.75F);
-		}
-		for (int i = 0; i < path.size() - 1; i++) {
-			PathRenderer.renderArrow(path.get(i), path.get(i + 1));
-		}
-
-		GL11.glPopMatrix();
-
-		// GL resets
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_LINE_SMOOTH);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthMask(true);
-	}
-
-	public void setDivingAllowed(boolean divingAllowed) {
-		this.divingAllowed = divingAllowed;
-	}
-
-	public void setFallingAllowed(boolean fallingAllowed) {
-		this.fallingAllowed = fallingAllowed;
+		return new WalkPathProcessor(path);
 	}
 
 	public void setThinkSpeed(int thinkSpeed) {
@@ -536,33 +526,11 @@ public class PathFinder {
 		this.thinkTime = thinkTime;
 	}
 
-	public void think() {
-		if (done)
-			throw new IllegalStateException("Path was already found!");
+	public void setFallingAllowed(boolean fallingAllowed) {
+		this.fallingAllowed = fallingAllowed;
+	}
 
-		int i = 0;
-		for (; i < thinkSpeed && !checkFailed(); i++) {
-			// get next position from queue
-			current = queue.poll();
-
-			// check if path is found
-			if (checkDone())
-				return;
-
-			// add neighbors to queue
-			for (PathPos next : getNeighbors(current)) {
-				// check cost
-				float newCost = costMap.get(current) + getCost(current, next);
-				if (costMap.containsKey(next) && costMap.get(next) <= newCost) {
-					continue;
-				}
-
-				// add to queue
-				costMap.put(next, newCost);
-				prevPosMap.put(next, current);
-				queue.add(next, newCost + getHeuristic(next));
-			}
-		}
-		iterations += i;
+	public void setDivingAllowed(boolean divingAllowed) {
+		this.divingAllowed = divingAllowed;
 	}
 }
