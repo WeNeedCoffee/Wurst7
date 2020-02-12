@@ -1,23 +1,24 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public License,
- * version 3. If a copy of the GPL was not distributed with this file, You can
- * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public
+ * License, version 3. If a copy of the GPL was not distributed with this
+ * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.mixin;
 
-import java.util.Iterator;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.wurstclient.WurstClient;
@@ -27,30 +28,10 @@ import net.wurstclient.options.WurstOptionsScreen;
 public abstract class GameMenuScreenMixin extends Screen {
 	private static final Identifier wurstTexture = new Identifier("wurst", "wurst_128.png");
 
+	private ButtonWidget wurstOptionsButton;
+
 	private GameMenuScreenMixin(WurstClient wurst, Text text_1) {
 		super(text_1);
-	}
-
-	private void addWurstOptionsButton() {
-		addButton(new ButtonWidget(width / 2 - 102, height / 4 + 56, 204, 20, "            Options", b -> minecraft.openScreen(new WurstOptionsScreen(this))));
-	}
-
-	private boolean isFeedbackOrBugReportButton(Element element) {
-		if (!(element instanceof AbstractButtonWidget))
-			return false;
-
-		AbstractButtonWidget button = (AbstractButtonWidget) element;
-
-		if (button.y != height / 4 + 72 + -16)
-			return false;
-
-		if (button.x != width / 2 - 102 && button.x != width / 2 + 4)
-			return false;
-
-		if (button.getWidth() != 98)
-			return false;
-
-		return true;
 	}
 
 	@Inject(at = { @At("TAIL") }, method = { "initWidgets()V" })
@@ -60,6 +41,30 @@ public abstract class GameMenuScreenMixin extends Screen {
 
 		addWurstOptionsButton();
 		removeFeedbackAndBugReportButtons();
+	}
+
+	private void addWurstOptionsButton() {
+		wurstOptionsButton = new ButtonWidget(width / 2 - 102, height / 4 + 56, 204, 20, "            Options", b -> openWurstOptions());
+
+		addButton(wurstOptionsButton);
+	}
+
+	private void openWurstOptions() {
+		minecraft.openScreen(new WurstOptionsScreen(this));
+	}
+
+	private void removeFeedbackAndBugReportButtons() {
+		buttons.removeIf(this::isFeedbackOrBugReportButton);
+		children.removeIf(this::isFeedbackOrBugReportButton);
+	}
+
+	private boolean isFeedbackOrBugReportButton(Element element) {
+		if (!(element instanceof AbstractButtonWidget))
+			return false;
+
+		AbstractButtonWidget button = (AbstractButtonWidget) element;
+
+		return button.getMessage().equals(I18n.translate("menu.sendFeedback")) || button.getMessage().equals(I18n.translate("menu.reportBugs"));
 	}
 
 	@Inject(at = { @At("TAIL") }, method = { "render(IIF)V" })
@@ -77,8 +82,8 @@ public abstract class GameMenuScreenMixin extends Screen {
 
 		minecraft.getTextureManager().bindTexture(wurstTexture);
 
-		int x = width / 2 - 68;
-		int y = height / 4 + 73 - 15;
+		int x = wurstOptionsButton.x + 34;
+		int y = wurstOptionsButton.y + 2;
 		int w = 63;
 		int h = 16;
 		int fw = 63;
@@ -86,23 +91,5 @@ public abstract class GameMenuScreenMixin extends Screen {
 		float u = 0;
 		float v = 0;
 		blit(x, y, u, v, w, h, fw, fh);
-	}
-
-	private void removeFeedbackAndBugReportButtons() {
-		for (Iterator<AbstractButtonWidget> itr = buttons.iterator(); itr.hasNext();) {
-			AbstractButtonWidget button = itr.next();
-
-			if (isFeedbackOrBugReportButton(button)) {
-				itr.remove();
-			}
-		}
-
-		for (Iterator<Element> itr = children.iterator(); itr.hasNext();) {
-			Element element = itr.next();
-
-			if (isFeedbackOrBugReportButton(element)) {
-				itr.remove();
-			}
-		}
 	}
 }

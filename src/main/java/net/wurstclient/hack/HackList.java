@@ -104,9 +104,11 @@ public final class HackList implements UpdateListener {
 	public final NavigatorHack navigatorHack = new NavigatorHack();
 	public final NoClipHack noClipHack = new NoClipHack();
 	public final NoFallHack noFallHack = new NoFallHack();
+	public final NoFireOverlayHack noFireOverlayHack = new NoFireOverlayHack();
 	public final NoHurtcamHack noHurtcamHack = new NoHurtcamHack();
-	// public final NoOverlayHack noOverlayHack = new NoOverlayHack();
-	// public final NoSlowdownHack noSlowdownHack = new NoSlowdownHack();
+	public final NoOverlayHack noOverlayHack = new NoOverlayHack();
+	public final NoPumpkinHack noPumpkinHack = new NoPumpkinHack();
+	public final NoSlowdownHack noSlowdownHack = new NoSlowdownHack();
 	public final NoWeatherHack noWeatherHack = new NoWeatherHack();
 	public final NoWebHack noWebHack = new NoWebHack();
 	public final NukerHack nukerHack = new NukerHack();
@@ -115,9 +117,9 @@ public final class HackList implements UpdateListener {
 	public final PanicHack panicHack = new PanicHack();
 	public final ParkourHack parkourHack = new ParkourHack();
 	public final PlayerEspHack playerEspHack = new PlayerEspHack();
-	// public final PlayerFinderHack playerFinderHack = new PlayerFinderHack();
-	// public final PotionSaverHack potionSaverHack = new PotionSaverHack();
-	// public final ProphuntEspHack prophuntEspHack = new ProphuntEspHack();
+	public final PlayerFinderHack playerFinderHack = new PlayerFinderHack();
+	public final PotionSaverHack potionSaverHack = new PotionSaverHack();
+	public final ProphuntEspHack prophuntEspHack = new ProphuntEspHack();
 	public final ProtectHack protectHack = new ProtectHack();
 	public final RadarHack radarHack = new RadarHack();
 	public final RainbowUiHack rainbowUiHack = new RainbowUiHack();
@@ -129,7 +131,7 @@ public final class HackList implements UpdateListener {
 	public final ServerCrasherHack serverCrasherHack = new ServerCrasherHack();
 	public final SkinDerpHack skinDerpHack = new SkinDerpHack();
 	public final SneakHack sneakHack = new SneakHack();
-	// public final SpeedHackHack speedHackHack = new SpeedHackHack();
+	public final SpeedHackHack speedHackHack = new SpeedHackHack();
 	public final SpeedNukerHack speedNukerHack = new SpeedNukerHack();
 	public final SpiderHack spiderHack = new SpiderHack();
 	public final StepHack stepHack = new StepHack();

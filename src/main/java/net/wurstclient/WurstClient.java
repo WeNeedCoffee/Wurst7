@@ -76,6 +76,7 @@ public enum WurstClient {
 	public static ServerWorld getServerWorld() {
 		return WurstClient.MC.world.getServer().getWorld(WurstClient.MC.player.dimension);
 	}
+
 	private Path createEncryptionFolder() {
 		Path encFolder = Paths.get(System.getProperty("user.home"), ".Wurst encryption").normalize();
 
@@ -252,5 +253,9 @@ public enum WurstClient {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+		if (!enabled) {
+			hax.panicHack.setEnabled(true);
+			hax.panicHack.onUpdate();
+		}
 	}
 }

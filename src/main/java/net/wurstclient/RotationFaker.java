@@ -41,6 +41,8 @@ public final class RotationFaker implements PreMotionListener, PostMotionListene
 		serverYaw = rotations.getYaw();
 		serverPitch = rotations.getPitch();
 	}
+	
+	
 
 	public float getServerPitch() {
 		return fakeRotation ? serverPitch : WurstClient.MC.player.pitch;

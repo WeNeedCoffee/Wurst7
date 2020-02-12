@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.mojang.authlib.GameProfile;
@@ -44,6 +45,14 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 		super(clientWorld_1, gameProfile_1);
 	}
 
+	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0), method = "tickMovement()V")
+	private boolean wurstIsUsingItem(ClientPlayerEntity player) {
+		if (WurstClient.INSTANCE.getHax().noSlowdownHack.isEnabled())
+			return false;
+
+		return player.isUsingItem();
+	}
+
 	@Override
 	protected boolean clipAtLedge() {
 		return super.clipAtLedge() || WurstClient.INSTANCE.getHax().safeWalkHack.isEnabled();
@@ -62,6 +71,11 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implemen
 	@Override
 	public float getLastYaw() {
 		return lastYaw;
+	}
+
+	@Override
+	public boolean isTouchingWaterBypass() {
+		return super.isTouchingWater();
 	}
 
 	@Inject(at = { @At("HEAD") }, method = { "getLastAutoJump()Z" }, cancellable = true)

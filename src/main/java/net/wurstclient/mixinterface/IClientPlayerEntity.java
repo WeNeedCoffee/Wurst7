@@ -15,6 +15,8 @@ public interface IClientPlayerEntity {
 	float getLastYaw();
 
 	void setMovementMultiplier(Vec3d movementMultiplier);
+	
+	public boolean isTouchingWaterBypass();
 
 	void setNoClip(boolean noClip);
 }
