@@ -22,6 +22,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.registry.Registry;
 import net.wurstclient.util.BlockUtils;
 
 @Mixin(ItemRenderer.class)
@@ -45,7 +46,7 @@ public class ItemRendererMixin {
 			}
 			if (!st.equals(stack)) {
 				stack = st;
-				String it = "minecraft:" + st.getName().asString().replace(" ", "_").replace("[^a-zA-Z0-9/-]+", "").toLowerCase() + "#inventory";
+				String it = "minecraft:" + Registry.ITEM.getId(st.getItem()).getPath().toLowerCase() + "#inventory";
 				model = this.models.getModelManager().getModel(new ModelIdentifier(it));
 
 			}

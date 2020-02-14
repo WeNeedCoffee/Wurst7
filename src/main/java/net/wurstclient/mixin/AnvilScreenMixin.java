@@ -44,7 +44,7 @@ public abstract class AnvilScreenMixin extends ContainerScreen<AnvilContainer> {
 					if (!e.equalsIgnoreCase("0i")) {
 						int l = string.split(":")[0].length();
 						String f = string.substring(l + (l > 1 ? 1 : 0));
-						string = e + (f.isEmpty() ? "" : ":" + f);
+						string = e + (f.isEmpty() ? ":" : ":" + f);
 						this.nameField.setChangedListener(null);
 						nameField.setText(string);
 						this.nameField.setChangedListener(this::onRenamed);
@@ -52,9 +52,10 @@ public abstract class AnvilScreenMixin extends ContainerScreen<AnvilContainer> {
 				}
 				((AnvilContainer) this.getContainer()).setNewItemName(string);
 				WurstClient.MC.player.networkHandler.sendPacket(new RenameItemC2SPacket(string));
+
+				ci.cancel();
 			}
 		}
-		ci.cancel();
 	}
 
 	@Shadow

@@ -66,6 +66,12 @@ public enum BlockUtils {
 	static Map<String, String> items = new HashMap<>();
 
 	static {
+		/*try {
+			call();
+		} catch (JSONException | IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}*/
 		JSONObject json;
 		try {
 			json = new JSONObject(new String(NetUtil.downloadUrl(f.toURI().toURL()), StandardCharsets.UTF_8));
@@ -87,14 +93,14 @@ public enum BlockUtils {
 		Map<Integer, String> bids = new HashMap<>();
 		int i = 0;
 		for (Block b : Registry.BLOCK) {
-			bids.put(i, b.getName().asString());
+			bids.put(i, Registry.BLOCK.getId(b).getPath());
 			i++;
 		}
 
 		Map<Integer, String> iids = new HashMap<>();
 		i = 0;
 		for (Item it : Registry.ITEM) {
-			iids.put(i, it.getName().asString());
+			iids.put(i, Registry.ITEM.getId(it).getPath());
 			i++;
 		}
 		f.delete();
@@ -108,9 +114,9 @@ public enum BlockUtils {
 	}
 
 	public static ItemConvertible getItemOrBlock(String name) {
-		if (name.matches("\\d*i")) {
+		if (name.matches("\\d+i")) {
 			return getItemFromName(items.get(name.replace("i", "")).replace(" ", "_").toLowerCase());
-		} else if (name.matches("\\d*b")) {
+		} else if (name.matches("\\d+b")) {
 			return getBlockFromName(blocks.get(name.replace("b", "")).replace(" ", "_").toLowerCase());
 		}
 		Item i = getItemFromName(name);
