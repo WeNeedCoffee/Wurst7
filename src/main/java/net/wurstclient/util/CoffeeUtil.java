@@ -9,6 +9,7 @@ import net.minecraft.block.DoorBlock;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.block.TrapdoorBlock;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -57,5 +58,14 @@ public class CoffeeUtil {
 
 	public boolean isDiamond(Item item) {
 		return false;
+	}
+	
+	public static void setPerspective(int i) {
+		WurstClient.MC.options.perspective = i;
+		if (WurstClient.MC.options.perspective == 0) {
+			WurstClient.MC.gameRenderer.onCameraEntitySet(WurstClient.MC.getCameraEntity());
+		} else if (WurstClient.MC.options.perspective == 1) {
+			WurstClient.MC.gameRenderer.onCameraEntitySet((Entity) null);
+		}
 	}
 }

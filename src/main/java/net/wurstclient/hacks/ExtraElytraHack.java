@@ -7,6 +7,7 @@
  */
 package net.wurstclient.hacks;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
@@ -19,6 +20,7 @@ import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.settings.CheckboxSetting;
+import net.wurstclient.util.CoffeeUtil;
 
 @SearchTags({ "EasyElytra", "extra elytra", "easy elytra" })
 public final class ExtraElytraHack extends Hack implements UpdateListener {
@@ -110,10 +112,12 @@ public final class ExtraElytraHack extends Hack implements UpdateListener {
 				sendStartStopPacket();
 				return;
 			}
-
+			CoffeeUtil.setPerspective(1);
 			controlSpeed();
 			controlHeight();
 			return;
+		} else {
+			CoffeeUtil.setPerspective(0);
 		}
 
 		if (ElytraItem.isUsable(chest) && MC.options.keyJump.isPressed()) {
