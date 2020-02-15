@@ -7,6 +7,7 @@
  */
 package net.wurstclient.mixinterface;
 
+import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.util.Session;
 
 public interface IMinecraftClient {
@@ -15,7 +16,9 @@ public interface IMinecraftClient {
 	int getItemUseCooldown();
 
 	IClientPlayerEntity getPlayer();
-
+	
+	BufferBuilderStorage getBufferBuilders();
+	
 	void rightClick();
 
 	void setItemUseCooldown(int itemUseCooldown);
