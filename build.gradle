@@ -12,6 +12,9 @@ group = project.maven_group
 
 minecraft {
 }
+repositories {
+    maven { url 'https://jitpack.io' }
+}
 
 dependencies {
 	//to change the versions see the gradle.properties file
@@ -31,12 +34,12 @@ dependencies {
 	modCompile 'com.google.code.findbugs:jsr305:3.0.2'
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
+
 }
 sourceSets {
   main {
     java {
     	srcDirs 'src/main/java'
-    	srcDirs '../fabritone/src/main/java'
     }
   }
 }

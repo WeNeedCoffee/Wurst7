@@ -23,7 +23,7 @@ public final class AltManager {
 	public AltManager(Path altsFile, Path encFolder) {
 		this.altsFile = new AltsFile(altsFile, encFolder);
 		this.altsFile.load(this);
-		Alt alt = null;
+		/*Alt alt = null;
 		for (Alt a : getList()) {
 			if (!a.isUnchecked()) {
 				alt = a;
@@ -32,7 +32,7 @@ public final class AltManager {
 		}
 		if (alt != null) {
 			LoginManager.login(alt.getEmail(), alt.getPassword());
-		}
+		}*/
 	}
 
 	public void add(Alt alt) {
