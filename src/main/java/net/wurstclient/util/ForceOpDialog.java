@@ -7,180 +7,264 @@
  */
 package net.wurstclient.util;
 
+import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ForceOpDialog extends JDialog {
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-		} catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
-			throw new RuntimeException(e);
-		}
-
-		new ForceOpDialog();
+		SwingUtils.setLookAndFeel();
+		new ForceOpDialog(args[0]);
 	}
 
-	private final ArrayList<JComponent> components = new ArrayList<>();
+	private final ArrayList<Component> components = new ArrayList<>();
 
-	public ForceOpDialog() {
+	private JSpinner spDelay;
+	private JCheckBox cbDontWait;
+
+	private JLabel lPasswords;
+	private JLabel lTime;
+	private JLabel lAttempts;
+
+	private int numPW = 50;
+	private int lastPW = -1;
+
+	public ForceOpDialog(String username) {
 		super((JFrame) null, "ForceOP", false);
 		setAlwaysOnTop(true);
 		setSize(512, 248);
 		setResizable(false);
 		setLocationRelativeTo(null);
 		setLayout(null);
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		SwingUtils.setExitOnClose(this);
 
-		addListSection();
+		addLabel("Password list", 4, 4);
+		addPwListSelector();
+		addHowToUseButton();
 
-		JSeparator sepListSpeed = new JSeparator();
-		sepListSpeed.setLocation(4, 56);
-		sepListSpeed.setSize(498, 4);
-		add(sepListSpeed);
-		components.add(sepListSpeed);
+		addSeparator(4, 56, 498, 4);
 
-		addSpeedSection();
+		addLabel("Speed", 4, 64);
+		addDelaySelector();
+		addDontWaitCheckbox();
 
-		JSeparator sepSpeedStart = new JSeparator();
-		sepSpeedStart.setLocation(4, 132);
-		sepSpeedStart.setSize(498, 4);
-		add(sepSpeedStart);
-		components.add(sepSpeedStart);
+		addSeparator(4, 132, 498, 4);
 
-		addStartSection();
+		addLabel("Username: " + username, 4, 140);
+		lPasswords = addLabel("Passwords: error", 4, 160);
+		lTime = addLabel("Estimated time: error", 4, 180);
+		lAttempts = addLabel("Attempts: error", 4, 200);
+		addStartButton();
 
-		loadPWList();
-		update();
+		updateNumPasswords();
 		setVisible(true);
 		toFront();
+
+		new Thread(() -> handleDialogInput(), "ForceOP dialog input").start();
 	}
 
-	private void addListSection() {
-		JLabel lPWList = new JLabel("Password list");
-		lPWList.setLocation(4, 4);
-		lPWList.setSize(lPWList.getPreferredSize());
-		add(lPWList);
-		components.add(lPWList);
+	private void handleDialogInput() {
+		try (BufferedReader bf = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+			for (String line = ""; (line = bf.readLine()) != null;)
+				messageFromWurst(line);
 
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void messageFromWurst(String line) {
+		if (line.startsWith("numPW ")) {
+			numPW = Integer.parseInt(line.substring(6));
+			updateNumPasswords();
+		}
+	}
+
+	private void addPwListSelector() {
 		JRadioButton rbDefaultList = new JRadioButton("default", true);
 		rbDefaultList.setLocation(4, 24);
 		rbDefaultList.setSize(rbDefaultList.getPreferredSize());
 		add(rbDefaultList);
-		components.add(rbDefaultList);
 
 		JRadioButton rbTXTList = new JRadioButton("TXT file", false);
 		rbTXTList.setLocation(rbDefaultList.getX() + rbDefaultList.getWidth() + 4, 24);
 		rbTXTList.setSize(rbTXTList.getPreferredSize());
 		add(rbTXTList);
-		components.add(rbTXTList);
 
-		ButtonGroup bgList = new ButtonGroup();
-		bgList.add(rbDefaultList);
-		bgList.add(rbTXTList);
-		components.add(rbTXTList);
+		ButtonGroup rbGroup = new ButtonGroup();
+		rbGroup.add(rbDefaultList);
+		rbGroup.add(rbTXTList);
 
-		JButton bTXTList = new JButton("browse");
-		bTXTList.setLocation(rbTXTList.getX() + rbTXTList.getWidth() + 4, 24);
-		bTXTList.setSize(bTXTList.getPreferredSize());
-		bTXTList.setEnabled(rbTXTList.isSelected());
-		add(bTXTList);
-		components.add(bTXTList);
+		JButton bBrowse = new JButton("browse");
+		bBrowse.setLocation(rbTXTList.getX() + rbTXTList.getWidth() + 4, 24);
+		bBrowse.setSize(bBrowse.getPreferredSize());
+		bBrowse.setEnabled(rbTXTList.isSelected());
+		bBrowse.addActionListener(e -> browsePwList());
+		add(bBrowse);
 
+		rbDefaultList.addActionListener(e -> {
+			bBrowse.setEnabled(false);
+			System.out.println("list default");
+		});
+
+		rbTXTList.addActionListener(e -> {
+			bBrowse.setEnabled(true);
+		});
+	}
+
+	private void browsePwList() {
+		JFileChooser fsTXTList = new JFileChooser();
+		fsTXTList.setAcceptAllFileFilterUsed(false);
+		fsTXTList.addChoosableFileFilter(new FileNameExtensionFilter("TXT files", new String[] { "txt" }));
+		fsTXTList.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+		int action = fsTXTList.showOpenDialog(this);
+		if (action != JFileChooser.APPROVE_OPTION)
+			return;
+
+		if (!fsTXTList.getSelectedFile().exists()) {
+			JOptionPane.showMessageDialog(this, "File does not exist!", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		String pwList = fsTXTList.getSelectedFile().getPath();
+		System.out.println("list " + pwList);
+	}
+
+	private void addHowToUseButton() {
 		JButton bHowTo = new JButton("How to use");
 		bHowTo.setFont(new Font(bHowTo.getFont().getName(), Font.BOLD, 16));
 		bHowTo.setSize(bHowTo.getPreferredSize());
 		bHowTo.setLocation(506 - bHowTo.getWidth() - 32, 12);
+		bHowTo.addActionListener(e -> openHowToUseLink());
 		add(bHowTo);
-		components.add(bHowTo);
 	}
 
-	private void addSpeedSection() {
-		JLabel lSpeed = new JLabel("Speed");
-		lSpeed.setLocation(4, 64);
-		lSpeed.setSize(lSpeed.getPreferredSize());
-		add(lSpeed);
-		components.add(lSpeed);
+	private void openHowToUseLink() {
+		try {
+			String howToLink = "https://www.wurstclient.net/Mods/Force_OP_(AuthMeCracker)/";
 
-		JLabel lDelay1 = new JLabel("Delay between attempts:");
-		lDelay1.setLocation(4, 84);
-		lDelay1.setSize(lDelay1.getPreferredSize());
-		add(lDelay1);
-		components.add(lDelay1);
+			Desktop.getDesktop().browse(URI.create(howToLink));
 
-		JSpinner spDelay = new JSpinner();
+		} catch (IOException e2) {
+			throw new RuntimeException(e2);
+		}
+	}
+
+	private void addDelaySelector() {
+		JLabel lDelay1 = addLabel("Delay between attempts:", 4, 84);
+
+		spDelay = new JSpinner();
 		spDelay.setToolTipText("<html>" + "50ms: Fastest, doesn't bypass AntiSpam plugins<br>" + "1000ms: Recommended, bypasses most AntiSpam plugins<br>" + "10000ms: Slowest, bypasses all AntiSpam plugins" + "</html>");
 		spDelay.setModel(new SpinnerNumberModel(1000, 50, 10000, 50));
 		spDelay.setLocation(lDelay1.getX() + lDelay1.getWidth() + 4, 84);
 		spDelay.setSize(60, (int) spDelay.getPreferredSize().getHeight());
+		spDelay.addChangeListener(e -> updateTimeLabel());
 		add(spDelay);
-		components.add(spDelay);
 
-		JLabel lDelay2 = new JLabel("ms");
-		lDelay2.setLocation(spDelay.getX() + spDelay.getWidth() + 4, 84);
-		lDelay2.setSize(lDelay2.getPreferredSize());
-		add(lDelay2);
-		components.add(lDelay2);
+		addLabel("ms", spDelay.getX() + spDelay.getWidth() + 4, 84);
+	}
 
-		JCheckBox cbDontWait = new JCheckBox("<html>Don't wait for \"<span style=\"color: rgb(192, 0, 0);\"><b>Wrong password!</b></span>\" messages</html>", false);
+	private void addDontWaitCheckbox() {
+		cbDontWait = new JCheckBox("<html>Don't wait for " + "\"<span style=\"color: red;\"><b>Wrong password!</b></span>\" " + "messages</html>", false);
 		cbDontWait.setToolTipText("Increases the speed but can cause inaccuracy.");
 		cbDontWait.setLocation(4, 104);
 		cbDontWait.setSize(cbDontWait.getPreferredSize());
+		cbDontWait.addActionListener(e -> updateTimeLabel());
 		add(cbDontWait);
-		components.add(cbDontWait);
 	}
 
-	private void addStartSection() {
-		JLabel lName = new JLabel("Username: error");
-		lName.setLocation(4, 140);
-		lName.setSize(lName.getPreferredSize());
-		add(lName);
-		components.add(lName);
-
-		JLabel lPasswords = new JLabel("Passwords: error");
-		lPasswords.setLocation(4, 160);
-		lPasswords.setSize(lPasswords.getPreferredSize());
-		add(lPasswords);
-		components.add(lPasswords);
-
-		JLabel lTime = new JLabel("Estimated time: error");
-		lTime.setLocation(4, 180);
-		lTime.setSize(lTime.getPreferredSize());
-		add(lTime);
-		components.add(lTime);
-
-		JLabel lAttempts = new JLabel("Attempts: error");
-		lAttempts.setLocation(4, 200);
-		lAttempts.setSize(lAttempts.getPreferredSize());
-		add(lAttempts);
-		components.add(lAttempts);
-
+	private void addStartButton() {
 		JButton bStart = new JButton("Start");
 		bStart.setFont(new Font(bStart.getFont().getName(), Font.BOLD, 18));
 		bStart.setLocation(506 - 192 - 12, 144);
 		bStart.setSize(192, 66);
 		bStart.addActionListener(e -> startForceOP());
 		add(bStart);
-		components.add(bStart);
 	}
 
-	private void loadPWList() {
-		// TODO
+	private JLabel addLabel(String text, int x, int y) {
+		JLabel label = new JLabel(text);
+		label.setLocation(x, y);
+		label.setSize(label.getPreferredSize());
+
+		add(label);
+		return label;
+	}
+
+	private void addSeparator(int x, int y, int width, int height) {
+		JSeparator sepSpeedStart = new JSeparator();
+		sepSpeedStart.setLocation(x, y);
+		sepSpeedStart.setSize(width, height);
+		add(sepSpeedStart);
+	}
+
+	@Override
+	public Component add(Component comp) {
+		components.add(comp);
+		return super.add(comp);
+	}
+
+	private void updateNumPasswords() {
+		updatePasswordsLabel();
+		updateTimeLabel();
+		updateAttemptsLabel();
+	}
+
+	private void updatePasswordsLabel() {
+		lPasswords.setText("Passwords: " + numPW);
+		lPasswords.setSize(lPasswords.getPreferredSize());
+	}
+
+	private void updateTimeLabel() {
+		int remainingPW = numPW - (lastPW + 1);
+		long timeMS = remainingPW * (int) spDelay.getValue();
+
+		// AutoReconnect time (5s every 30s)
+		timeMS += (int) (timeMS / 30000 * 5000);
+
+		// "wrong password" wait time (estimated 50ms per password)
+		// actual value varies with lag, which cannot be predicted
+		if (!cbDontWait.isSelected())
+			timeMS += remainingPW * 50;
+
+		String timeString = getTimeString(timeMS);
+
+		lTime.setText("Estimated time: " + timeString);
+		lTime.setSize(lTime.getPreferredSize());
+	}
+
+	private String getTimeString(long ms) {
+		TimeUnit uDays = TimeUnit.DAYS;
+		TimeUnit uHours = TimeUnit.HOURS;
+		TimeUnit uMin = TimeUnit.MINUTES;
+		TimeUnit uMS = TimeUnit.MILLISECONDS;
+
+		long days = uMS.toDays(ms);
+		long hours = uMS.toHours(ms) - uDays.toHours(days);
+		long minutes = uMS.toMinutes(ms) - uHours.toMinutes(uMS.toHours(ms));
+		long seconds = uMS.toSeconds(ms) - uMin.toSeconds(uMS.toMinutes(ms));
+
+		return days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+	}
+
+	private void updateAttemptsLabel() {
+		lAttempts.setText("Attempts: " + (lastPW + 1) + "/" + numPW);
+		lAttempts.setSize(lAttempts.getPreferredSize());
 	}
 
 	private void startForceOP() {
 		components.forEach(c -> c.setEnabled(false));
-		new Thread(() -> runForceOP(), "ForceOP").start();
-	}
-
-	private void runForceOP() {
-		// TODO
-	}
-
-	private void update() {
-		// TODO
+		System.out.println("start");
 	}
 }
