@@ -9,7 +9,7 @@ import net.wurstclient.WurstClient;
 
 @Mixin(TheNetherDimension.class)
 public class NetherDimensionMixin {
-	@Inject(at = { @At("HEAD") }, method = { "isFogThick(II)Z" })
+	@Inject(at = { @At("HEAD") }, method = { "isFogThick(II)Z" }, cancellable = true)
 	public void isFogThick(int x, int z, CallbackInfoReturnable<Boolean> cir) {
 		cir.setReturnValue(!WurstClient.INSTANCE.getHax().antiNetherFogHack.isEnabled());
 	}
