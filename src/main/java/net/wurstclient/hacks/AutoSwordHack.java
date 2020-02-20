@@ -75,16 +75,16 @@ public final class AutoSwordHack extends Hack implements UpdateListener {
 		switch (priority.getSelected()) {
 			case SPEED:
 				if (item instanceof SwordItem)
-					return ((ISwordItem) item).getAttackSpeed();
+					return ((ISwordItem) item).getSpeed();
 				else if (item instanceof MiningToolItem)
-					return ((IMiningToolItem) item).getAttackSpeed();
+					return ((IMiningToolItem) item).getSpeed();
 				break;
 
 			case DAMAGE:
 				if (item instanceof SwordItem)
 					return ((SwordItem) item).getAttackDamage();
 				else if (item instanceof MiningToolItem)
-					return ((IMiningToolItem) item).getAttackDamage();
+					return ((IMiningToolItem) item).getDmg();
 				break;
 		}
 

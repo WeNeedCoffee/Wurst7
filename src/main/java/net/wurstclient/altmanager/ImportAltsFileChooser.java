@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2014 - 2020 | Alexander01998 | All rights reserved.
  *
- * This source code is subject to the terms of the GNU General Public License,
- * version 3. If a copy of the GPL was not distributed with this file, You can
- * obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
+ * This source code is subject to the terms of the GNU General Public
+ * License, version 3. If a copy of the GPL was not distributed with this
+ * file, You can obtain one at: https://www.gnu.org/licenses/gpl-3.0.txt
  */
 package net.wurstclient.altmanager;
 
@@ -14,22 +14,17 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
+
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import net.wurstclient.util.SwingUtils;
 
 public final class ImportAltsFileChooser extends JFileChooser {
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-		} catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
-			throw new RuntimeException(e);
-		}
-
+		SwingUtils.setLookAndFeel();
 		JFileChooser fileChooser = new ImportAltsFileChooser(new File(args[0]));
 
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -41,9 +36,8 @@ public final class ImportAltsFileChooser extends JFileChooser {
 
 		File file = fileChooser.getSelectedFile();
 		try {
-			for (String line : Files.readAllLines(file.toPath())) {
+			for (String line : Files.readAllLines(file.toPath()))
 				System.out.println(line);
-			}
 
 		} catch (IOException e) {
 			e.printStackTrace();

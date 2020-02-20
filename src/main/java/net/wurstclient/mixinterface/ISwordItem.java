@@ -8,5 +8,5 @@
 package net.wurstclient.mixinterface;
 
 public interface ISwordItem {
-	public float getAttackSpeed();
+	public float getSpeed();
 }

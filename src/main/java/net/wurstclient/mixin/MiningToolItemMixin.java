@@ -31,12 +31,12 @@ public class MiningToolItemMixin extends ToolItem implements IMiningToolItem {
 	}
 
 	@Override
-	public float getAttackDamage() {
+	public float getDmg() {
 		return attackDamage;
 	}
 
 	@Override
-	public float getAttackSpeed() {
+	public float getSpeed() {
 		return attackSpeed;
 	}
 }
